@@ -4,7 +4,7 @@
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-%3E%3D8.2-blue)
 ![React](https://img.shields.io/badge/React-TypeScript-blue)
-![License](https://img.shields.io/github/license/igCarlos/CIVAN)
+![License](https://img.shields.io/github/license/igCarlos/civan)
 
 Panel de administración desarrollado con **Laravel 12 + Inertia + React + TypeScript + Vite**.
 
