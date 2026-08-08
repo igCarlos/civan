@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SystemSetting;
+use Illuminate\Support\Facades\Storage;
 
 class SystemSettingsService
 {
@@ -23,6 +24,10 @@ class SystemSettingsService
                     [
                         'system.panel_name',
                         'system.short_name',
+                        'system.logo_light',
+                        'system.logo_dark',
+                        'system.favicon',
+                        'system.logo_size',
                         'system.primary_color',
                         'system.sidebar_color',
                         'system.sidebar_shape',
@@ -54,6 +59,45 @@ class SystemSettingsService
                 (string) $values->get(
                     'system.short_name',
                     'CIVAN'
+                ),
+
+            /*
+            |--------------------------------------------------------------------------
+            | Identidad visual
+            |--------------------------------------------------------------------------
+            */
+
+            'logo_light' =>
+                $this->publicAssetUrl(
+                    $values->get(
+                        'system.logo_light'
+                    )
+                ),
+
+            'logo_dark' =>
+                $this->publicAssetUrl(
+                    $values->get(
+                        'system.logo_dark'
+                    )
+                ),
+
+            'favicon' =>
+                $this->publicAssetUrl(
+                    $values->get(
+                        'system.favicon'
+                    )
+                ),
+
+            'logo_size' =>
+                max(
+                    50,
+                    min(
+                        100,
+                        (int) $values->get(
+                            'system.logo_size',
+                            75
+                        )
+                    )
                 ),
 
             /*
@@ -152,5 +196,26 @@ class SystemSettingsService
                     )
                 ),
         ];
+    }
+
+    /**
+     * Convertir una ruta del disco public en URL web.
+     */
+    private function publicAssetUrl(
+        mixed $path
+    ): ?string {
+        $path = trim(
+            (string) ($path ?? '')
+        );
+
+        if ($path === '') {
+            return null;
+        }
+
+        return Storage::disk(
+            'public'
+        )->url(
+            $path
+        );
     }
 }

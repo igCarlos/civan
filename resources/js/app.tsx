@@ -23,6 +23,9 @@ declare global {
 type SharedPageProps = {
     system?: {
         panel_name?: string;
+        logo_light?: string | null;
+        logo_dark?: string | null;
+        favicon?: string | null;
         primary_color?: string;
         sidebar_color?: string;
         sidebar_shape?: string;
@@ -71,6 +74,61 @@ function applyAppearance(
         card_style:
             system?.card_style,
     });
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Favicon dinámico
+|--------------------------------------------------------------------------
+*/
+
+const initialFavicon =
+    (
+        document.querySelector(
+            'link[rel~="icon"]',
+        ) as HTMLLinkElement | null
+    )?.href ??
+    '/favicon.ico';
+
+function applyFavicon(
+    favicon:
+        | string
+        | null
+        | undefined,
+): void {
+    let link =
+        document.querySelector(
+            'link[data-civan-favicon]',
+        ) as HTMLLinkElement | null;
+
+    if (!link) {
+        link =
+            document.querySelector(
+                'link[rel~="icon"]',
+            ) as HTMLLinkElement | null;
+    }
+
+    if (!link) {
+        link =
+            document.createElement(
+                'link',
+            );
+
+        link.rel =
+            'icon';
+
+        document.head.appendChild(
+            link,
+        );
+    }
+
+    link.dataset.civanFavicon =
+        'true';
+
+    link.href =
+        favicon ||
+        initialFavicon;
 }
 
 createInertiaApp({
@@ -141,6 +199,10 @@ createInertiaApp({
             initialProps.system,
         );
 
+        applyFavicon(
+            initialProps.system?.favicon,
+        );
+
         /*
         |--------------------------------------------------------------------------
         | Navegaciones Inertia
@@ -166,6 +228,10 @@ createInertiaApp({
 
                 applyAppearance(
                     pageProps.system,
+                );
+
+                applyFavicon(
+                    pageProps.system?.favicon,
                 );
 
                 /*

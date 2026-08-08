@@ -239,6 +239,18 @@ const fieldLabelKeys: Record<
     panel_name:
         'audit.field.panel_name',
 
+    logo_light:
+        'audit.field.logo_light',
+
+    logo_dark:
+        'audit.field.logo_dark',
+
+    favicon:
+        'audit.field.favicon',
+
+    logo_size:
+        'audit.field.logo_size',
+
     short_name:
         'audit.field.short_name',
 

@@ -10,12 +10,15 @@ import {
     CreditCard,
     Globe2,
     Languages,
+    ImageIcon,
     LayoutDashboard,
     Palette,
     PanelLeft,
     RotateCcw,
     Sparkles,
     Save,
+    Upload,
+    X,
     Settings,
     TextCursorInput,
 } from 'lucide-react';
@@ -23,6 +26,7 @@ import {
 import {
     FormEvent,
     useEffect,
+    useState,
 } from 'react';
 
 import {
@@ -43,6 +47,10 @@ import {
 interface SystemSettings {
     panel_name: string;
     short_name: string;
+    logo_light: string | null;
+    logo_dark: string | null;
+    favicon: string | null;
+    logo_size: number;
     primary_color: string;
     sidebar_color: string;
     sidebar_shape: 'normal' | 'rounded';
@@ -175,6 +183,47 @@ const CARD_PRESETS = [
     },
 ] as const;
 
+
+function useObjectUrl(
+    file: File | null,
+): string | null {
+    const [
+        url,
+        setUrl,
+    ] = useState<string | null>(
+        null,
+    );
+
+    useEffect(() => {
+        if (!file) {
+            setUrl(
+                null,
+            );
+
+            return;
+        }
+
+        const nextUrl =
+            URL.createObjectURL(
+                file,
+            );
+
+        setUrl(
+            nextUrl,
+        );
+
+        return () => {
+            URL.revokeObjectURL(
+                nextUrl,
+            );
+        };
+    }, [
+        file,
+    ]);
+
+    return url;
+}
+
 export default function SystemSettingsPage({
     settings,
     options,
@@ -206,6 +255,42 @@ export default function SystemSettingsPage({
 
             short_name:
                 settings.short_name,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Archivos de branding
+            |--------------------------------------------------------------------------
+            */
+
+            logo_light:
+                null as File | null,
+
+            logo_dark:
+                null as File | null,
+
+            favicon:
+                null as File | null,
+
+            remove_logo_light:
+                false,
+
+            remove_logo_dark:
+                false,
+
+            remove_favicon:
+                false,
+
+            logo_size:
+                Number(
+                    settings.logo_size ??
+                    75,
+                ),
+
+            /*
+            |--------------------------------------------------------------------------
+            | Apariencia
+            |--------------------------------------------------------------------------
+            */
 
             primary_color:
                 normalizeHexColor(
@@ -257,6 +342,46 @@ export default function SystemSettingsPage({
             per_page:
                 settings.per_page,
         });
+
+
+    const logoLightObjectUrl =
+        useObjectUrl(
+            form.data.logo_light,
+        );
+
+    const logoDarkObjectUrl =
+        useObjectUrl(
+            form.data.logo_dark,
+        );
+
+    const faviconObjectUrl =
+        useObjectUrl(
+            form.data.favicon,
+        );
+
+    const logoLightPreview =
+        logoLightObjectUrl ??
+        (
+            form.data.remove_logo_light
+                ? null
+                : settings.logo_light
+        );
+
+    const logoDarkPreview =
+        logoDarkObjectUrl ??
+        (
+            form.data.remove_logo_dark
+                ? null
+                : settings.logo_dark
+        );
+
+    const faviconPreview =
+        faviconObjectUrl ??
+        (
+            form.data.remove_favicon
+                ? null
+                : settings.favicon
+        );
 
     /*
     |--------------------------------------------------------------------------
@@ -342,10 +467,67 @@ export default function SystemSettingsPage({
     ) => {
         event.preventDefault();
 
-        form.put(
+        form.post(
             '/dashboard/configuracion/sistema',
             {
-                preserveScroll: true,
+                preserveScroll:
+                    true,
+
+                preserveState:
+                    true,
+
+                forceFormData:
+                    true,
+
+                onSuccess:
+                    () => {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Limpiar únicamente archivos temporales
+                        |--------------------------------------------------------------------------
+                        |
+                        | Los valores reales vuelven desde Laravel mediante Inertia.
+                        |
+                        */
+
+                        form.setData(
+                            'logo_light',
+                            null,
+                        );
+
+                        form.setData(
+                            'logo_dark',
+                            null,
+                        );
+
+                        form.setData(
+                            'favicon',
+                            null,
+                        );
+
+                        form.setData(
+                            'remove_logo_light',
+                            false,
+                        );
+
+                        form.setData(
+                            'remove_logo_dark',
+                            false,
+                        );
+
+                        form.setData(
+                            'remove_favicon',
+                            false,
+                        );
+                    },
+
+                onError:
+                    (errors) => {
+                        console.error(
+                            'Error al guardar la configuración de CIVAN:',
+                            errors,
+                        );
+                    },
             },
         );
     };
@@ -382,6 +564,45 @@ export default function SystemSettingsPage({
                         </p>
                     </div>
                 </div>
+
+                {Object.keys(
+                    form.errors,
+                ).length > 0 && (
+                    <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+                        <p className="font-medium text-destructive">
+                            {t(
+                                'settings.save_error_title',
+                            )}
+                        </p>
+
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {t(
+                                'settings.save_error_description',
+                            )}
+                        </p>
+
+                        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-destructive">
+                            {Object.entries(
+                                form.errors,
+                            ).map(
+                                ([
+                                    field,
+                                    message,
+                                ]) => (
+                                    <li
+                                        key={
+                                            field
+                                        }
+                                    >
+                                        {
+                                            message
+                                        }
+                                    </li>
+                                ),
+                            )}
+                        </ul>
+                    </div>
+                )}
 
                 <form
                     onSubmit={submit}
@@ -486,6 +707,461 @@ export default function SystemSettingsPage({
                                     </p>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Branding */}
+
+                        <div className="border-t p-5">
+                            <div className="mb-4">
+                                <div className="flex items-center gap-2">
+                                    <ImageIcon className="size-4" />
+
+                                    <h3 className="text-sm font-semibold">
+                                        {t(
+                                            'settings.branding',
+                                        )}
+                                    </h3>
+                                </div>
+
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    {t(
+                                        'settings.branding_description',
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="grid min-w-0 gap-4 min-[720px]:grid-cols-2 min-[1200px]:grid-cols-3">
+                                {/* Logo claro */}
+
+                                <div className="min-w-0 rounded-xl border p-4">
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            {t(
+                                                'settings.logo_light',
+                                            )}
+                                        </p>
+
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {t(
+                                                'settings.logo_light_description',
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-3 h-28 overflow-hidden rounded-lg border bg-white">
+                                        {logoLightPreview ? (
+                                            <img
+                                                src={
+                                                    logoLightPreview
+                                                }
+                                                alt={t(
+                                                    'settings.logo_light',
+                                                )}
+                                                className="h-full object-cover object-center"
+                                                style={{
+                                                    width:
+                                                        `${form.data.logo_size}%`,
+                                                }}
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-zinc-500">
+                                                {t(
+                                                    'settings.no_logo',
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-3 space-y-2">
+                                        <label className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium hover:bg-muted">
+                                            <Upload className="size-3.5" />
+
+                                            {t(
+                                                'settings.select_image',
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/webp"
+                                                className="hidden"
+                                                disabled={
+                                                    !can.update ||
+                                                    form.processing
+                                                }
+                                                onChange={(event) => {
+                                                    const file =
+                                                        event.target.files?.[
+                                                            0
+                                                        ] ??
+                                                        null;
+
+                                                    form.setData(
+                                                        'logo_light',
+                                                        file,
+                                                    );
+
+                                                    if (file) {
+                                                        form.setData(
+                                                            'remove_logo_light',
+                                                            false,
+                                                        );
+                                                    }
+
+                                                    event.currentTarget.value =
+                                                        '';
+                                                }}
+                                            />
+                                        </label>
+
+                                        {logoLightPreview && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    form.setData(
+                                                        'logo_light',
+                                                        null,
+                                                    );
+
+                                                    form.setData(
+                                                        'remove_logo_light',
+                                                        true,
+                                                    );
+                                                }}
+                                                disabled={
+                                                    !can.update ||
+                                                    form.processing
+                                                }
+                                                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                            >
+                                                <X className="size-3.5" />
+
+                                                {t(
+                                                    'settings.remove_image',
+                                                )}
+                                            </button>
+                                        )}
+
+                                        {form.errors.logo_light && (
+                                            <p className="text-xs text-destructive">
+                                                {
+                                                    form.errors.logo_light
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Logo oscuro */}
+
+                                <div className="min-w-0 rounded-xl border p-4">
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            {t(
+                                                'settings.logo_dark',
+                                            )}
+                                        </p>
+
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {t(
+                                                'settings.logo_dark_description',
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-3 h-28 overflow-hidden rounded-lg border bg-zinc-950">
+                                        {logoDarkPreview ? (
+                                            <img
+                                                src={
+                                                    logoDarkPreview
+                                                }
+                                                alt={t(
+                                                    'settings.logo_dark',
+                                                )}
+                                                className="h-full object-cover object-center"
+                                                style={{
+                                                    width:
+                                                        `${form.data.logo_size}%`,
+                                                }}
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-zinc-400">
+                                                {t(
+                                                    'settings.no_logo',
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-3 space-y-2">
+                                        <label className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium hover:bg-muted">
+                                            <Upload className="size-3.5" />
+
+                                            {t(
+                                                'settings.select_image',
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/webp"
+                                                className="hidden"
+                                                disabled={
+                                                    !can.update ||
+                                                    form.processing
+                                                }
+                                                onChange={(event) => {
+                                                    const file =
+                                                        event.target.files?.[
+                                                            0
+                                                        ] ??
+                                                        null;
+
+                                                    form.setData(
+                                                        'logo_dark',
+                                                        file,
+                                                    );
+
+                                                    if (file) {
+                                                        form.setData(
+                                                            'remove_logo_dark',
+                                                            false,
+                                                        );
+                                                    }
+
+                                                    event.currentTarget.value =
+                                                        '';
+                                                }}
+                                            />
+                                        </label>
+
+                                        {logoDarkPreview && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    form.setData(
+                                                        'logo_dark',
+                                                        null,
+                                                    );
+
+                                                    form.setData(
+                                                        'remove_logo_dark',
+                                                        true,
+                                                    );
+                                                }}
+                                                disabled={
+                                                    !can.update ||
+                                                    form.processing
+                                                }
+                                                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                            >
+                                                <X className="size-3.5" />
+
+                                                {t(
+                                                    'settings.remove_image',
+                                                )}
+                                            </button>
+                                        )}
+
+                                        {form.errors.logo_dark && (
+                                            <p className="text-xs text-destructive">
+                                                {
+                                                    form.errors.logo_dark
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Favicon */}
+
+                                <div className="min-w-0 rounded-xl border p-4">
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            {t(
+                                                'settings.favicon',
+                                            )}
+                                        </p>
+
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {t(
+                                                'settings.favicon_description',
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-3 flex h-24 items-center justify-center overflow-hidden rounded-lg border bg-background p-4">
+                                        {faviconPreview ? (
+                                            <img
+                                                src={
+                                                    faviconPreview
+                                                }
+                                                alt={t(
+                                                    'settings.favicon',
+                                                )}
+                                                className="size-12 object-contain"
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">
+                                                {t(
+                                                    'settings.no_favicon',
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-3 space-y-2">
+                                        <label className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium hover:bg-muted">
+                                            <Upload className="size-3.5" />
+
+                                            {t(
+                                                'settings.select_image',
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                accept=".png,.jpg,.jpeg,.webp,.ico,image/x-icon"
+                                                className="hidden"
+                                                disabled={
+                                                    !can.update ||
+                                                    form.processing
+                                                }
+                                                onChange={(event) => {
+                                                    const file =
+                                                        event.target.files?.[
+                                                            0
+                                                        ] ??
+                                                        null;
+
+                                                    form.setData(
+                                                        'favicon',
+                                                        file,
+                                                    );
+
+                                                    if (file) {
+                                                        form.setData(
+                                                            'remove_favicon',
+                                                            false,
+                                                        );
+                                                    }
+
+                                                    event.currentTarget.value =
+                                                        '';
+                                                }}
+                                            />
+                                        </label>
+
+                                        {faviconPreview && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    form.setData(
+                                                        'favicon',
+                                                        null,
+                                                    );
+
+                                                    form.setData(
+                                                        'remove_favicon',
+                                                        true,
+                                                    );
+                                                }}
+                                                disabled={
+                                                    !can.update ||
+                                                    form.processing
+                                                }
+                                                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                            >
+                                                <X className="size-3.5" />
+
+                                                {t(
+                                                    'settings.remove_image',
+                                                )}
+                                            </button>
+                                        )}
+
+                                        {form.errors.favicon && (
+                                            <p className="text-xs text-destructive">
+                                                {
+                                                    form.errors.favicon
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 rounded-xl border p-4">
+                                <div className="flex flex-col gap-3 min-[640px]:flex-row min-[640px]:items-center min-[640px]:justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            {t(
+                                                'settings.logo_size',
+                                            )}
+                                        </p>
+
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {t(
+                                                'settings.logo_size_description',
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <span className="shrink-0 rounded-md border bg-background px-2.5 py-1 font-mono text-xs">
+                                        {
+                                            form.data.logo_size
+                                        }%
+                                    </span>
+                                </div>
+
+                                <div className="mt-4 flex items-center gap-3">
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                        {t(
+                                            'settings.logo_size.small',
+                                        )}
+                                    </span>
+
+                                    <input
+                                        type="range"
+                                        min={50}
+                                        max={100}
+                                        step={5}
+                                        value={
+                                            form.data.logo_size
+                                        }
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'logo_size',
+                                                Number(
+                                                    event.target.value,
+                                                ),
+                                            )
+                                        }
+                                        disabled={
+                                            !can.update ||
+                                            form.processing
+                                        }
+                                        className="h-2 min-w-0 flex-1 cursor-pointer accent-primary disabled:cursor-not-allowed disabled:opacity-60"
+                                    />
+
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                        {t(
+                                            'settings.logo_size.large',
+                                        )}
+                                    </span>
+                                </div>
+
+                                {form.errors.logo_size && (
+                                    <p className="mt-2 text-xs text-destructive">
+                                        {
+                                            form.errors.logo_size
+                                        }
+                                    </p>
+                                )}
+                            </div>
+
+                            <p className="mt-4 text-xs text-muted-foreground">
+                                {t(
+                                    'settings.branding_hint',
+                                )}
+                            </p>
                         </div>
                     </section>
 

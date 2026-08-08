@@ -455,7 +455,7 @@ Route::middleware([
                 ->name('settings.system.index');
 
 
-            Route::put(
+            Route::post(
                 '/configuracion/sistema',
                 [
                     SystemSettingsController::class,
