@@ -286,7 +286,7 @@ Ajusta `8.3` a la versión instalada en el servidor.
 ## 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git civan
+https://github.com/igCarlos/civan.git
 cd civan
 ```
 
