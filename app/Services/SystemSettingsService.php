@@ -23,6 +23,14 @@ class SystemSettingsService
                     [
                         'system.panel_name',
                         'system.short_name',
+                        'system.primary_color',
+                        'system.sidebar_color',
+                        'system.sidebar_shape',
+                        'system.background_color_mode',
+                        'system.background_color',
+                        'system.card_color_mode',
+                        'system.card_color',
+                        'system.card_style',
                         'system.timezone',
                         'system.locale',
                         'system.date_format',
@@ -48,13 +56,70 @@ class SystemSettingsService
                     'CIVAN'
                 ),
 
+            /*
+            |--------------------------------------------------------------------------
+            | Apariencia
+            |--------------------------------------------------------------------------
+            */
+
+            'primary_color' =>
+                (string) $values->get(
+                    'system.primary_color',
+                    '#18181B'
+                ),
+
+            'sidebar_color' =>
+                (string) $values->get(
+                    'system.sidebar_color',
+                    '#FAFAFA'
+                ),
+
+            'sidebar_shape' =>
+                (string) $values->get(
+                    'system.sidebar_shape',
+                    'normal'
+                ),
+
+            'background_color_mode' =>
+                (string) $values->get(
+                    'system.background_color_mode',
+                    'auto'
+                ),
+
+            'background_color' =>
+                (string) $values->get(
+                    'system.background_color',
+                    '#FFFFFF'
+                ),
+
+            'card_color_mode' =>
+                (string) $values->get(
+                    'system.card_color_mode',
+                    'auto'
+                ),
+
+            'card_color' =>
+                (string) $values->get(
+                    'system.card_color',
+                    '#FFFFFF'
+                ),
+
+            'card_style' =>
+                (string) $values->get(
+                    'system.card_style',
+                    'solid'
+                ),
+
+            /*
+            |--------------------------------------------------------------------------
+            | Regional
+            |--------------------------------------------------------------------------
+            */
+
             'timezone' =>
                 (string) $values->get(
                     'system.timezone',
-                    config(
-                        'app.timezone',
-                        'UTC'
-                    )
+                    'UTC'
                 ),
 
             'locale' =>

@@ -166,6 +166,9 @@ const eventLabelKeys: Record<
     audit_retention_update:
         'audit.event.audit_retention_update',
 
+    system_settings_update:
+        'audit.event.system_settings_update',
+
     page_view:
         'audit.event.page_view',
 };
@@ -233,6 +236,54 @@ const fieldLabelKeys: Record<
     permissions:
         'audit.field.permissions',
 
+    panel_name:
+        'audit.field.panel_name',
+
+    short_name:
+        'audit.field.short_name',
+
+    timezone:
+        'audit.field.timezone',
+
+    locale:
+        'audit.field.locale',
+
+    date_format:
+        'audit.field.date_format',
+
+    time_format:
+        'audit.field.time_format',
+
+    per_page:
+        'audit.field.per_page',
+
+    primary_color:
+        'audit.field.primary_color',
+
+    sidebar_color:
+        'audit.field.sidebar_color',
+
+    sidebar_shape:
+        'audit.field.sidebar_shape',
+
+    background_color_mode:
+        'audit.field.background_color_mode',
+
+    background_color:
+        'audit.field.background_color',
+
+    default_theme:
+        'audit.field.default_theme',
+
+    card_color_mode:
+        'audit.field.card_color_mode',
+
+    card_color:
+        'audit.field.card_color',
+
+    card_style:
+        'audit.field.card_style',
+
     created_count:
         'audit.field.created_count',
 
@@ -268,6 +319,36 @@ function getEventLabel(
     return key
         ? t(key)
         : event;
+}
+
+const descriptionLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    system_settings_update:
+        'audit.description.system_settings_update',
+};
+
+function getDescription(
+    log: AuditLog,
+    t: Translator,
+): string {
+    const key =
+        descriptionLabelKeys[
+            log.event
+        ];
+
+    if (key) {
+        return t(key);
+    }
+
+    return (
+        log.description ??
+        getEventLabel(
+            log.event,
+            t,
+        )
+    );
 }
 
 function getModuleLabel(
@@ -348,6 +429,22 @@ function formatValue(
             value,
             null,
             2,
+        );
+    }
+
+    if (
+        value === 'es'
+    ) {
+        return t(
+            'locale.es',
+        );
+    }
+
+    if (
+        value === 'en'
+    ) {
+        return t(
+            'locale.en',
         );
     }
 
@@ -1328,11 +1425,10 @@ export default function AuditIndex({
                                                             </div>
 
                                                             <p className="mt-1 text-sm">
-                                                                {log.description ??
-                                                                    getEventLabel(
-                                                                        log.event,
-                                                                        t,
-                                                                    )}
+                                                                {getDescription(
+                                                                    log,
+                                                                    t,
+                                                                )}
                                                             </p>
                                                         </div>
 

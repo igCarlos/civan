@@ -42,13 +42,70 @@ class SystemSettingsController extends Controller
                             'CIVAN'
                         ),
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Apariencia
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'primary_color' =>
+                        SystemSetting::valueOf(
+                            'system.primary_color',
+                            '#18181B'
+                        ),
+
+                    'sidebar_color' =>
+                        SystemSetting::valueOf(
+                            'system.sidebar_color',
+                            '#FAFAFA'
+                        ),
+
+                    'sidebar_shape' =>
+                        SystemSetting::valueOf(
+                            'system.sidebar_shape',
+                            'normal'
+                        ),
+
+                    'background_color_mode' =>
+                        SystemSetting::valueOf(
+                            'system.background_color_mode',
+                            'auto'
+                        ),
+
+                    'background_color' =>
+                        SystemSetting::valueOf(
+                            'system.background_color',
+                            '#FFFFFF'
+                        ),
+
+                    'card_color_mode' =>
+                        SystemSetting::valueOf(
+                            'system.card_color_mode',
+                            'auto'
+                        ),
+
+                    'card_color' =>
+                        SystemSetting::valueOf(
+                            'system.card_color',
+                            '#FFFFFF'
+                        ),
+
+                    'card_style' =>
+                        SystemSetting::valueOf(
+                            'system.card_style',
+                            'solid'
+                        ),
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Regional
+                    |--------------------------------------------------------------------------
+                    */
+
                     'timezone' =>
                         SystemSetting::valueOf(
                             'system.timezone',
-                            config(
-                                'app.timezone',
-                                'UTC'
-                            )
+                            'UTC'
                         ),
 
                     'locale' =>
@@ -166,6 +223,54 @@ class SystemSettingsController extends Controller
                     'max:30',
                 ],
 
+                'primary_color' => [
+                    'required',
+                    'string',
+                    'regex:/^#[0-9A-Fa-f]{6}$/',
+                ],
+
+                'sidebar_color' => [
+                    'required',
+                    'string',
+                    'regex:/^#[0-9A-Fa-f]{6}$/',
+                ],
+
+                'sidebar_shape' => [
+                    'required',
+                    'string',
+                    'in:normal,rounded',
+                ],
+
+                'background_color_mode' => [
+                    'required',
+                    'string',
+                    'in:auto,custom',
+                ],
+
+                'background_color' => [
+                    'required',
+                    'string',
+                    'regex:/^#[0-9A-Fa-f]{6}$/',
+                ],
+
+                'card_color_mode' => [
+                    'required',
+                    'string',
+                    'in:auto,custom',
+                ],
+
+                'card_color' => [
+                    'required',
+                    'string',
+                    'regex:/^#[0-9A-Fa-f]{6}$/',
+                ],
+
+                'card_style' => [
+                    'required',
+                    'string',
+                    'in:solid,glass',
+                ],
+
                 'timezone' => [
                     'required',
                     'string',
@@ -199,6 +304,32 @@ class SystemSettingsController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Normalizar color
+        |--------------------------------------------------------------------------
+        */
+
+        $validated['primary_color'] =
+            strtoupper(
+                $validated['primary_color']
+            );
+
+        $validated['sidebar_color'] =
+            strtoupper(
+                $validated['sidebar_color']
+            );
+
+        $validated['background_color'] =
+            strtoupper(
+                $validated['background_color']
+            );
+
+        $validated['card_color'] =
+            strtoupper(
+                $validated['card_color']
+            );
+
+        /*
+        |--------------------------------------------------------------------------
         | Estado anterior
         |--------------------------------------------------------------------------
         */
@@ -216,13 +347,58 @@ class SystemSettingsController extends Controller
                     'CIVAN'
                 ),
 
+            'primary_color' =>
+                SystemSetting::valueOf(
+                    'system.primary_color',
+                    '#18181B'
+                ),
+
+            'sidebar_color' =>
+                SystemSetting::valueOf(
+                    'system.sidebar_color',
+                    '#FAFAFA'
+                ),
+
+            'sidebar_shape' =>
+                SystemSetting::valueOf(
+                    'system.sidebar_shape',
+                    'normal'
+                ),
+
+            'background_color_mode' =>
+                SystemSetting::valueOf(
+                    'system.background_color_mode',
+                    'auto'
+                ),
+
+            'background_color' =>
+                SystemSetting::valueOf(
+                    'system.background_color',
+                    '#FFFFFF'
+                ),
+
+            'card_color_mode' =>
+                SystemSetting::valueOf(
+                    'system.card_color_mode',
+                    'auto'
+                ),
+
+            'card_color' =>
+                SystemSetting::valueOf(
+                    'system.card_color',
+                    '#FFFFFF'
+                ),
+
+            'card_style' =>
+                SystemSetting::valueOf(
+                    'system.card_style',
+                    'solid'
+                ),
+
             'timezone' =>
                 SystemSetting::valueOf(
                     'system.timezone',
-                    config(
-                        'app.timezone',
-                        'UTC'
-                    )
+                    'UTC'
                 ),
 
             'locale' =>
@@ -274,6 +450,62 @@ class SystemSettingsController extends Controller
         );
 
         SystemSetting::put(
+            'system.primary_color',
+            $validated['primary_color'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.sidebar_color',
+            $validated['sidebar_color'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.sidebar_shape',
+            $validated['sidebar_shape'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.background_color_mode',
+            $validated['background_color_mode'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.background_color',
+            $validated['background_color'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.card_color_mode',
+            $validated['card_color_mode'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.card_color',
+            $validated['card_color'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
+            'system.card_style',
+            $validated['card_style'],
+            'system',
+            'string'
+        );
+
+        SystemSetting::put(
             'system.timezone',
             $validated['timezone'],
             'system',
@@ -320,6 +552,30 @@ class SystemSettingsController extends Controller
 
             'short_name' =>
                 $validated['short_name'],
+
+            'primary_color' =>
+                $validated['primary_color'],
+
+            'sidebar_color' =>
+                $validated['sidebar_color'],
+
+            'sidebar_shape' =>
+                $validated['sidebar_shape'],
+
+            'background_color_mode' =>
+                $validated['background_color_mode'],
+
+            'background_color' =>
+                $validated['background_color'],
+
+            'card_color_mode' =>
+                $validated['card_color_mode'],
+
+            'card_color' =>
+                $validated['card_color'],
+
+            'card_style' =>
+                $validated['card_style'],
 
             'timezone' =>
                 $validated['timezone'],

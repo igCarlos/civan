@@ -1,0 +1,441 @@
+/*
+|--------------------------------------------------------------------------
+| CIVAN · Sidebar dinámico
+|--------------------------------------------------------------------------
+|
+| El componente Sidebar del starter kit puede tener capas internas que
+| conservan el fondo original. Estas reglas hacen que el color elegido en
+| Configuración → Sistema → Apariencia se aplique al sidebar REAL y no solo
+| al texto.
+|
+*/
+
+/* Fondo real del sidebar (compatibilidad con distintas versiones de shadcn). */
+[data-sidebar="sidebar"],
+[data-slot="sidebar-inner"] {
+    background-color: var(
+        --system-sidebar,
+        var(--sidebar)
+    ) !important;
+
+    color: var(
+        --system-sidebar-foreground,
+        var(--sidebar-foreground)
+    ) !important;
+
+    border-color: var(
+        --system-sidebar-border,
+        var(--sidebar-border)
+    ) !important;
+}
+
+/* Header, contenido y footer deben ser transparentes para heredar el fondo. */
+[data-sidebar="sidebar"] [data-slot="sidebar-header"],
+[data-sidebar="sidebar"] [data-slot="sidebar-content"],
+[data-sidebar="sidebar"] [data-slot="sidebar-footer"],
+[data-slot="sidebar-inner"] [data-slot="sidebar-header"],
+[data-slot="sidebar-inner"] [data-slot="sidebar-content"],
+[data-slot="sidebar-inner"] [data-slot="sidebar-footer"] {
+    background-color: transparent !important;
+}
+
+/* Títulos de grupos: visibles tanto en fondo claro como oscuro. */
+[data-sidebar="sidebar"] [data-slot="sidebar-group-label"],
+[data-slot="sidebar-inner"] [data-slot="sidebar-group-label"] {
+    color: color-mix(
+        in srgb,
+        var(
+            --system-sidebar-foreground,
+            var(--sidebar-foreground)
+        ) 68%,
+        transparent
+    ) !important;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Elementos normales
+|--------------------------------------------------------------------------
+*/
+
+[data-sidebar="sidebar"]
+    [data-slot="sidebar-menu-button"]:not([data-active="true"]),
+[data-sidebar="sidebar"]
+    [data-sidebar="menu-button"]:not([data-active="true"]),
+[data-slot="sidebar-inner"]
+    [data-slot="sidebar-menu-button"]:not([data-active="true"]),
+[data-slot="sidebar-inner"]
+    [data-sidebar="menu-button"]:not([data-active="true"]) {
+    color: var(
+        --system-sidebar-foreground,
+        var(--sidebar-foreground)
+    ) !important;
+}
+
+/* Hover suave calculado desde el color actual del sidebar. */
+[data-sidebar="sidebar"]
+    [data-slot="sidebar-menu-button"]:not([data-active="true"]):hover,
+[data-sidebar="sidebar"]
+    [data-sidebar="menu-button"]:not([data-active="true"]):hover,
+[data-slot="sidebar-inner"]
+    [data-slot="sidebar-menu-button"]:not([data-active="true"]):hover,
+[data-slot="sidebar-inner"]
+    [data-sidebar="menu-button"]:not([data-active="true"]):hover {
+    background-color: color-mix(
+        in srgb,
+        var(
+            --system-sidebar-foreground,
+            var(--sidebar-foreground)
+        ) 8%,
+        transparent
+    ) !important;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Elemento activo
+|--------------------------------------------------------------------------
+*/
+
+[data-sidebar="sidebar"]
+    [data-slot="sidebar-menu-button"][data-active="true"],
+[data-sidebar="sidebar"]
+    [data-sidebar="menu-button"][data-active="true"],
+[data-slot="sidebar-inner"]
+    [data-slot="sidebar-menu-button"][data-active="true"],
+[data-slot="sidebar-inner"]
+    [data-sidebar="menu-button"][data-active="true"] {
+    background-color: var(
+        --system-sidebar-accent,
+        var(--sidebar-accent)
+    ) !important;
+
+    color: var(
+        --system-sidebar-accent-foreground,
+        var(--sidebar-accent-foreground)
+    ) !important;
+}
+
+/* Los SVG siguen el color del texto. */
+[data-sidebar="sidebar"] svg,
+[data-slot="sidebar-inner"] svg {
+    color: currentColor;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Borde del sidebar
+|--------------------------------------------------------------------------
+*/
+
+[data-slot="sidebar-container"],
+[data-sidebar="sidebar"] {
+    border-color: var(
+        --system-sidebar-border,
+        var(--sidebar-border)
+    ) !important;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CIVAN · Cards personalizables (corregido)
+|--------------------------------------------------------------------------
+|
+| Nunca se modifica el token global --card.
+| CIVAN usa variables propias para que el color personalizado afecte
+| únicamente a las cards y pueda calcular correctamente el contraste.
+|
+*/
+
+html[data-civan-card-color-mode="custom"] .bg-card {
+    background-color: var(
+        --civan-card-base
+    ) !important;
+
+    color: var(
+        --civan-card-foreground
+    ) !important;
+
+    border-color: var(
+        --civan-card-border
+    ) !important;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Texto dentro de cards personalizadas
+|--------------------------------------------------------------------------
+*/
+
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    .text-muted-foreground {
+    color: var(
+        --civan-card-muted-foreground
+    ) !important;
+}
+
+/*
+ * Los encabezados, labels y textos sin una clase de color explícita
+ * heredan automáticamente --civan-card-foreground.
+ */
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    label,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    h1,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    h2,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    h3,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    h4,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    p {
+    color: inherit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Controles con fondo propio
+|--------------------------------------------------------------------------
+|
+| Inputs/selects suelen usar bg-background. Aunque estén dentro de una card
+| oscura deben conservar el color de texto normal del fondo del formulario,
+| evitando texto blanco sobre inputs blancos.
+|
+*/
+
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    input,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    select,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    textarea,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    .bg-background {
+    color: var(
+        --foreground
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Divisiones internas
+|--------------------------------------------------------------------------
+*/
+
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    > .border-b,
+html[data-civan-card-color-mode="custom"]
+    .bg-card
+    > .border-t {
+    border-color: var(
+        --civan-card-border
+    ) !important;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Glassmorphism
+|--------------------------------------------------------------------------
+*/
+
+html[data-civan-card-style="glass"] .bg-card {
+    background-color: color-mix(
+        in srgb,
+        var(
+            --civan-card-base,
+            var(--card)
+        ) 72%,
+        transparent
+    ) !important;
+
+    color: var(
+        --civan-card-foreground,
+        var(--card-foreground)
+    ) !important;
+
+    -webkit-backdrop-filter:
+        blur(18px)
+        saturate(145%);
+
+    backdrop-filter:
+        blur(18px)
+        saturate(145%);
+
+    border-color: color-mix(
+        in srgb,
+        var(
+            --civan-card-foreground,
+            var(--card-foreground)
+        ) 14%,
+        transparent
+    ) !important;
+
+    box-shadow:
+        0 10px 32px
+            color-mix(
+                in srgb,
+                var(
+                    --civan-card-foreground,
+                    var(--card-foreground)
+                ) 8%,
+                transparent
+            ),
+        inset 0 1px 0
+            color-mix(
+                in srgb,
+                white 20%,
+                transparent
+            );
+}
+
+/*
+ * Texto secundario en glass personalizado.
+ */
+html[data-civan-card-style="glass"]
+    .bg-card
+    .text-muted-foreground {
+    color: var(
+        --civan-card-muted-foreground,
+        var(--muted-foreground)
+    ) !important;
+}
+
+/*
+ * Cards anidadas reciben una capa ligeramente más opaca para distinguirse.
+ */
+html[data-civan-card-style="glass"]
+    .bg-card
+    .bg-card {
+    background-color: color-mix(
+        in srgb,
+        var(
+            --civan-card-base,
+            var(--card)
+        ) 84%,
+        transparent
+    ) !important;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Transiciones
+|--------------------------------------------------------------------------
+*/
+
+.bg-card {
+    transition:
+        background-color 180ms ease,
+        color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| CIVAN · Forma del sidebar
+|--------------------------------------------------------------------------
+*/
+
+@media (min-width: 768px) {
+    html[data-civan-sidebar-shape="normal"]
+        [data-slot="sidebar-inner"],
+    html[data-civan-sidebar-shape="normal"]
+        [data-sidebar="sidebar"] {
+        border-radius: 0 !important;
+        overflow: hidden;
+    }
+
+    html[data-civan-sidebar-shape="rounded"]
+        [data-slot="sidebar-inner"],
+    html[data-civan-sidebar-shape="rounded"]
+        [data-sidebar="sidebar"] {
+        border-radius: 1rem !important;
+        overflow: hidden;
+
+        box-shadow:
+            0 8px 28px
+                color-mix(
+                    in srgb,
+                    var(
+                        --system-sidebar-foreground,
+                        var(--sidebar-foreground)
+                    ) 10%,
+                    transparent
+                );
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| CIVAN · Fondo personalizado
+|--------------------------------------------------------------------------
+|
+| La utilidad TypeScript actualiza los tokens --background / --foreground.
+| Estas reglas fuerzan las capas principales del Starter Kit a seguirlos.
+|
+*/
+
+html[data-civan-background-color-mode="custom"],
+html[data-civan-background-color-mode="custom"] body,
+html[data-civan-background-color-mode="custom"]
+    [data-slot="sidebar-inset"] {
+    background-color: var(
+        --system-background,
+        var(--background)
+    ) !important;
+
+    color: var(
+        --system-background-foreground,
+        var(--foreground)
+    );
+}
+
+html[data-civan-background-color-mode="custom"]
+    [data-slot="sidebar-inset"]
+    > header {
+    background-color: color-mix(
+        in srgb,
+        var(
+            --system-background,
+            var(--background)
+        ) 92%,
+        transparent
+    ) !important;
+
+    border-color: var(
+        --system-background-border,
+        var(--border)
+    ) !important;
+
+    -webkit-backdrop-filter:
+        blur(12px);
+
+    backdrop-filter:
+        blur(12px);
+}
+
+/*
+ * Transición suave durante la vista previa.
+ */
+body,
+[data-slot="sidebar-inset"] {
+    transition:
+        background-color 180ms ease,
+        color 180ms ease;
+}

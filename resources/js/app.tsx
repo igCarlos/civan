@@ -1,4 +1,5 @@
 import '../css/app.css';
+import '../css/civan-dynamic-theme.css';
 
 import {
     createInertiaApp,
@@ -11,6 +12,10 @@ import { route as routeFn } from 'ziggy-js';
 
 import { initializeTheme } from './hooks/use-appearance';
 
+import {
+    applySystemAppearance,
+} from './lib/system-theme';
+
 declare global {
     const route: typeof routeFn;
 }
@@ -18,41 +23,61 @@ declare global {
 type SharedPageProps = {
     system?: {
         panel_name?: string;
+        primary_color?: string;
+        sidebar_color?: string;
+        sidebar_shape?: string;
+        background_color_mode?: string;
+        background_color?: string;
+        card_color_mode?: string;
+        card_color?: string;
+        card_style?: string;
     };
 };
-
-/*
-|--------------------------------------------------------------------------
-| Nombre del panel
-|--------------------------------------------------------------------------
-|
-| Se usa VITE_APP_NAME únicamente como respaldo. Cuando Laravel comparte
-| system.panel_name mediante Inertia, ese valor pasa a ser el nombre oficial
-| mostrado en las pestañas del navegador.
-|
-*/
 
 let appName =
     import.meta.env.VITE_APP_NAME ||
     'CIVAN Panel';
 
-createInertiaApp({
-    /*
-    |--------------------------------------------------------------------------
-    | Título del navegador
-    |--------------------------------------------------------------------------
-    */
+/**
+ * Aplicar toda la apariencia global enviada por Laravel.
+ */
+function applyAppearance(
+    system:
+        | SharedPageProps['system']
+        | undefined,
+): void {
+    applySystemAppearance({
+        primary_color:
+            system?.primary_color,
 
+        sidebar_color:
+            system?.sidebar_color,
+
+        sidebar_shape:
+            system?.sidebar_shape,
+
+        background_color_mode:
+            system?.background_color_mode,
+
+        background_color:
+            system?.background_color,
+
+        card_color_mode:
+            system?.card_color_mode,
+
+        card_color:
+            system?.card_color,
+
+        card_style:
+            system?.card_style,
+    });
+}
+
+createInertiaApp({
     title: (title) =>
         title
             ? `${title} | ${appName}`
             : appName,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resolver páginas
-    |--------------------------------------------------------------------------
-    */
 
     resolve: (name) =>
         resolvePageComponent(
@@ -62,26 +87,20 @@ createInertiaApp({
             ),
         ),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Inicializar aplicación
-    |--------------------------------------------------------------------------
-    */
-
     setup({
         el,
         App,
         props,
     }) {
-        /*
-        |--------------------------------------------------------------------------
-        | Obtener nombre inicial desde system_settings
-        |--------------------------------------------------------------------------
-        */
-
         const initialProps =
             props.initialPage.props as
                 SharedPageProps;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Nombre inicial
+        |--------------------------------------------------------------------------
+        */
 
         if (
             initialProps.system?.panel_name
@@ -92,13 +111,40 @@ createInertiaApp({
 
         /*
         |--------------------------------------------------------------------------
-        | Mantener actualizado el nombre al navegar con Inertia
+        | Apariencia personal claro / oscuro
         |--------------------------------------------------------------------------
         |
-        | Esto también permite que, si el administrador cambia el nombre del
-        | panel desde Configuración del sistema, la pestaña use el nuevo nombre
-        | sin depender de VITE_APP_NAME.
+        | Primero dejamos que el Starter Kit determine claro/oscuro.
+        | Luego CIVAN aplica sus personalizaciones globales.
         |
+        | Esto es importante para:
+        | - fondo automático
+        | - cards automáticas
+        | - fondo personalizado
+        | - sidebar
+        |
+        */
+
+        initializeTheme();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Apariencia global guardada
+        |--------------------------------------------------------------------------
+        |
+        | ESTA LLAMADA es la que hace que los valores guardados en
+        | system_settings vuelvan a aplicarse después de F5 / Ctrl+R.
+        |
+        */
+
+        applyAppearance(
+            initialProps.system,
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Navegaciones Inertia
+        |--------------------------------------------------------------------------
         */
 
         router.on(
@@ -107,6 +153,26 @@ createInertiaApp({
                 const pageProps =
                     event.detail.page.props as
                         SharedPageProps;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reaplicar apariencia
+                |--------------------------------------------------------------------------
+                |
+                | También restaura la configuración guardada si el administrador
+                | hizo cambios de vista previa pero salió sin guardar.
+                |
+                */
+
+                applyAppearance(
+                    pageProps.system,
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Nombre del panel
+                |--------------------------------------------------------------------------
+                */
 
                 const nextAppName =
                     pageProps.system?.panel_name;
@@ -123,16 +189,6 @@ createInertiaApp({
 
                 appName =
                     nextAppName;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Corregir inmediatamente el título actual
-                |--------------------------------------------------------------------------
-                |
-                | Si Head se renderizó antes del evento navigate, sustituimos
-                | el nombre anterior para que el cambio sea visible al instante.
-                |
-                */
 
                 const pipeSuffix =
                     ` | ${previousAppName}`;
@@ -184,6 +240,3 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
-
-// This will set light / dark mode on load...
-initializeTheme();
