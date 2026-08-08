@@ -7,13 +7,15 @@ test('guests are redirected to the login page', function () {
     $this->get('/dashboard')->assertRedirect('/login');
 });
 
-test('authenticated users can visit the dashboard', function () {
+test('authenticated active users can visit the dashboard', function () {
     $role = Role::firstOrCreate([
         'name' => 'administrador',
         'guard_name' => 'web',
     ]);
 
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'status' => 'active',
+    ]);
 
     $user->assignRole($role);
 
