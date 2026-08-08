@@ -2119,4 +2119,4 @@ Si todos los comandos terminan sin errores, la instalación está preparada para
 
 ---
 
-**CIVAN** — Panel de administración y gestión de hosting en desarrollo.
+**CIVAN** — Panel de administración.
