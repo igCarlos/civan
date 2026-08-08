@@ -763,7 +763,7 @@ Mantén ambas terminales abiertas.
 Ejemplo de ubicación:
 
 ```text
-C:\xampp\htdocs\appwebs\civan
+C:\xampp\htdocs\civan
 ```
 
 ## 1. Verificar PHP
@@ -842,7 +842,7 @@ utf8mb4_unicode_ci
 ## 4. Instalar proyecto
 
 ```powershell
-cd C:\xampp\htdocs\appwebs\civan
+cd C:\xampp\htdocs\civan
 
 composer install
 npm install
@@ -969,7 +969,7 @@ Ejemplo:
 
 ```bash
 cd /var/www
-sudo git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git civan
+sudo git clone https://github.com/igCarlos/civan.git
 sudo chown -R $USER:$USER /var/www/civan
 cd /var/www/civan
 ```
@@ -2012,7 +2012,7 @@ civan/
 Para una instalación local limpia:
 
 ```bash
-git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git civan
+git clone https://github.com/igCarlos/civan.git
 cd civan
 
 composer install
@@ -2054,7 +2054,7 @@ http://localhost:8000
 # Instalación resumida de producción
 
 ```bash
-git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git /var/www/civan
+git clone https://github.com/igCarlos/civan.git /var/www/civan
 
 cd /var/www/civan
 
