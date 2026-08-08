@@ -8,6 +8,7 @@ import {
 
 import { useState } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -39,19 +40,6 @@ interface Props {
 
 /*
 |--------------------------------------------------------------------------
-| Breadcrumbs
-|--------------------------------------------------------------------------
-*/
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Permisos',
-        href: '/dashboard/permisos',
-    },
-];
-
-/*
-|--------------------------------------------------------------------------
 | Página
 |--------------------------------------------------------------------------
 */
@@ -60,6 +48,15 @@ export default function PermissionsIndex({
     modules,
     can,
 }: Props) {
+    const { t } = useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t('permissions.title'),
+            href: '/dashboard/permisos',
+        },
+    ];
+
     /*
     |--------------------------------------------------------------------------
     | Estado de sincronización
@@ -68,6 +65,35 @@ export default function PermissionsIndex({
 
     const [syncing, setSyncing] =
         useState(false);
+
+    const moduleLabel = (
+        module: string,
+    ): string => {
+        switch (module) {
+            case 'authentication':
+                return t('modules.authentication');
+            case 'users':
+                return t('modules.users');
+            case 'roles':
+                return t('modules.roles');
+            case 'permissions':
+                return t('modules.permissions');
+            case 'audit_logs':
+                return t('modules.audit_logs');
+            case 'settings':
+                return t('modules.settings');
+            case 'websites':
+                return t('modules.websites');
+            case 'domains':
+                return t('modules.domains');
+            case 'databases':
+                return t('modules.databases');
+            case 'server':
+                return t('modules.server');
+            default:
+                return module;
+        }
+    };
 
     /*
     |--------------------------------------------------------------------------
@@ -82,7 +108,9 @@ export default function PermissionsIndex({
 
         const confirmed =
             window.confirm(
-                '¿Deseas buscar y crear los permisos faltantes del sistema?',
+                t(
+                    'permissions.sync_confirm',
+                ),
             );
 
         if (!confirmed) {
@@ -106,25 +134,42 @@ export default function PermissionsIndex({
         );
     };
 
+    const totalPermissions =
+        modules.reduce(
+            (
+                total,
+                module,
+            ) =>
+                total +
+                module.count,
+            0,
+        );
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
         >
-            <Head title="Permisos" />
+            <Head
+                title={t(
+                    'permissions.title',
+                )}
+            />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-
                 {/* Encabezado */}
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            Permisos
+                            {t(
+                                'permissions.title',
+                            )}
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Permisos detectados y
-                            registrados en CIVAN.
+                            {t(
+                                'permissions.description',
+                            )}
                         </p>
                     </div>
 
@@ -150,8 +195,12 @@ export default function PermissionsIndex({
                             />
 
                             {syncing
-                                ? 'Sincronizando...'
-                                : 'Sincronizar permisos'}
+                                ? t(
+                                      'permissions.syncing',
+                                  )
+                                : t(
+                                      'permissions.sync',
+                                  )}
                         </button>
                     )}
                 </div>
@@ -162,25 +211,25 @@ export default function PermissionsIndex({
                     <span>
                         {modules.length}{' '}
                         {modules.length === 1
-                            ? 'módulo detectado'
-                            : 'módulos detectados'}
+                            ? t(
+                                  'permissions.module_singular',
+                              )
+                            : t(
+                                  'permissions.module_plural',
+                              )}
                     </span>
 
-                    <span>
-                        •
-                    </span>
+                    <span>•</span>
 
                     <span>
-                        {modules.reduce(
-                            (
-                                total,
-                                module,
-                            ) =>
-                                total +
-                                module.count,
-                            0,
-                        )}{' '}
-                        permisos registrados
+                        {totalPermissions}{' '}
+                        {totalPermissions === 1
+                            ? t(
+                                  'permissions.registered_singular',
+                              )
+                            : t(
+                                  'permissions.registered_plural',
+                              )}
                     </span>
                 </div>
 
@@ -204,10 +253,10 @@ export default function PermissionsIndex({
                                         </div>
 
                                         <div>
-                                            <h2 className="font-semibold capitalize">
-                                                {
-                                                    module.module
-                                                }
+                                            <h2 className="font-semibold">
+                                                {moduleLabel(
+                                                    module.module,
+                                                )}
                                             </h2>
 
                                             <p className="text-xs text-muted-foreground">
@@ -216,8 +265,12 @@ export default function PermissionsIndex({
                                                 }{' '}
                                                 {module.count ===
                                                 1
-                                                    ? 'permiso'
-                                                    : 'permisos'}
+                                                    ? t(
+                                                          'permissions.permission_singular',
+                                                      )
+                                                    : t(
+                                                          'permissions.permission_plural',
+                                                      )}
                                             </p>
                                         </div>
                                     </div>
@@ -259,14 +312,15 @@ export default function PermissionsIndex({
                         <KeyRound className="mx-auto mb-3 size-8 text-muted-foreground" />
 
                         <p className="font-medium">
-                            No existen permisos
+                            {t(
+                                'permissions.empty_title',
+                            )}
                         </p>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Ejecuta el
-                            sincronizador para
-                            generar los permisos
-                            según tus modelos.
+                            {t(
+                                'permissions.empty_description',
+                            )}
                         </p>
 
                         {can.sync && (
@@ -289,8 +343,12 @@ export default function PermissionsIndex({
                                 />
 
                                 {syncing
-                                    ? 'Sincronizando...'
-                                    : 'Sincronizar permisos'}
+                                    ? t(
+                                          'permissions.syncing',
+                                      )
+                                    : t(
+                                          'permissions.sync',
+                                      )}
                             </button>
                         )}
                     </div>

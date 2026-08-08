@@ -11,6 +11,7 @@ import {
     Users,
 } from 'lucide-react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -32,21 +33,23 @@ interface Props {
     };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Roles',
-        href: '/dashboard/roles',
-    },
-];
-
 export default function RolesIndex({
     roles,
     can,
 }: Props) {
+    const { t } = useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t('roles.title'),
+            href: '/dashboard/roles',
+        },
+    ];
+
     const removeRole = (role: Role) => {
         if (
             !window.confirm(
-                `¿Eliminar el rol "${role.name}"?`,
+                `${t('roles.delete_confirm')} "${role.name}"?`,
             )
         ) {
             return;
@@ -62,19 +65,17 @@ export default function RolesIndex({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Roles" />
+            <Head title={t('roles.title')} />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold">
-                            Roles
+                            {t('roles.title')}
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Administra los roles y los
-                            permisos de acceso.
+                            {t('roles.description')}
                         </p>
                     </div>
 
@@ -85,7 +86,7 @@ export default function RolesIndex({
                         >
                             <Plus className="size-4" />
 
-                            Nuevo rol
+                            {t('roles.new')}
                         </Link>
                     )}
                 </div>
@@ -98,7 +99,6 @@ export default function RolesIndex({
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-center gap-3">
-
                                     <div className="flex size-11 items-center justify-center rounded-lg bg-primary/10">
                                         <ShieldCheck className="size-5 text-primary" />
                                     </div>
@@ -110,7 +110,9 @@ export default function RolesIndex({
 
                                         {role.protected && (
                                             <span className="text-xs text-muted-foreground">
-                                                Rol protegido
+                                                {t(
+                                                    'roles.protected',
+                                                )}
                                             </span>
                                         )}
                                     </div>
@@ -128,7 +130,7 @@ export default function RolesIndex({
                                     </div>
 
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Usuarios
+                                        {t('roles.users')}
                                     </p>
                                 </div>
 
@@ -138,7 +140,9 @@ export default function RolesIndex({
                                     </div>
 
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Permisos
+                                        {t(
+                                            'roles.permissions',
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -149,22 +153,27 @@ export default function RolesIndex({
                                         href={`/dashboard/roles/${role.id}/editar`}
                                         className="inline-flex h-9 flex-1 items-center justify-center rounded-md border text-sm font-medium hover:bg-muted"
                                     >
-                                        Administrar
+                                        {t('roles.manage')}
                                     </Link>
                                 )}
 
                                 {can.delete &&
                                     !role.protected && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            removeRole(role)
-                                        }
-                                        className="inline-flex size-9 items-center justify-center rounded-md border text-red-500 hover:bg-red-500/10"
-                                    >
-                                        <Trash2 className="size-4" />
-                                    </button>
-                                )}
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                removeRole(
+                                                    role,
+                                                )
+                                            }
+                                            className="inline-flex size-9 items-center justify-center rounded-md border text-red-500 hover:bg-red-500/10"
+                                            title={t(
+                                                'common.delete',
+                                            )}
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </button>
+                                    )}
                             </div>
                         </div>
                     ))}

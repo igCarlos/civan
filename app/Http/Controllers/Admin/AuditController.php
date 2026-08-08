@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\SystemDateTimeService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -14,10 +15,14 @@ class AuditController extends Controller
     /**
      * Listado general de auditoría.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        SystemDateTimeService $dateTime
+    ): Response {
         abort_unless(
-            $request->user()->can('audit_logs.view'),
+            $request->user()->can(
+                'audit_logs.view'
+            ),
             403
         );
 
@@ -28,23 +33,62 @@ class AuditController extends Controller
         */
 
         $search = trim(
-            (string) $request->input('search', '')
+            (string) $request->input(
+                'search',
+                ''
+            )
         );
 
         $event = trim(
-            (string) $request->input('event', '')
+            (string) $request->input(
+                'event',
+                ''
+            )
         );
 
         $module = trim(
-            (string) $request->input('module', '')
+            (string) $request->input(
+                'module',
+                ''
+            )
         );
 
-        $actorId = $request->input('actor_id');
+        $actorId =
+            $request->input(
+                'actor_id'
+            );
 
-        $dateFrom = $request->input('date_from');
+        $dateFrom =
+            $request->input(
+                'date_from'
+            );
 
-        $dateTo = $request->input('date_to');
+        $dateTo =
+            $request->input(
+                'date_to'
+            );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Fechas del filtro: zona local -> UTC
+        |--------------------------------------------------------------------------
+        |
+        | El usuario elige días según system.timezone.
+        | La base de datos se consulta usando UTC.
+        |
+        */
+
+        $dateFromUtc =
+            $dateTime
+                ->localDayStartUtc(
+                    $dateFrom
+                );
+
+        $dateToUtc =
+            $dateTime
+                ->localDayEndUtc(
+                    $dateTo
+                );
 
         /*
         |--------------------------------------------------------------------------
@@ -53,54 +97,40 @@ class AuditController extends Controller
         */
 
         $logs = AuditLog::query()
-
             ->with([
                 'actor:id,name,email',
             ])
 
-            /*
-            |--------------------------------------------------------------------------
-            | Buscar
-            |--------------------------------------------------------------------------
-            */
-
             ->when(
                 $search !== '',
                 function ($query) use ($search) {
-
                     $query->where(
                         function ($query) use ($search) {
-
                             $query
                                 ->where(
                                     'description',
                                     'like',
                                     "%{$search}%"
                                 )
-
                                 ->orWhere(
                                     'event',
                                     'like',
                                     "%{$search}%"
                                 )
-
                                 ->orWhere(
                                     'module',
                                     'like',
                                     "%{$search}%"
                                 )
-
                                 ->orWhereHas(
                                     'actor',
                                     function ($query) use ($search) {
-
                                         $query
                                             ->where(
                                                 'name',
                                                 'like',
                                                 "%{$search}%"
                                             )
-
                                             ->orWhere(
                                                 'email',
                                                 'like',
@@ -113,13 +143,6 @@ class AuditController extends Controller
                 }
             )
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Evento
-            |--------------------------------------------------------------------------
-            */
-
             ->when(
                 $event !== '',
                 fn ($query) =>
@@ -128,13 +151,6 @@ class AuditController extends Controller
                         $event
                     )
             )
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Módulo
-            |--------------------------------------------------------------------------
-            */
 
             ->when(
                 $module !== '',
@@ -145,13 +161,6 @@ class AuditController extends Controller
                     )
             )
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Usuario
-            |--------------------------------------------------------------------------
-            */
-
             ->when(
                 $actorId,
                 fn ($query) =>
@@ -161,146 +170,118 @@ class AuditController extends Controller
                     )
             )
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Fecha desde
-            |--------------------------------------------------------------------------
-            */
-
             ->when(
-                $dateFrom,
+                $dateFromUtc,
                 fn ($query) =>
-                    $query->whereDate(
+                    $query->where(
                         'created_at',
                         '>=',
-                        $dateFrom
+                        $dateFromUtc
                     )
             )
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Fecha hasta
-            |--------------------------------------------------------------------------
-            */
-
             ->when(
-                $dateTo,
+                $dateToUtc,
                 fn ($query) =>
-                    $query->whereDate(
+                    $query->where(
                         'created_at',
                         '<=',
-                        $dateTo
+                        $dateToUtc
                     )
             )
 
             ->latest('created_at')
-
             ->paginate(20)
-
             ->withQueryString()
+            ->through(
+                function (
+                    AuditLog $log
+                ) use (
+                    $dateTime
+                ) {
+                    return [
+                        'id' =>
+                            $log->id,
 
-            ->through(function (AuditLog $log) {
+                        'event' =>
+                            $log->event,
 
-                return [
-                    'id' => $log->id,
+                        'module' =>
+                            $log->module,
 
-                    'event' => $log->event,
+                        /*
+                         * Se conserva como fallback.
+                         * La interfaz puede generar una descripción traducida
+                         * a partir del código del evento.
+                         */
+                        'description' =>
+                            $log->description,
 
-                    'module' => $log->module,
+                        'actor' =>
+                            $log->actor
+                                ? [
+                                    'id' =>
+                                        $log->actor->id,
 
-                    'description' =>
-                        $log->description,
+                                    'name' =>
+                                        $log->actor->name,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Actor
-                    |--------------------------------------------------------------------------
-                    */
+                                    'email' =>
+                                        $log->actor->email,
+                                ]
+                                : null,
 
-                    'actor' => $log->actor
-                        ? [
-                            'id' =>
-                                $log->actor->id,
+                        'subject_type' =>
+                            $log->subject_type,
 
-                            'name' =>
-                                $log->actor->name,
+                        'subject_id' =>
+                            $log->subject_id,
 
-                            'email' =>
-                                $log->actor->email,
-                        ]
-                        : null,
+                        'old_values' =>
+                            $log->old_values
+                            ?? [],
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Registro afectado
-                    |--------------------------------------------------------------------------
-                    */
+                        'new_values' =>
+                            $log->new_values
+                            ?? [],
 
-                    'subject_type' =>
-                        $log->subject_type,
+                        'ip_address' =>
+                            $log->ip_address,
 
-                    'subject_id' =>
-                        $log->subject_id,
+                        'user_agent' =>
+                            $log->user_agent,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Cambios
-                    |--------------------------------------------------------------------------
-                    */
+                        'method' =>
+                            $log->method,
 
-                    'old_values' =>
-                        $log->old_values ?? [],
+                        'route' =>
+                            $log->route,
 
-                    'new_values' =>
-                        $log->new_values ?? [],
+                        'url' =>
+                            $log->url,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Información técnica
-                    |--------------------------------------------------------------------------
-                    */
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Presentación regional
+                        |--------------------------------------------------------------------------
+                        |
+                        | created_at de DB representa un instante UTC.
+                        | Solo aquí lo convertimos a la zona configurada.
+                        |
+                        */
 
-                    'ip_address' =>
-                        $log->ip_address,
-
-                    'user_agent' =>
-                        $log->user_agent,
-
-                    'method' =>
-                        $log->method,
-
-                    'route' =>
-                        $log->route,
-
-                    'url' =>
-                        $log->url,
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Fechas
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'created_at' =>
-                        $log->created_at
-                            ?->format(
-                                'd/m/Y H:i:s'
+                        'created_at' =>
+                            $dateTime->format(
+                                $log->created_at
                             ),
 
-                    'created_at_human' =>
-                        $log->created_at
-                            ?->diffForHumans(),
-                ];
-            });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Usuarios para filtro
-        |--------------------------------------------------------------------------
-        */
+                        'created_at_human' =>
+                            $dateTime->human(
+                                $log->created_at
+                            ),
+                    ];
+                }
+            );
 
         $users = User::query()
             ->orderBy('name')
@@ -309,76 +290,81 @@ class AuditController extends Controller
                 'name',
             ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Eventos existentes
-        |--------------------------------------------------------------------------
-        */
-
         $events = AuditLog::query()
-            ->whereNotNull('event')
+            ->whereNotNull(
+                'event'
+            )
             ->distinct()
-            ->orderBy('event')
-            ->pluck('event')
+            ->orderBy(
+                'event'
+            )
+            ->pluck(
+                'event'
+            )
             ->values();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Módulos existentes
-        |--------------------------------------------------------------------------
-        */
 
         $modules = AuditLog::query()
-            ->whereNotNull('module')
+            ->whereNotNull(
+                'module'
+            )
             ->distinct()
-            ->orderBy('module')
-            ->pluck('module')
+            ->orderBy(
+                'module'
+            )
+            ->pluck(
+                'module'
+            )
             ->values();
-
 
         return Inertia::render(
             'admin/audit/index',
             [
-                'logs' => $logs,
+                'logs' =>
+                    $logs,
 
-                'users' => $users,
+                'users' =>
+                    $users,
 
-                'events' => $events,
+                'events' =>
+                    $events,
 
-                'modules' => $modules,
+                'modules' =>
+                    $modules,
 
                 'filters' => [
-                    'search' => $search,
+                    'search' =>
+                        $search,
 
-                    'event' => $event,
+                    'event' =>
+                        $event,
 
-                    'module' => $module,
+                    'module' =>
+                        $module,
 
-                    'actor_id' => $actorId,
+                    'actor_id' =>
+                        $actorId,
 
-                    'date_from' => $dateFrom,
+                    'date_from' =>
+                        $dateFrom,
 
-                    'date_to' => $dateTo,
+                    'date_to' =>
+                        $dateTo,
                 ],
-
-                /*
-                |--------------------------------------------------------------------------
-                | Permisos de la vista
-                |--------------------------------------------------------------------------
-                */
 
                 'can' => [
                     'export' =>
-                        $request->user()->can(
-                            'audit_logs.export'
-                        ),
+                        $request
+                            ->user()
+                            ->can(
+                                'audit_logs.export'
+                            ),
 
                     'retentionUpdate' =>
-                        $request->user()->can(
-                            'audit_logs.retention.update'
-                        ),
+                        $request
+                            ->user()
+                            ->can(
+                                'audit_logs.retention.update'
+                            ),
                 ],
             ]
         );

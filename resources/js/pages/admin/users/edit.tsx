@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { FormEvent } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -40,9 +41,11 @@ export default function EditUser({
     roles,
     can,
 }: Props) {
+    const { t } = useTranslation();
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Usuarios',
+            title: t('users.title'),
             href: '/dashboard/usuarios',
         },
         {
@@ -96,7 +99,9 @@ export default function EditUser({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Editar ${user.name}`} />
+            <Head
+                title={`${t('users.edit.title')} ${user.name}`}
+            />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
                 {/* Encabezado */}
@@ -110,11 +115,11 @@ export default function EditUser({
 
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            Editar usuario
+                            {t('users.edit.title')}
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Modifica la información de{' '}
+                            {t('users.edit.description')}{' '}
                             <span className="font-medium text-foreground">
                                 {user.name}
                             </span>
@@ -137,12 +142,15 @@ export default function EditUser({
 
                                     <div>
                                         <h2 className="font-semibold">
-                                            Información
+                                            {t(
+                                                'users.edit.information',
+                                            )}
                                         </h2>
 
                                         <p className="text-sm text-muted-foreground">
-                                            Datos principales del
-                                            usuario.
+                                            {t(
+                                                'users.edit.information_description',
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -152,7 +160,7 @@ export default function EditUser({
                                 {/* Nombre */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Nombre *
+                                        {t('users.edit.name')} *
                                     </label>
 
                                     <input
@@ -177,7 +185,7 @@ export default function EditUser({
                                 {/* Usuario */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Usuario
+                                        {t('users.edit.username')}
                                     </label>
 
                                     <input
@@ -202,7 +210,7 @@ export default function EditUser({
                                 {/* Email */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Correo electrónico *
+                                        {t('users.edit.email')} *
                                     </label>
 
                                     <input
@@ -228,7 +236,7 @@ export default function EditUser({
                                 {/* Teléfono */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Teléfono
+                                        {t('users.edit.phone')}
                                     </label>
 
                                     <input
@@ -253,7 +261,7 @@ export default function EditUser({
                                 {/* Estado */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Estado
+                                        {t('users.edit.status')}
                                     </label>
 
                                     <select
@@ -267,15 +275,21 @@ export default function EditUser({
                                         className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                     >
                                         <option value="active">
-                                            Activo
+                                            {t(
+                                                'users.status.active',
+                                            )}
                                         </option>
 
                                         <option value="pending">
-                                            Pendiente
+                                            {t(
+                                                'users.status.pending',
+                                            )}
                                         </option>
 
                                         <option value="suspended">
-                                            Suspendido
+                                            {t(
+                                                'users.status.suspended',
+                                            )}
                                         </option>
                                     </select>
 
@@ -299,11 +313,13 @@ export default function EditUser({
 
                                     <div>
                                         <h2 className="font-semibold">
-                                            Roles
+                                            {t('users.edit.roles')}
                                         </h2>
 
                                         <p className="text-sm text-muted-foreground">
-                                            Define el nivel de acceso.
+                                            {t(
+                                                'users.edit.roles_description',
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -338,8 +354,9 @@ export default function EditUser({
                                     ))
                                 ) : (
                                     <p className="text-sm text-muted-foreground">
-                                        No tienes permiso para
-                                        asignar roles.
+                                        {t(
+                                            'users.edit.no_role_permission',
+                                        )}
                                     </p>
                                 )}
 
@@ -361,15 +378,19 @@ export default function EditUser({
                                 <Save className="size-4" />
 
                                 {form.processing
-                                    ? 'Guardando...'
-                                    : 'Guardar cambios'}
+                                    ? t(
+                                          'users.edit.saving',
+                                      )
+                                    : t(
+                                          'users.edit.submit',
+                                      )}
                             </button>
 
                             <Link
                                 href="/dashboard/usuarios"
                                 className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md border text-sm font-medium hover:bg-muted"
                             >
-                                Cancelar
+                                {t('common.cancel')}
                             </Link>
                         </section>
                     </div>

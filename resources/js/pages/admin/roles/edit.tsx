@@ -12,6 +12,7 @@ import {
 
 import { FormEvent } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -42,9 +43,11 @@ export default function EditRole({
     role,
     modules,
 }: Props) {
+    const { t } = useTranslation();
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Roles',
+            title: t('roles.title'),
             href: '/dashboard/roles',
         },
         {
@@ -53,16 +56,6 @@ export default function EditRole({
         },
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Formulario
-    |--------------------------------------------------------------------------
-    |
-    | A diferencia de create.tsx, iniciamos con
-    | los datos que ya tiene el rol.
-    |
-    */
-
     const form = useForm({
         name: role.name,
 
@@ -70,18 +63,71 @@ export default function EditRole({
             role.permission_ids ?? [],
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Seleccionar permiso individual
-    |--------------------------------------------------------------------------
-    */
+    const moduleLabel = (
+        module: string,
+    ): string => {
+        switch (module) {
+            case 'authentication':
+                return t('modules.authentication');
+            case 'users':
+                return t('modules.users');
+            case 'roles':
+                return t('modules.roles');
+            case 'permissions':
+                return t('modules.permissions');
+            case 'audit_logs':
+                return t('modules.audit_logs');
+            case 'settings':
+                return t('modules.settings');
+            case 'websites':
+                return t('modules.websites');
+            case 'domains':
+                return t('modules.domains');
+            case 'databases':
+                return t('modules.databases');
+            case 'server':
+                return t('modules.server');
+            default:
+                return module;
+        }
+    };
+
+    const permissionActionLabel = (
+        action: string,
+    ): string => {
+        switch (action) {
+            case 'view':
+                return t('permissions.action.view');
+            case 'create':
+                return t('permissions.action.create');
+            case 'update':
+                return t('permissions.action.update');
+            case 'delete':
+                return t('permissions.action.delete');
+            case 'sync':
+                return t('permissions.action.sync');
+            case 'export':
+                return t('permissions.action.export');
+            case 'roles.update':
+                return t(
+                    'permissions.action.roles_update',
+                );
+            case 'status.update':
+                return t(
+                    'permissions.action.status_update',
+                );
+            case 'retention.update':
+                return t(
+                    'permissions.action.retention_update',
+                );
+            default:
+                return action;
+        }
+    };
 
     const togglePermission = (
         permissionId: number,
     ) => {
-        /*
-         * El rol administrador está protegido.
-         */
         if (role.protected) {
             return;
         }
@@ -107,12 +153,6 @@ export default function EditRole({
         ]);
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | Seleccionar todos los permisos de un módulo
-    |--------------------------------------------------------------------------
-    */
-
     const toggleModule = (
         module: Module,
     ) => {
@@ -128,10 +168,6 @@ export default function EditRole({
             form.data.permission_ids.includes(id),
         );
 
-        /*
-         * Si todos estaban seleccionados,
-         * quitamos todos.
-         */
         if (allSelected) {
             form.setData(
                 'permission_ids',
@@ -144,10 +180,6 @@ export default function EditRole({
             return;
         }
 
-        /*
-         * De lo contrario agregamos todos,
-         * evitando duplicados.
-         */
         form.setData(
             'permission_ids',
 
@@ -159,12 +191,6 @@ export default function EditRole({
             ),
         );
     };
-
-    /*
-    |--------------------------------------------------------------------------
-    | Guardar
-    |--------------------------------------------------------------------------
-    */
 
     const submit = (
         event: FormEvent<HTMLFormElement>,
@@ -181,13 +207,13 @@ export default function EditRole({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Editar rol - ${role.name}`} />
+            <Head
+                title={`${t('roles.edit.title')} - ${role.name}`}
+            />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-
                 {/* Encabezado */}
                 <div className="flex items-center gap-4">
-
                     <Link
                         href="/dashboard/roles"
                         className="inline-flex size-10 items-center justify-center rounded-md border hover:bg-muted"
@@ -197,12 +223,13 @@ export default function EditRole({
 
                     <div>
                         <h1 className="text-2xl font-bold">
-                            Editar rol
+                            {t('roles.edit.title')}
                         </h1>
 
                         <p className="text-sm text-muted-foreground">
-                            Administra el nombre y los
-                            permisos de este rol.
+                            {t(
+                                'roles.edit.description',
+                            )}
                         </p>
                     </div>
                 </div>
@@ -210,18 +237,19 @@ export default function EditRole({
                 {/* Advertencia administrador */}
                 {role.protected && (
                     <div className="flex gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-
                         <ShieldAlert className="mt-0.5 size-5 shrink-0 text-yellow-600" />
 
                         <div>
                             <p className="font-medium">
-                                Rol protegido
+                                {t(
+                                    'roles.edit.protected_title',
+                                )}
                             </p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                El rol administrador no puede
-                                cambiar de nombre ni perder
-                                permisos.
+                                {t(
+                                    'roles.edit.protected_description',
+                                )}
                             </p>
                         </div>
                     </div>
@@ -231,15 +259,13 @@ export default function EditRole({
                     onSubmit={submit}
                     className="space-y-6"
                 >
-
                     {/* Nombre */}
                     <section className="rounded-xl border bg-card p-5 shadow-sm">
-
                         <label
                             htmlFor="role-name"
                             className="mb-2 block text-sm font-medium"
                         >
-                            Nombre del rol *
+                            {t('roles.edit.name')} *
                         </label>
 
                         <input
@@ -264,17 +290,18 @@ export default function EditRole({
 
                     {/* Permisos */}
                     <section className="rounded-xl border bg-card shadow-sm">
-
                         <div className="flex flex-col gap-2 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
-
                             <div>
                                 <h2 className="font-semibold">
-                                    Permisos
+                                    {t(
+                                        'roles.edit.permissions',
+                                    )}
                                 </h2>
 
                                 <p className="text-sm text-muted-foreground">
-                                    Selecciona las acciones que
-                                    podrá realizar este rol.
+                                    {t(
+                                        'roles.edit.permissions_description',
+                                    )}
                                 </p>
                             </div>
 
@@ -283,14 +310,12 @@ export default function EditRole({
                                     form.data.permission_ids
                                         .length
                                 }{' '}
-                                seleccionados
+                                {t('roles.edit.selected')}
                             </div>
                         </div>
 
                         <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-
                             {modules.map((module) => {
-
                                 const moduleIds =
                                     module.permissions.map(
                                         (permission) =>
@@ -314,15 +339,13 @@ export default function EditRole({
                                         key={module.module}
                                         className="overflow-hidden rounded-lg border"
                                     >
-
                                         {/* Módulo */}
                                         <div className="flex items-center justify-between gap-3 border-b bg-muted/30 px-4 py-3">
-
                                             <div>
-                                                <h3 className="font-semibold capitalize">
-                                                    {
-                                                        module.module
-                                                    }
+                                                <h3 className="font-semibold">
+                                                    {moduleLabel(
+                                                        module.module,
+                                                    )}
                                                 </h3>
 
                                                 <p className="text-xs text-muted-foreground">
@@ -333,7 +356,9 @@ export default function EditRole({
                                                     {
                                                         moduleIds.length
                                                     }{' '}
-                                                    seleccionados
+                                                    {t(
+                                                        'roles.edit.selected',
+                                                    )}
                                                 </p>
                                             </div>
 
@@ -360,16 +385,18 @@ export default function EditRole({
                                                     className="size-4"
                                                 />
 
-                                                Todos
+                                                {t(
+                                                    'roles.edit.all',
+                                                )}
                                             </label>
                                         </div>
 
                                         {/* Permisos */}
                                         <div className="space-y-1 p-3">
-
                                             {module.permissions.map(
-                                                (permission) => {
-
+                                                (
+                                                    permission,
+                                                ) => {
                                                     const selected =
                                                         form.data.permission_ids.includes(
                                                             permission.id,
@@ -404,9 +431,9 @@ export default function EditRole({
 
                                                             <div className="min-w-0">
                                                                 <p className="text-sm font-medium">
-                                                                    {
-                                                                        permission.action
-                                                                    }
+                                                                    {permissionActionLabel(
+                                                                        permission.action,
+                                                                    )}
                                                                 </p>
 
                                                                 <p className="truncate text-xs text-muted-foreground">
@@ -437,12 +464,11 @@ export default function EditRole({
 
                     {/* Acciones */}
                     <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-
                         <Link
                             href="/dashboard/roles"
                             className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-muted"
                         >
-                            Cancelar
+                            {t('common.cancel')}
                         </Link>
 
                         <button
@@ -456,8 +482,12 @@ export default function EditRole({
                             <Save className="size-4" />
 
                             {form.processing
-                                ? 'Guardando...'
-                                : 'Guardar cambios'}
+                                ? t(
+                                      'roles.edit.saving',
+                                  )
+                                : t(
+                                      'roles.edit.submit',
+                                  )}
                         </button>
                     </div>
                 </form>

@@ -18,6 +18,7 @@ import {
     useState,
 } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import {
     type BreadcrumbItem,
@@ -46,22 +47,24 @@ interface Props {
     };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Auditoría',
-        href: '/dashboard/auditoria',
-    },
-    {
-        title: 'Retención',
-        href: '/dashboard/auditoria/retencion',
-    },
-];
-
 export default function AuditRetention({
     settings,
     stats,
     can,
 }: Props) {
+    const { t } = useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t('audit.title'),
+            href: '/dashboard/auditoria',
+        },
+        {
+            title: t('audit.retention.title'),
+            href: '/dashboard/auditoria/retencion',
+        },
+    ];
+
     const [
         pruning,
         setPruning,
@@ -96,12 +99,27 @@ export default function AuditRetention({
             return;
         }
 
+        const message =
+            stats.eligible_count > 0
+                ? t(
+                      'audit.retention.confirm_with_records',
+                  )
+                      .replace(
+                          '{count}',
+                          String(
+                              stats.eligible_count,
+                          ),
+                      )
+                      .replace(
+                          '{cutoff}',
+                          stats.cutoff,
+                      )
+                : t(
+                      'audit.retention.confirm_without_records',
+                  );
+
         const confirmed =
-            window.confirm(
-                stats.eligible_count > 0
-                    ? `Se eliminarán ${stats.eligible_count} registros de navegación anteriores a ${stats.cutoff}. ¿Deseas continuar?`
-                    : 'No hay registros vencidos actualmente. ¿Deseas ejecutar la limpieza de todos modos?',
-            );
+            window.confirm(message);
 
         if (!confirmed) {
             return;
@@ -130,10 +148,13 @@ export default function AuditRetention({
                 breadcrumbs
             }
         >
-            <Head title="Retención de Auditoría" />
+            <Head
+                title={t(
+                    'audit.retention.title',
+                )}
+            />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-
                 {/* Encabezado */}
 
                 <div className="flex items-start gap-3">
@@ -143,13 +164,15 @@ export default function AuditRetention({
 
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            Retención de Auditoría
+                            {t(
+                                'audit.retention.title',
+                            )}
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Controla cuánto tiempo se conserva
-                            la navegación registrada en CIVAN.
-                            Los eventos importantes no se eliminan.
+                            {t(
+                                'audit.retention.description',
+                            )}
                         </p>
                     </div>
                 </div>
@@ -160,7 +183,9 @@ export default function AuditRetention({
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Retención actual
+                                {t(
+                                    'audit.retention.current',
+                                )}
                             </p>
 
                             <CalendarClock className="size-4 text-muted-foreground" />
@@ -171,14 +196,18 @@ export default function AuditRetention({
                                 settings
                                     .page_view_retention_days
                             }{' '}
-                            días
+                            {t(
+                                'audit.retention.days',
+                            )}
                         </p>
                     </div>
 
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Navegaciones
+                                {t(
+                                    'audit.retention.page_views',
+                                )}
                             </p>
 
                             <Activity className="size-4 text-muted-foreground" />
@@ -195,7 +224,9 @@ export default function AuditRetention({
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Listas para limpiar
+                                {t(
+                                    'audit.retention.ready_to_prune',
+                                )}
                             </p>
 
                             <Eraser className="size-4 text-muted-foreground" />
@@ -212,7 +243,9 @@ export default function AuditRetention({
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Bloque de limpieza
+                                {t(
+                                    'audit.retention.chunk_size',
+                                )}
                             </p>
 
                             <Database className="size-4 text-muted-foreground" />
@@ -232,11 +265,15 @@ export default function AuditRetention({
                 <section className="rounded-xl border bg-card shadow-sm">
                     <div className="border-b p-5">
                         <h2 className="font-semibold">
-                            Política de navegación
+                            {t(
+                                'audit.retention.policy_title',
+                            )}
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Solo afecta eventos
+                            {t(
+                                'audit.retention.policy_description',
+                            )}
                             <span className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
                                 page_view
                             </span>
@@ -253,7 +290,9 @@ export default function AuditRetention({
                                 htmlFor="page_view_retention_days"
                                 className="text-sm font-medium"
                             >
-                                Días de retención
+                                {t(
+                                    'audit.retention.retention_days',
+                                )}
                             </label>
 
                             <input
@@ -291,9 +330,9 @@ export default function AuditRetention({
                             )}
 
                             <p className="text-xs text-muted-foreground">
-                                Se eliminarán únicamente
-                                navegaciones con más de esta
-                                cantidad de días.
+                                {t(
+                                    'audit.retention.retention_help',
+                                )}
                             </p>
                         </div>
 
@@ -309,8 +348,12 @@ export default function AuditRetention({
                                     <Save className="size-4" />
 
                                     {form.processing
-                                        ? 'Guardando...'
-                                        : 'Guardar configuración'}
+                                        ? t(
+                                              'audit.retention.saving',
+                                          )
+                                        : t(
+                                              'audit.retention.save',
+                                          )}
                                 </button>
                             )}
                         </div>
@@ -322,12 +365,15 @@ export default function AuditRetention({
                 <section className="rounded-xl border bg-card shadow-sm">
                     <div className="border-b p-5">
                         <h2 className="font-semibold">
-                            Limpieza
+                            {t(
+                                'audit.retention.cleanup_title',
+                            )}
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Revisa qué registros quedarían
-                            fuera de la política actual.
+                            {t(
+                                'audit.retention.cleanup_description',
+                            )}
                         </p>
                     </div>
 
@@ -335,7 +381,9 @@ export default function AuditRetention({
                         <div className="space-y-4">
                             <div>
                                 <p className="text-sm text-muted-foreground">
-                                    Fecha límite
+                                    {t(
+                                        'audit.retention.cutoff',
+                                    )}
                                 </p>
 
                                 <p className="mt-1 font-medium">
@@ -348,21 +396,27 @@ export default function AuditRetention({
 
                             <div>
                                 <p className="text-sm text-muted-foreground">
-                                    Navegación más antigua
+                                    {t(
+                                        'audit.retention.oldest_page_view',
+                                    )}
                                 </p>
 
                                 <p className="mt-1 font-medium">
                                     {
                                         stats
                                             .oldest_page_view
-                                        ?? 'No existen registros de navegación'
+                                        ?? t(
+                                            'audit.retention.no_page_views',
+                                        )
                                     }
                                 </p>
                             </div>
 
                             <div>
                                 <p className="text-sm text-muted-foreground">
-                                    Registros que se eliminarían
+                                    {t(
+                                        'audit.retention.eligible_records',
+                                    )}
                                 </p>
 
                                 <p className="mt-1 text-2xl font-bold">
@@ -389,8 +443,12 @@ export default function AuditRetention({
                                     <Eraser className="size-4" />
 
                                     {pruning
-                                        ? 'Limpiando...'
-                                        : 'Limpiar ahora'}
+                                        ? t(
+                                              'audit.retention.pruning',
+                                          )
+                                        : t(
+                                              'audit.retention.prune_now',
+                                          )}
                                 </button>
                             )}
                         </div>
@@ -401,16 +459,15 @@ export default function AuditRetention({
 
                 <section className="rounded-xl border border-dashed p-5">
                     <h2 className="font-semibold">
-                        Eventos conservados
+                        {t(
+                            'audit.retention.preserved_title',
+                        )}
                     </h2>
 
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Esta política no elimina inicios o
-                        cierres de sesión, creación, edición,
-                        eliminación, cambios de roles,
-                        permisos, sincronizaciones,
-                        exportaciones ni otras acciones
-                        importantes de seguridad.
+                        {t(
+                            'audit.retention.preserved_description',
+                        )}
                     </p>
                 </section>
             </div>

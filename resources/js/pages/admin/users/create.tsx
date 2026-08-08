@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { FormEvent } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -23,21 +24,23 @@ interface Props {
     };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Usuarios',
-        href: '/dashboard/usuarios',
-    },
-    {
-        title: 'Nuevo usuario',
-        href: '/dashboard/usuarios/crear',
-    },
-];
-
 export default function CreateUser({
     roles,
     can,
 }: Props) {
+    const { t } = useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t('users.title'),
+            href: '/dashboard/usuarios',
+        },
+        {
+            title: t('users.create.title'),
+            href: '/dashboard/usuarios/crear',
+        },
+    ];
+
     const form = useForm({
         name: '',
         username: '',
@@ -82,7 +85,7 @@ export default function CreateUser({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Nuevo usuario" />
+            <Head title={t('users.create.title')} />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
                 {/* Encabezado */}
@@ -96,12 +99,11 @@ export default function CreateUser({
 
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            Nuevo usuario
+                            {t('users.create.title')}
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Crea una nueva cuenta para acceder a
-                            CIVAN.
+                            {t('users.create.description')}
                         </p>
                     </div>
                 </div>
@@ -120,12 +122,15 @@ export default function CreateUser({
 
                                     <div>
                                         <h2 className="font-semibold">
-                                            Información
+                                            {t(
+                                                'users.create.information',
+                                            )}
                                         </h2>
 
                                         <p className="text-sm text-muted-foreground">
-                                            Datos principales del
-                                            usuario.
+                                            {t(
+                                                'users.create.information_description',
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -134,7 +139,7 @@ export default function CreateUser({
                             <div className="grid gap-5 p-5 md:grid-cols-2">
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Nombre *
+                                        {t('users.create.name')} *
                                     </label>
 
                                     <input
@@ -158,7 +163,7 @@ export default function CreateUser({
 
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Usuario
+                                        {t('users.create.username')}
                                     </label>
 
                                     <input
@@ -187,7 +192,7 @@ export default function CreateUser({
 
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Correo electrónico *
+                                        {t('users.create.email')} *
                                     </label>
 
                                     <input
@@ -212,7 +217,7 @@ export default function CreateUser({
 
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Teléfono
+                                        {t('users.create.phone')}
                                     </label>
 
                                     <input
@@ -236,7 +241,7 @@ export default function CreateUser({
 
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Estado
+                                        {t('users.create.status')}
                                     </label>
 
                                     <select
@@ -250,15 +255,21 @@ export default function CreateUser({
                                         className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                     >
                                         <option value="active">
-                                            Activo
+                                            {t(
+                                                'users.status.active',
+                                            )}
                                         </option>
 
                                         <option value="pending">
-                                            Pendiente
+                                            {t(
+                                                'users.status.pending',
+                                            )}
                                         </option>
 
                                         <option value="suspended">
-                                            Suspendido
+                                            {t(
+                                                'users.status.suspended',
+                                            )}
                                         </option>
                                     </select>
                                 </div>
@@ -273,12 +284,15 @@ export default function CreateUser({
 
                                     <div>
                                         <h2 className="font-semibold">
-                                            Seguridad
+                                            {t(
+                                                'users.create.security',
+                                            )}
                                         </h2>
 
                                         <p className="text-sm text-muted-foreground">
-                                            Contraseña inicial de
-                                            acceso.
+                                            {t(
+                                                'users.create.security_description',
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -287,7 +301,7 @@ export default function CreateUser({
                             <div className="grid gap-5 p-5 md:grid-cols-2">
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Contraseña *
+                                        {t('users.create.password')} *
                                     </label>
 
                                     <input
@@ -316,7 +330,10 @@ export default function CreateUser({
 
                                 <div>
                                     <label className="mb-2 block text-sm font-medium">
-                                        Confirmar contraseña *
+                                        {t(
+                                            'users.create.password_confirmation',
+                                        )}{' '}
+                                        *
                                     </label>
 
                                     <input
@@ -353,14 +370,15 @@ export default function CreateUser({
 
                                     <div>
                                         <p className="text-sm font-medium">
-                                            Forzar cambio de
-                                            contraseña
+                                            {t(
+                                                'users.create.force_password_change',
+                                            )}
                                         </p>
 
                                         <p className="text-xs text-muted-foreground">
-                                            El usuario deberá crear
-                                            una nueva contraseña al
-                                            iniciar sesión.
+                                            {t(
+                                                'users.create.force_password_change_description',
+                                            )}
                                         </p>
                                     </div>
                                 </label>
@@ -377,12 +395,13 @@ export default function CreateUser({
 
                                     <div>
                                         <h2 className="font-semibold">
-                                            Roles
+                                            {t('users.create.roles')}
                                         </h2>
 
                                         <p className="text-sm text-muted-foreground">
-                                            Define el nivel de
-                                            acceso.
+                                            {t(
+                                                'users.create.roles_description',
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -419,8 +438,9 @@ export default function CreateUser({
                                     ))
                                 ) : (
                                     <p className="text-sm text-muted-foreground">
-                                        No tienes permiso para
-                                        asignar roles.
+                                        {t(
+                                            'users.create.no_role_permission',
+                                        )}
                                     </p>
                                 )}
 
@@ -445,15 +465,19 @@ export default function CreateUser({
                                 <UserPlus className="size-4" />
 
                                 {form.processing
-                                    ? 'Creando...'
-                                    : 'Crear usuario'}
+                                    ? t(
+                                          'users.create.creating',
+                                      )
+                                    : t(
+                                          'users.create.submit',
+                                      )}
                             </button>
 
                             <Link
                                 href="/dashboard/usuarios"
                                 className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md border text-sm font-medium hover:bg-muted"
                             >
-                                Cancelar
+                                {t('common.cancel')}
                             </Link>
                         </section>
                     </div>

@@ -32,7 +32,9 @@ import {
     useState,
 } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
+import { type TranslationKey } from '@/i18n/translations';
 import { type BreadcrumbItem } from '@/types';
 
 /*
@@ -127,108 +129,181 @@ interface Props {
 
 /*
 |--------------------------------------------------------------------------
-| Breadcrumbs
+| Etiquetas traducibles
 |--------------------------------------------------------------------------
 */
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Auditoría',
-        href: '/dashboard/auditoria',
-    },
-];
+type Translator = (
+    key: TranslationKey,
+) => string;
 
-/*
-|--------------------------------------------------------------------------
-| Etiquetas
-|--------------------------------------------------------------------------
-*/
+const eventLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    login: 'audit.event.login',
+    logout: 'audit.event.logout',
 
-const eventLabels: Record<string, string> = {
-    login: 'Inicio de sesión',
-    logout: 'Cierre de sesión',
+    create: 'audit.event.create',
+    update: 'audit.event.update',
+    delete: 'audit.event.delete',
 
-    create: 'Creación',
-    update: 'Edición',
-    delete: 'Eliminación',
+    role_change: 'audit.event.role_change',
+    status_change: 'audit.event.status_change',
 
-    role_change: 'Cambio de roles',
-    status_change: 'Cambio de estado',
+    permission_change:
+        'audit.event.permission_change',
 
-    permission_change: 'Cambio de permisos',
-    permission_sync: 'Sincronización de permisos',
-    audit_export: 'Exportación de auditoría',
-    audit_prune: 'Limpieza de auditoría',
-    audit_retention_update: 'Cambio de retención',
+    permission_sync:
+        'audit.event.permission_sync',
 
-    page_view: 'Navegación',
+    audit_export:
+        'audit.event.audit_export',
+
+    audit_prune:
+        'audit.event.audit_prune',
+
+    audit_retention_update:
+        'audit.event.audit_retention_update',
+
+    page_view:
+        'audit.event.page_view',
 };
 
-const moduleLabels: Record<string, string> = {
-    authentication: 'Autenticación',
+const moduleLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    authentication:
+        'modules.authentication',
 
-    users: 'Usuarios',
-    roles: 'Roles',
-    permissions: 'Permisos',
+    users:
+        'modules.users',
 
-    audit_logs: 'Auditoría',
+    roles:
+        'modules.roles',
 
-    websites: 'Sitios web',
-    domains: 'Dominios',
-    databases: 'Bases de datos',
+    permissions:
+        'modules.permissions',
 
-    server: 'Servidor',
+    audit_logs:
+        'modules.audit_logs',
+
+    settings:
+        'modules.settings',
+
+    websites:
+        'modules.websites',
+
+    domains:
+        'modules.domains',
+
+    databases:
+        'modules.databases',
+
+    server:
+        'modules.server',
 };
 
-const fieldLabels: Record<string, string> = {
-    id: 'ID',
+const fieldLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    id:
+        'audit.field.id',
 
-    name: 'Nombre',
-    username: 'Usuario',
-    email: 'Correo electrónico',
-    phone: 'Teléfono',
+    name:
+        'audit.field.name',
 
-    status: 'Estado',
+    username:
+        'audit.field.username',
 
-    roles: 'Roles',
+    email:
+        'audit.field.email',
 
-    permissions: 'Permisos',
+    phone:
+        'audit.field.phone',
 
-    created_count: 'Permisos creados',
-    created_permissions: 'Permisos nuevos',
+    status:
+        'audit.field.status',
 
-    format: 'Formato',
-    filters: 'Filtros aplicados',
+    roles:
+        'audit.field.roles',
 
-    retention_days: 'Días de retención',
-    page_view_retention_days: 'Días de retención',
-    cutoff: 'Fecha límite',
-    deleted_count: 'Registros eliminados',
+    permissions:
+        'audit.field.permissions',
+
+    created_count:
+        'audit.field.created_count',
+
+    created_permissions:
+        'audit.field.created_permissions',
+
+    format:
+        'audit.field.format',
+
+    filters:
+        'audit.field.filters',
+
+    retention_days:
+        'audit.field.retention_days',
+
+    page_view_retention_days:
+        'audit.field.retention_days',
+
+    cutoff:
+        'audit.field.cutoff',
+
+    deleted_count:
+        'audit.field.deleted_count',
 };
 
-/*
-|--------------------------------------------------------------------------
-| Helpers
-|--------------------------------------------------------------------------
-*/
+function getEventLabel(
+    event: string,
+    t: Translator,
+): string {
+    const key =
+        eventLabelKeys[event];
 
-function getEventLabel(event: string) {
-    return eventLabels[event] ?? event;
+    return key
+        ? t(key)
+        : event;
 }
 
-function getModuleLabel(module: string | null) {
+function getModuleLabel(
+    module: string | null,
+    t: Translator,
+): string {
     if (!module) {
-        return 'Sistema';
+        return t(
+            'audit.system',
+        );
     }
 
-    return moduleLabels[module] ?? module;
+    const key =
+        moduleLabelKeys[module];
+
+    return key
+        ? t(key)
+        : module;
 }
 
-function getFieldLabel(field: string) {
-    return fieldLabels[field] ?? field;
+function getFieldLabel(
+    field: string,
+    t: Translator,
+): string {
+    const key =
+        fieldLabelKeys[field];
+
+    return key
+        ? t(key)
+        : field;
 }
 
-function formatValue(value: unknown): string {
+function formatValue(
+    value: unknown,
+    t: Translator,
+): string {
     if (
         value === null ||
         value === undefined ||
@@ -237,21 +312,38 @@ function formatValue(value: unknown): string {
         return '—';
     }
 
-    if (typeof value === 'boolean') {
-        return value ? 'Sí' : 'No';
+    if (
+        typeof value ===
+        'boolean'
+    ) {
+        return value
+            ? t('common.yes')
+            : t('common.no');
     }
 
-    if (Array.isArray(value)) {
-        if (value.length === 0) {
-            return 'Ninguno';
+    if (
+        Array.isArray(value)
+    ) {
+        if (
+            value.length === 0
+        ) {
+            return t(
+                'audit.none',
+            );
         }
 
         return value
-            .map((item) => String(item))
+            .map(
+                (item) =>
+                    String(item),
+            )
             .join(', ');
     }
 
-    if (typeof value === 'object') {
+    if (
+        typeof value ===
+        'object'
+    ) {
         return JSON.stringify(
             value,
             null,
@@ -259,22 +351,36 @@ function formatValue(value: unknown): string {
         );
     }
 
-    if (value === 'active') {
-        return 'Activo';
+    if (
+        value === 'active'
+    ) {
+        return t(
+            'users.status.active',
+        );
     }
 
-    if (value === 'pending') {
-        return 'Pendiente';
+    if (
+        value === 'pending'
+    ) {
+        return t(
+            'users.status.pending',
+        );
     }
 
-    if (value === 'suspended') {
-        return 'Suspendido';
+    if (
+        value === 'suspended'
+    ) {
+        return t(
+            'users.status.suspended',
+        );
     }
 
     return String(value);
 }
 
-function getChangedFields(log: AuditLog) {
+function getChangedFields(
+    log: AuditLog,
+) {
     return Array.from(
         new Set([
             ...Object.keys(
@@ -374,6 +480,17 @@ export default function AuditIndex({
     filters,
     can,
 }: Props) {
+    const { t } =
+        useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t(
+                'audit.title',
+            ),
+            href: '/dashboard/auditoria',
+        },
+    ];
     /*
     |--------------------------------------------------------------------------
     | Filtros
@@ -689,11 +806,56 @@ export default function AuditIndex({
         });
     };
 
+    const paginationLabel = (
+        label: string,
+    ): string => {
+        const normalized =
+            label
+                .replace(
+                    /&laquo;|&raquo;/g,
+                    '',
+                )
+                .replace(
+                    /«|»/g,
+                    '',
+                )
+                .trim()
+                .toLowerCase();
+
+        if (
+            normalized.includes(
+                'previous',
+            ) ||
+            normalized.includes(
+                'anterior',
+            )
+        ) {
+            return `« ${t(
+                'pagination.previous',
+            )}`;
+        }
+
+        if (
+            normalized.includes(
+                'next',
+            ) ||
+            normalized.includes(
+                'siguiente',
+            )
+        ) {
+            return `${t(
+                'pagination.next',
+            )} »`;
+        }
+
+        return label;
+    };
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
         >
-            <Head title="Auditoría" />
+            <Head title={t('audit.title')} />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
 
@@ -708,11 +870,11 @@ export default function AuditIndex({
                         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold tracking-tight">
-                                    Auditoría
+                                    {t('audit.title')}
                                 </h1>
 
                                 <p className="text-sm text-muted-foreground">
-                                    Actividad y seguridad del sistema.
+                                    {t('audit.description')}
                                 </p>
                             </div>
 
@@ -727,18 +889,18 @@ export default function AuditIndex({
                                     />
 
                                     {isRefreshing
-                                        ? 'Actualizando...'
-                                        : 'Actualización automática'}
+                                        ? t('audit.refreshing')
+                                        : t('audit.auto_refresh')}
                                 </div>
 
                                 <Link
                                     href="/dashboard/auditoria/retencion"
                                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted"
-                                    title="Configurar retención de auditoría"
+                                    title={t('audit.retention_title')}
                                 >
                                     <Settings className="size-4" />
 
-                                    Retención
+                                    {t('audit.retention')}
                                 </Link>
 
                                 {can?.export && (
@@ -746,7 +908,7 @@ export default function AuditIndex({
                                         <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted">
                                             <Download className="size-4" />
 
-                                            Exportar
+                                            {t('audit.export')}
 
                                             <ChevronDown className="size-4" />
                                         </summary>
@@ -813,7 +975,7 @@ export default function AuditIndex({
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <p className="text-sm text-muted-foreground">
-                            Registros
+                            {t('audit.records')}
                         </p>
 
                         <p className="mt-2 text-2xl font-bold">
@@ -823,7 +985,7 @@ export default function AuditIndex({
 
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <p className="text-sm text-muted-foreground">
-                            Módulos registrados
+                            {t('audit.registered_modules')}
                         </p>
 
                         <p className="mt-2 text-2xl font-bold">
@@ -833,7 +995,7 @@ export default function AuditIndex({
 
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <p className="text-sm text-muted-foreground">
-                            Tipos de eventos
+                            {t('audit.event_types')}
                         </p>
 
                         <p className="mt-2 text-2xl font-bold">
@@ -847,12 +1009,11 @@ export default function AuditIndex({
                 <section className="rounded-xl border bg-card shadow-sm">
                     <div className="border-b p-5">
                         <h2 className="font-semibold">
-                            Filtros
+                            {t('audit.filters')}
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Busca actividad por usuario,
-                            evento, módulo o fecha.
+                            {t('audit.filters_description')}
                         </p>
                     </div>
 
@@ -866,7 +1027,7 @@ export default function AuditIndex({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
-                                    Buscar
+                                    {t('common.search')}
                                 </label>
 
                                 <div className="relative">
@@ -880,7 +1041,7 @@ export default function AuditIndex({
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="Usuario, acción..."
+                                        placeholder={t('audit.search_placeholder')}
                                         className="h-10 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                                     />
                                 </div>
@@ -890,7 +1051,7 @@ export default function AuditIndex({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
-                                    Usuario
+                                    {t('audit.user')}
                                 </label>
 
                                 <select
@@ -903,7 +1064,7 @@ export default function AuditIndex({
                                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                 >
                                     <option value="">
-                                        Todos
+                                        {t('audit.all')}
                                     </option>
 
                                     {users.map(
@@ -929,7 +1090,7 @@ export default function AuditIndex({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
-                                    Evento
+                                    {t('audit.event')}
                                 </label>
 
                                 <select
@@ -942,7 +1103,7 @@ export default function AuditIndex({
                                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                 >
                                     <option value="">
-                                        Todos
+                                        {t('audit.all')}
                                     </option>
 
                                     {events.map(
@@ -959,6 +1120,7 @@ export default function AuditIndex({
                                             >
                                                 {getEventLabel(
                                                     eventItem,
+                                                    t,
                                                 )}
                                             </option>
                                         ),
@@ -970,7 +1132,7 @@ export default function AuditIndex({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
-                                    Módulo
+                                    {t('audit.module')}
                                 </label>
 
                                 <select
@@ -983,7 +1145,7 @@ export default function AuditIndex({
                                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                 >
                                     <option value="">
-                                        Todos
+                                        {t('audit.all')}
                                     </option>
 
                                     {modules.map(
@@ -1000,6 +1162,7 @@ export default function AuditIndex({
                                             >
                                                 {getModuleLabel(
                                                     moduleItem,
+                                                    t,
                                                 )}
                                             </option>
                                         ),
@@ -1011,7 +1174,7 @@ export default function AuditIndex({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
-                                    Desde
+                                    {t('audit.from')}
                                 </label>
 
                                 <div className="relative">
@@ -1034,7 +1197,7 @@ export default function AuditIndex({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
-                                    Hasta
+                                    {t('audit.to')}
                                 </label>
 
                                 <div className="relative">
@@ -1061,7 +1224,7 @@ export default function AuditIndex({
                             >
                                 <Search className="size-4" />
 
-                                Buscar
+                                {t('common.search')}
                             </button>
 
                             <button
@@ -1073,7 +1236,7 @@ export default function AuditIndex({
                             >
                                 <RotateCcw className="size-4" />
 
-                                Limpiar
+                                {t('audit.clear')}
                             </button>
                         </div>
                     </form>
@@ -1084,13 +1247,17 @@ export default function AuditIndex({
                 <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
                     <div className="border-b p-5">
                         <h2 className="font-semibold">
-                            Actividad registrada
+                            {t('audit.activity_registered')}
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
                             {logs.total === 1
-                                ? '1 actividad encontrada'
-                                : `${logs.total} actividades encontradas`}
+                                ? `1 ${t(
+                                      'audit.activity_found_singular',
+                                  )}`
+                                : `${logs.total} ${t(
+                                      'audit.activity_found_plural',
+                                  )}`}
                         </p>
                     </div>
 
@@ -1099,13 +1266,11 @@ export default function AuditIndex({
                             <Activity className="mb-4 size-10 text-muted-foreground" />
 
                             <h3 className="font-semibold">
-                                No hay actividad
+                                {t('audit.no_activity')}
                             </h3>
 
                             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                                No existen registros
-                                que coincidan con los
-                                filtros seleccionados.
+                                {t('audit.no_activity_description')}
                             </p>
                         </div>
                     ) : (
@@ -1151,12 +1316,13 @@ export default function AuditIndex({
                                                                     {log
                                                                         .actor
                                                                         ?.name ??
-                                                                        'Sistema'}
+                                                                        t('audit.system')}
                                                                 </span>
 
                                                                 <span className="rounded-md bg-muted px-2 py-0.5 text-xs">
                                                                     {getEventLabel(
                                                                         log.event,
+                                                                        t,
                                                                     )}
                                                                 </span>
                                                             </div>
@@ -1165,6 +1331,7 @@ export default function AuditIndex({
                                                                 {log.description ??
                                                                     getEventLabel(
                                                                         log.event,
+                                                                        t,
                                                                     )}
                                                             </p>
                                                         </div>
@@ -1188,6 +1355,7 @@ export default function AuditIndex({
                                                         <span>
                                                             {getModuleLabel(
                                                                 log.module,
+                                                                t,
                                                             )}
                                                         </span>
 
@@ -1210,7 +1378,7 @@ export default function AuditIndex({
 
                                                         {log.subject_id && (
                                                             <span>
-                                                                Registro
+                                                                {t('audit.record')}
                                                                 #{' '}
                                                                 {
                                                                     log.subject_id
@@ -1243,6 +1411,7 @@ export default function AuditIndex({
                                                                                 <span className="font-medium">
                                                                                     {getFieldLabel(
                                                                                         field,
+                                                                                        t,
                                                                                     )}
                                                                                 </span>
 
@@ -1252,6 +1421,7 @@ export default function AuditIndex({
                                                                                             .old_values?.[
                                                                                             field
                                                                                         ],
+                                                                                        t,
                                                                                     )}
                                                                                 </span>
 
@@ -1265,6 +1435,7 @@ export default function AuditIndex({
                                                                                             .new_values?.[
                                                                                             field
                                                                                         ],
+                                                                                        t,
                                                                                     )}
                                                                                 </span>
                                                                             </div>
@@ -1288,14 +1459,12 @@ export default function AuditIndex({
                                                         {isOpen ? (
                                                             <>
                                                                 <ChevronUp className="size-4" />
-                                                                Ocultar
-                                                                detalles
+                                                                {t('audit.hide_details')}
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <ChevronDown className="size-4" />
-                                                                Ver
-                                                                detalles
+                                                                {t('audit.view_details')}
                                                             </>
                                                         )}
                                                     </button>
@@ -1309,22 +1478,20 @@ export default function AuditIndex({
 
                                                             <div className="rounded-lg border p-4">
                                                                 <h4 className="font-semibold">
-                                                                    Información
-                                                                    de la
-                                                                    actividad
+                                                                    {t('audit.activity_information')}
                                                                 </h4>
 
                                                                 <dl className="mt-4 space-y-3 text-sm">
                                                                     <div>
                                                                         <dt className="text-muted-foreground">
-                                                                            Usuario
+                                                                            {t('audit.user')}
                                                                         </dt>
 
                                                                         <dd className="font-medium">
                                                                             {log
                                                                                 .actor
                                                                                 ?.name ??
-                                                                                'Sistema'}
+                                                                                t('audit.system')}
                                                                         </dd>
                                                                     </div>
 
@@ -1333,7 +1500,7 @@ export default function AuditIndex({
                                                                         ?.email && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Correo
+                                                                                {t('audit.email')}
                                                                             </dt>
 
                                                                             <dd>
@@ -1348,24 +1515,26 @@ export default function AuditIndex({
 
                                                                     <div>
                                                                         <dt className="text-muted-foreground">
-                                                                            Evento
+                                                                            {t('audit.event')}
                                                                         </dt>
 
                                                                         <dd>
                                                                             {getEventLabel(
                                                                                 log.event,
+                                                                                t,
                                                                             )}
                                                                         </dd>
                                                                     </div>
 
                                                                     <div>
                                                                         <dt className="text-muted-foreground">
-                                                                            Módulo
+                                                                            {t('audit.module')}
                                                                         </dt>
 
                                                                         <dd>
                                                                             {getModuleLabel(
                                                                                 log.module,
+                                                                                t,
                                                                             )}
                                                                         </dd>
                                                                     </div>
@@ -1373,8 +1542,7 @@ export default function AuditIndex({
                                                                     {log.subject_type && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Tipo
-                                                                                afectado
+                                                                                {t('audit.affected_type')}
                                                                             </dt>
 
                                                                             <dd className="break-all">
@@ -1388,8 +1556,7 @@ export default function AuditIndex({
                                                                     {log.subject_id && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                ID
-                                                                                afectado
+                                                                                {t('audit.affected_id')}
                                                                             </dt>
 
                                                                             <dd>
@@ -1406,8 +1573,7 @@ export default function AuditIndex({
 
                                                             <div className="rounded-lg border p-4">
                                                                 <h4 className="font-semibold">
-                                                                    Información
-                                                                    técnica
+                                                                    {t('audit.technical_information')}
                                                                 </h4>
 
                                                                 <dl className="mt-4 space-y-3 text-sm">
@@ -1430,7 +1596,7 @@ export default function AuditIndex({
                                                                     {log.method && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Método
+                                                                                {t('audit.method')}
                                                                             </dt>
 
                                                                             <dd>
@@ -1444,7 +1610,7 @@ export default function AuditIndex({
                                                                     {log.route && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Ruta
+                                                                                {t('audit.route')}
                                                                             </dt>
 
                                                                             <dd className="break-all">
@@ -1472,9 +1638,7 @@ export default function AuditIndex({
                                                                     {log.user_agent && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Navegador
-                                                                                /
-                                                                                dispositivo
+                                                                                {t('audit.browser_device')}
                                                                             </dt>
 
                                                                             <dd className="mt-1 break-words text-xs">
@@ -1493,8 +1657,7 @@ export default function AuditIndex({
                                                                 0 && (
                                                                 <div className="rounded-lg border p-4 xl:col-span-2">
                                                                     <h4 className="font-semibold">
-                                                                        Cambios
-                                                                        realizados
+                                                                        {t('audit.changes_made')}
                                                                     </h4>
 
                                                                     <div className="mt-4 overflow-x-auto">
@@ -1502,15 +1665,15 @@ export default function AuditIndex({
                                                                             <thead>
                                                                                 <tr className="border-b text-left">
                                                                                     <th className="pb-3 pr-4 font-medium">
-                                                                                        Campo
+                                                                                        {t('audit.field')}
                                                                                     </th>
 
                                                                                     <th className="pb-3 pr-4 font-medium">
-                                                                                        Antes
+                                                                                        {t('audit.before')}
                                                                                     </th>
 
                                                                                     <th className="pb-3 font-medium">
-                                                                                        Después
+                                                                                        {t('audit.after')}
                                                                                     </th>
                                                                                 </tr>
                                                                             </thead>
@@ -1528,6 +1691,7 @@ export default function AuditIndex({
                                                                                             <td className="py-3 pr-4 font-medium">
                                                                                                 {getFieldLabel(
                                                                                                     field,
+                                                                                                    t,
                                                                                                 )}
                                                                                             </td>
 
@@ -1537,6 +1701,7 @@ export default function AuditIndex({
                                                                                                         .old_values?.[
                                                                                                         field
                                                                                                     ],
+                                                                                                    t,
                                                                                                 )}
                                                                                             </td>
 
@@ -1546,6 +1711,7 @@ export default function AuditIndex({
                                                                                                         .new_values?.[
                                                                                                         field
                                                                                                     ],
+                                                                                                    t,
                                                                                                 )}
                                                                                             </td>
                                                                                         </tr>
@@ -1572,9 +1738,10 @@ export default function AuditIndex({
                     {logs.last_page > 1 && (
                         <div className="flex flex-col gap-4 border-t p-5 sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Mostrando{' '}
+                                {t('users.showing')}{' '}
                                 {logs.from ?? 0} -{' '}
-                                {logs.to ?? 0} de{' '}
+                                {logs.to ?? 0}{' '}
+                                {t('users.of')}{' '}
                                 {logs.total}
                             </p>
 
@@ -1618,11 +1785,11 @@ export default function AuditIndex({
                                             ].join(
                                                 ' ',
                                             )}
-                                            dangerouslySetInnerHTML={{
-                                                __html:
-                                                    link.label,
-                                            }}
-                                        />
+                                        >
+                                            {paginationLabel(
+                                                link.label,
+                                            )}
+                                        </button>
                                     ),
                                 )}
                             </div>

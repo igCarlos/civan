@@ -8,6 +8,7 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\UpdateUserLastSeen;
 use App\Http\Middleware\TrackNavigation;
+use App\Http\Middleware\ApplySystemSettings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            ApplySystemSettings::class,
         ]);
 
         $middleware->alias([

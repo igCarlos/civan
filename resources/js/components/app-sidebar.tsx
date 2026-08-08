@@ -12,6 +12,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
+import {
+    useTranslation,
+} from '@/hooks/use-translation';
+
 import { type NavItem } from '@/types';
 
 import {
@@ -32,115 +36,14 @@ import {
 
 import AppLogo from './app-logo';
 
-/*
-|--------------------------------------------------------------------------
-| Tipo para elementos protegidos por permisos
-|--------------------------------------------------------------------------
-*/
-
 type PermissionNavItem = NavItem & {
     permission: string;
 };
 
-/*
-|--------------------------------------------------------------------------
-| Menú principal
-|--------------------------------------------------------------------------
-*/
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        url: '/dashboard',
-        icon: LayoutGrid,
-    },
-];
-
-/*
-|--------------------------------------------------------------------------
-| Administración
-|--------------------------------------------------------------------------
-*/
-
-const administrationNavItems: PermissionNavItem[] = [
-    {
-        title: 'Usuarios',
-        url: '/dashboard/usuarios',
-        icon: Users,
-        permission: 'users.view',
-    },
-
-    {
-        title: 'Roles',
-        url: '/dashboard/roles',
-        icon: ShieldCheck,
-        permission: 'roles.view',
-    },
-
-    {
-        title: 'Permisos',
-        url: '/dashboard/permisos',
-        icon: KeyRound,
-        permission: 'permissions.view',
-    },
-
-    {
-        title: 'Auditoría',
-        url: '/dashboard/auditoria',
-        icon: Activity,
-        permission: 'audit_logs.view',
-    },
-];
-
-/*
-|--------------------------------------------------------------------------
-| Configuración
-|--------------------------------------------------------------------------
-*/
-
-const configurationNavItems: PermissionNavItem[] = [
-    {
-        title: 'Sistema',
-        url: '/dashboard/configuracion/sistema',
-        icon: Settings,
-        permission: 'settings.view',
-    },
-];
-
-/*
-|--------------------------------------------------------------------------
-| Footer
-|--------------------------------------------------------------------------
-*/
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-
-    {
-        title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
-    },
-];
-
-/*
-|--------------------------------------------------------------------------
-| Sidebar
-|--------------------------------------------------------------------------
-*/
-
 export function AppSidebar() {
-    /*
-    |--------------------------------------------------------------------------
-    | Obtener permisos enviados por Laravel
-    |--------------------------------------------------------------------------
-    */
-
-    const { auth } = usePage<{
+    const {
+        auth,
+    } = usePage<{
         auth: {
             user: unknown;
             roles: string[];
@@ -148,11 +51,9 @@ export function AppSidebar() {
         };
     }>().props;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Verificar permiso
-    |--------------------------------------------------------------------------
-    */
+    const {
+        t,
+    } = useTranslation();
 
     const hasPermission = (
         permission: string,
@@ -164,11 +65,78 @@ export function AppSidebar() {
         );
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | Filtrar módulos visibles
-    |--------------------------------------------------------------------------
-    */
+    const mainNavItems: NavItem[] = [
+        {
+            title: t(
+                'nav.dashboard',
+            ),
+            url: '/dashboard',
+            icon: LayoutGrid,
+        },
+    ];
+
+    const administrationNavItems: PermissionNavItem[] = [
+        {
+            title: t(
+                'nav.users',
+            ),
+            url: '/dashboard/usuarios',
+            icon: Users,
+            permission: 'users.view',
+        },
+
+        {
+            title: t(
+                'nav.roles',
+            ),
+            url: '/dashboard/roles',
+            icon: ShieldCheck,
+            permission: 'roles.view',
+        },
+
+        {
+            title: t(
+                'nav.permissions',
+            ),
+            url: '/dashboard/permisos',
+            icon: KeyRound,
+            permission: 'permissions.view',
+        },
+
+        {
+            title: t(
+                'nav.audit',
+            ),
+            url: '/dashboard/auditoria',
+            icon: Activity,
+            permission: 'audit_logs.view',
+        },
+    ];
+
+    const configurationNavItems: PermissionNavItem[] = [
+        {
+            title: t(
+                'nav.system',
+            ),
+            url: '/dashboard/configuracion/sistema',
+            icon: Settings,
+            permission: 'settings.view',
+        },
+    ];
+
+    const footerNavItems: NavItem[] = [
+        {
+            title: 'Repository',
+            url: 'https://github.com/laravel/react-starter-kit',
+            icon: Folder,
+        },
+
+        {
+            title: 'Documentation',
+            url: 'https://laravel.com/docs/starter-kits',
+            icon: BookOpen,
+        },
+    ];
 
     const visibleAdministrationItems =
         administrationNavItems.filter(
@@ -191,8 +159,6 @@ export function AppSidebar() {
             collapsible="icon"
             variant="inset"
         >
-            {/* Header */}
-
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -211,34 +177,34 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            {/* Contenido */}
-
             <SidebarContent>
-                {/* General */}
-
                 <NavMain
-                    label="General"
-                    items={mainNavItems}
+                    label={t(
+                        'nav.general',
+                    )}
+                    items={
+                        mainNavItems
+                    }
                 />
-
-                {/* Administración */}
 
                 {visibleAdministrationItems.length >
                     0 && (
                     <NavMain
-                        label="Administración"
+                        label={t(
+                            'nav.administration',
+                        )}
                         items={
                             visibleAdministrationItems
                         }
                     />
                 )}
 
-                {/* Configuración */}
-
                 {visibleConfigurationItems.length >
                     0 && (
                     <NavMain
-                        label="Configuración"
+                        label={t(
+                            'nav.configuration',
+                        )}
                         items={
                             visibleConfigurationItems
                         }
@@ -246,11 +212,11 @@ export function AppSidebar() {
                 )}
             </SidebarContent>
 
-            {/* Footer */}
-
             <SidebarFooter>
                 <NavFooter
-                    items={footerNavItems}
+                    items={
+                        footerNavItems
+                    }
                     className="mt-auto"
                 />
 

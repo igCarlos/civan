@@ -11,6 +11,7 @@ import {
 
 import { FormEvent } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -29,24 +30,88 @@ interface Props {
     modules: Module[];
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Roles',
-        href: '/dashboard/roles',
-    },
-    {
-        title: 'Nuevo rol',
-        href: '/dashboard/roles/crear',
-    },
-];
-
 export default function CreateRole({
     modules,
 }: Props) {
+    const { t } = useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t('roles.title'),
+            href: '/dashboard/roles',
+        },
+        {
+            title: t('roles.create.title'),
+            href: '/dashboard/roles/crear',
+        },
+    ];
+
     const form = useForm({
         name: '',
         permission_ids: [] as number[],
     });
+
+    const moduleLabel = (
+        module: string,
+    ): string => {
+        switch (module) {
+            case 'authentication':
+                return t('modules.authentication');
+            case 'users':
+                return t('modules.users');
+            case 'roles':
+                return t('modules.roles');
+            case 'permissions':
+                return t('modules.permissions');
+            case 'audit_logs':
+                return t('modules.audit_logs');
+            case 'settings':
+                return t('modules.settings');
+            case 'websites':
+                return t('modules.websites');
+            case 'domains':
+                return t('modules.domains');
+            case 'databases':
+                return t('modules.databases');
+            case 'server':
+                return t('modules.server');
+            default:
+                return module;
+        }
+    };
+
+    const permissionActionLabel = (
+        action: string,
+    ): string => {
+        switch (action) {
+            case 'view':
+                return t('permissions.action.view');
+            case 'create':
+                return t('permissions.action.create');
+            case 'update':
+                return t('permissions.action.update');
+            case 'delete':
+                return t('permissions.action.delete');
+            case 'sync':
+                return t('permissions.action.sync');
+            case 'export':
+                return t('permissions.action.export');
+            case 'roles.update':
+                return t(
+                    'permissions.action.roles_update',
+                );
+            case 'status.update':
+                return t(
+                    'permissions.action.status_update',
+                );
+            case 'retention.update':
+                return t(
+                    'permissions.action.retention_update',
+                );
+            default:
+                return action;
+        }
+    };
 
     const togglePermission = (
         permissionId: number,
@@ -115,10 +180,9 @@ export default function CreateRole({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Nuevo rol" />
+            <Head title={t('roles.create.title')} />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-
                 <div className="flex items-center gap-4">
                     <Link
                         href="/dashboard/roles"
@@ -129,11 +193,13 @@ export default function CreateRole({
 
                     <div>
                         <h1 className="text-2xl font-bold">
-                            Nuevo rol
+                            {t('roles.create.title')}
                         </h1>
 
                         <p className="text-sm text-muted-foreground">
-                            Crea un rol y selecciona sus permisos.
+                            {t(
+                                'roles.create.description',
+                            )}
                         </p>
                     </div>
                 </div>
@@ -144,7 +210,7 @@ export default function CreateRole({
                 >
                     <section className="rounded-xl border bg-card p-5 shadow-sm">
                         <label className="mb-2 block text-sm font-medium">
-                            Nombre del rol *
+                            {t('roles.create.name')} *
                         </label>
 
                         <input
@@ -155,7 +221,9 @@ export default function CreateRole({
                                     event.target.value,
                                 )
                             }
-                            placeholder="Ej: soporte"
+                            placeholder={t(
+                                'roles.create.name_placeholder',
+                            )}
                             className="h-10 w-full max-w-lg rounded-md border bg-background px-3 text-sm"
                         />
 
@@ -169,11 +237,15 @@ export default function CreateRole({
                     <section className="rounded-xl border bg-card shadow-sm">
                         <div className="border-b p-5">
                             <h2 className="font-semibold">
-                                Permisos
+                                {t(
+                                    'roles.create.permissions',
+                                )}
                             </h2>
 
                             <p className="text-sm text-muted-foreground">
-                                Selecciona qué podrá hacer este rol.
+                                {t(
+                                    'roles.create.permissions_description',
+                                )}
                             </p>
                         </div>
 
@@ -193,8 +265,10 @@ export default function CreateRole({
                                         className="overflow-hidden rounded-lg border"
                                     >
                                         <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
-                                            <h3 className="font-semibold capitalize">
-                                                {module.module}
+                                            <h3 className="font-semibold">
+                                                {moduleLabel(
+                                                    module.module,
+                                                )}
                                             </h3>
 
                                             <label className="flex cursor-pointer items-center gap-2 text-xs">
@@ -210,13 +284,17 @@ export default function CreateRole({
                                                     }
                                                 />
 
-                                                Todos
+                                                {t(
+                                                    'roles.create.all',
+                                                )}
                                             </label>
                                         </div>
 
                                         <div className="space-y-1 p-3">
                                             {module.permissions.map(
-                                                (permission) => (
+                                                (
+                                                    permission,
+                                                ) => (
                                                     <label
                                                         key={
                                                             permission.id
@@ -237,9 +315,9 @@ export default function CreateRole({
 
                                                         <div>
                                                             <p className="text-sm font-medium">
-                                                                {
-                                                                    permission.action
-                                                                }
+                                                                {permissionActionLabel(
+                                                                    permission.action,
+                                                                )}
                                                             </p>
 
                                                             <p className="text-xs text-muted-foreground">
@@ -263,7 +341,7 @@ export default function CreateRole({
                             href="/dashboard/roles"
                             className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-muted"
                         >
-                            Cancelar
+                            {t('common.cancel')}
                         </Link>
 
                         <button
@@ -274,8 +352,12 @@ export default function CreateRole({
                             <ShieldPlus className="size-4" />
 
                             {form.processing
-                                ? 'Creando...'
-                                : 'Crear rol'}
+                                ? t(
+                                      'roles.create.creating',
+                                  )
+                                : t(
+                                      'roles.create.submit',
+                                  )}
                         </button>
                     </div>
                 </form>

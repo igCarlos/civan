@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useTranslation } from '@/hooks/use-translation';
+import { type TranslationKey } from '@/i18n/translations';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -101,61 +103,178 @@ interface Props {
     };
 }
 
-const eventLabels: Record<string, string> = {
-    login: 'Inicio de sesión',
-    logout: 'Cierre de sesión',
-    create: 'Creación',
-    update: 'Edición',
-    delete: 'Eliminación',
-    role_change: 'Cambio de roles',
-    status_change: 'Cambio de estado',
-    permission_change: 'Cambio de permisos',
-    page_view: 'Navegación',
+type Translate = (
+    key: TranslationKey,
+) => string;
+
+const eventLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    login: 'users.activity.event.login',
+    logout: 'users.activity.event.logout',
+    create: 'users.activity.event.create',
+    update: 'users.activity.event.update',
+    delete: 'users.activity.event.delete',
+    role_change:
+        'users.activity.event.role_change',
+    status_change:
+        'users.activity.event.status_change',
+    permission_change:
+        'users.activity.event.permission_change',
+    page_view:
+        'users.activity.event.page_view',
+    audit_export:
+        'users.activity.event.audit_export',
+    audit_prune:
+        'users.activity.event.audit_prune',
+    audit_retention_update:
+        'users.activity.event.audit_retention_update',
+    permission_sync:
+        'users.activity.event.permission_sync',
+    system_settings_update:
+        'users.activity.event.system_settings_update',
 };
 
-const moduleLabels: Record<string, string> = {
-    authentication: 'Autenticación',
-    users: 'Usuarios',
-    roles: 'Roles',
-    permissions: 'Permisos',
-    audit_logs: 'Auditoría',
-    websites: 'Sitios web',
-    domains: 'Dominios',
-    databases: 'Bases de datos',
-    server: 'Servidor',
+const moduleLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    authentication:
+        'users.activity.module.authentication',
+    users: 'users.activity.module.users',
+    roles: 'users.activity.module.roles',
+    permissions:
+        'users.activity.module.permissions',
+    audit_logs:
+        'users.activity.module.audit_logs',
+    websites:
+        'users.activity.module.websites',
+    domains:
+        'users.activity.module.domains',
+    databases:
+        'users.activity.module.databases',
+    server:
+        'users.activity.module.server',
+    settings:
+        'users.activity.module.settings',
 };
 
-const fieldLabels: Record<string, string> = {
-    id: 'ID',
-    name: 'Nombre',
-    username: 'Usuario',
-    email: 'Correo',
-    phone: 'Teléfono',
-    status: 'Estado',
-    roles: 'Roles',
-    permissions: 'Permisos',
+const fieldLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    id: 'users.activity.field.id',
+    name: 'users.activity.field.name',
+    username:
+        'users.activity.field.username',
+    email: 'users.activity.field.email',
+    phone: 'users.activity.field.phone',
+    status: 'users.activity.field.status',
+    roles: 'users.activity.field.roles',
+    permissions:
+        'users.activity.field.permissions',
+    panel_name:
+        'users.activity.field.panel_name',
+    short_name:
+        'users.activity.field.short_name',
+    timezone:
+        'users.activity.field.timezone',
+    locale:
+        'users.activity.field.locale',
+    date_format:
+        'users.activity.field.date_format',
+    time_format:
+        'users.activity.field.time_format',
+    per_page:
+        'users.activity.field.per_page',
+    retention_days:
+        'users.activity.field.retention_days',
+    cutoff:
+        'users.activity.field.cutoff',
+    deleted_count:
+        'users.activity.field.deleted_count',
+    format:
+        'users.activity.field.format',
+    filters:
+        'users.activity.field.filters',
 };
 
-function eventLabel(event: string) {
-    return eventLabels[event] ?? event;
+function eventLabel(
+    event: string,
+    t: Translate,
+) {
+    const key =
+        eventLabelKeys[event];
+
+    return key
+        ? t(key)
+        : event;
+}
+
+const descriptionLabelKeys: Record<
+    string,
+    TranslationKey
+> = {
+    system_settings_update:
+        'users.activity.description.system_settings_update',
+};
+
+function activityDescription(
+    activity: ActivityItem,
+    t: Translate,
+): string {
+    const key =
+        descriptionLabelKeys[
+            activity.event
+        ];
+
+    if (key) {
+        return t(key);
+    }
+
+    return (
+        activity.description ??
+        eventLabel(
+            activity.event,
+            t,
+        )
+    );
 }
 
 function moduleLabel(
     module: string | null,
+    t: Translate,
 ) {
     if (!module) {
-        return 'Sistema';
+        return t(
+            'users.activity.system',
+        );
     }
 
-    return moduleLabels[module] ?? module;
+    const key =
+        moduleLabelKeys[module];
+
+    return key
+        ? t(key)
+        : module;
 }
 
-function fieldLabel(field: string) {
-    return fieldLabels[field] ?? field;
+function fieldLabel(
+    field: string,
+    t: Translate,
+) {
+    const key =
+        fieldLabelKeys[field];
+
+    return key
+        ? t(key)
+        : field;
 }
 
 function formatValue(
     value: unknown,
+    t: Translate,
 ): string {
     if (
         value === null ||
@@ -168,11 +287,13 @@ function formatValue(
     if (Array.isArray(value)) {
         return value.length
             ? value.join(', ')
-            : 'Ninguno';
+            : t('common.none');
     }
 
     if (typeof value === 'boolean') {
-        return value ? 'Sí' : 'No';
+        return value
+            ? t('common.yes')
+            : t('common.no');
     }
 
     if (typeof value === 'object') {
@@ -183,31 +304,58 @@ function formatValue(
         );
     }
 
+    if (value === 'es') {
+        return t(
+            'locale.es',
+        );
+    }
+
+    if (value === 'en') {
+        return t(
+            'locale.en',
+        );
+    }
+
     if (value === 'active') {
-        return 'Activo';
+        return t(
+            'users.status.active',
+        );
     }
 
     if (value === 'pending') {
-        return 'Pendiente';
+        return t(
+            'users.status.pending',
+        );
     }
 
     if (value === 'suspended') {
-        return 'Suspendido';
+        return t(
+            'users.status.suspended',
+        );
     }
 
     return String(value);
 }
 
-function statusLabel(status: string) {
+function statusLabel(
+    status: string,
+    t: Translate,
+) {
     switch (status) {
         case 'active':
-            return 'Activo';
+            return t(
+                'users.status.active',
+            );
 
         case 'pending':
-            return 'Pendiente';
+            return t(
+                'users.status.pending',
+            );
 
         case 'suspended':
-            return 'Suspendido';
+            return t(
+                'users.status.suspended',
+            );
 
         default:
             return status;
@@ -232,17 +380,24 @@ function statusClass(status: string) {
 
 function presenceLabel(
     presence: UserItem['presence'],
+    t: Translate,
 ) {
     switch (presence) {
         case 'online':
-            return 'En línea';
+            return t(
+                'users.presence.online',
+            );
 
         case 'away':
-            return 'Ausente';
+            return t(
+                'users.presence.away',
+            );
 
         case 'offline':
         default:
-            return 'Desconectado';
+            return t(
+                'users.presence.offline',
+            );
     }
 }
 
@@ -264,16 +419,23 @@ function presenceClass(
 
 function relationLabel(
     relation: ActivityItem['relation'],
+    t: Translate,
 ) {
     switch (relation) {
         case 'performed':
-            return 'Realizada por el usuario';
+            return t(
+                'users.activity.relation.performed',
+            );
 
         case 'affected':
-            return 'Sobre el usuario';
+            return t(
+                'users.activity.relation.affected',
+            );
 
         case 'self':
-            return 'Actividad propia';
+            return t(
+                'users.activity.relation.self',
+            );
     }
 }
 
@@ -363,6 +525,8 @@ export default function UserActivity({
     activities,
     can,
 }: Props) {
+    const { t } = useTranslation();
+
     const [
         expanded,
         setExpanded,
@@ -370,7 +534,7 @@ export default function UserActivity({
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Usuarios',
+            title: t('users.title'),
             href: '/dashboard/usuarios',
         },
         {
@@ -378,7 +542,7 @@ export default function UserActivity({
             href: `/dashboard/usuarios/${user.id}/editar`,
         },
         {
-            title: 'Actividad',
+            title: t('users.activity.title'),
             href: `/dashboard/usuarios/${user.id}/actividad`,
         },
     ];
@@ -451,12 +615,42 @@ export default function UserActivity({
         );
     };
 
+    const paginationLabel = (
+        label: string,
+    ): string => {
+        const normalized = label
+            .replace(/&laquo;|&raquo;/g, '')
+            .replace(/«|»/g, '')
+            .trim()
+            .toLowerCase();
+
+        if (
+            normalized.includes('previous') ||
+            normalized.includes('anterior')
+        ) {
+            return `« ${t(
+                'pagination.previous',
+            )}`;
+        }
+
+        if (
+            normalized.includes('next') ||
+            normalized.includes('siguiente')
+        ) {
+            return `${t(
+                'pagination.next',
+            )} »`;
+        }
+
+        return label;
+    };
+
     return (
         <AppLayout
             breadcrumbs={breadcrumbs}
         >
             <Head
-                title={`Actividad - ${user.name}`}
+                title={`${t('users.activity.title')} - ${user.name}`}
             />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -484,13 +678,15 @@ export default function UserActivity({
                                 >
                                     {statusLabel(
                                         user.status,
+                                        t,
                                     )}
                                 </span>
                             </div>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Historial de actividad y
-                                seguridad del usuario.
+                                {t(
+                                    'users.activity.description',
+                                )}
                             </p>
                         </div>
                     </div>
@@ -501,7 +697,9 @@ export default function UserActivity({
                             className="inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium hover:bg-muted"
                         >
                             <Pencil className="size-4" />
-                            Administrar usuario
+                            {t(
+                                'users.activity.manage_user',
+                            )}
                         </Link>
                     )}
                 </div>
@@ -511,7 +709,9 @@ export default function UserActivity({
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <p className="text-sm text-muted-foreground">
-                            Presencia
+                            {t(
+                                'users.activity.presence',
+                            )}
                         </p>
 
                         <div className="mt-3 flex items-center gap-2">
@@ -524,25 +724,32 @@ export default function UserActivity({
                             <span className="font-semibold">
                                 {presenceLabel(
                                     user.presence,
+                                    t,
                                 )}
                             </span>
                         </div>
 
                         <p className="mt-2 text-xs text-muted-foreground">
                             {user.last_seen_at_human ??
-                                'Sin actividad registrada'}
+                                t(
+                                    'users.no_activity',
+                                )}
                         </p>
                     </div>
 
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock3 className="size-4" />
-                            Último inicio
+                            {t(
+                                'users.last_login',
+                            )}
                         </div>
 
                         <p className="mt-3 font-semibold">
                             {user.last_login_at_human ??
-                                'Nunca'}
+                                t(
+                                    'users.never',
+                                )}
                         </p>
 
                         <p className="mt-2 text-xs text-muted-foreground">
@@ -553,7 +760,9 @@ export default function UserActivity({
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <History className="size-4" />
-                            Actividades
+                            {t(
+                                'users.activity.activities',
+                            )}
                         </div>
 
                         <p className="mt-3 text-2xl font-bold">
@@ -561,14 +770,18 @@ export default function UserActivity({
                         </p>
 
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Registros relacionados
+                            {t(
+                                'users.activity.related_records',
+                            )}
                         </p>
                     </div>
 
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Shield className="size-4" />
-                            Roles
+                            {t(
+                                'users.activity.roles',
+                            )}
                         </div>
 
                         <div className="mt-3 flex flex-wrap gap-1">
@@ -585,7 +798,9 @@ export default function UserActivity({
                                 )
                             ) : (
                                 <span className="text-sm text-muted-foreground">
-                                    Sin rol
+                                    {t(
+                                        'users.no_role',
+                                    )}
                                 </span>
                             )}
                         </div>
@@ -598,7 +813,9 @@ export default function UserActivity({
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                             <p className="text-xs text-muted-foreground">
-                                Correo
+                                {t(
+                                'users.activity.email',
+                            )}
                             </p>
 
                             <p className="mt-1 text-sm font-medium">
@@ -608,7 +825,9 @@ export default function UserActivity({
 
                         <div>
                             <p className="text-xs text-muted-foreground">
-                                Usuario
+                                {t(
+                                'users.activity.username',
+                            )}
                             </p>
 
                             <p className="mt-1 text-sm font-medium">
@@ -620,12 +839,16 @@ export default function UserActivity({
 
                         <div>
                             <p className="text-xs text-muted-foreground">
-                                Última actividad
+                                {t(
+                                'users.last_activity',
+                            )}
                             </p>
 
                             <p className="mt-1 text-sm font-medium">
                                 {user.last_seen_at ??
-                                    'Nunca'}
+                                    t(
+                                    'users.never',
+                                )}
                             </p>
                         </div>
                     </div>
@@ -636,13 +859,15 @@ export default function UserActivity({
                 <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
                     <div className="border-b p-5">
                         <h2 className="font-semibold">
-                            Historial de actividad
+                            {t(
+                                'users.activity.history',
+                            )}
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Acciones realizadas por el
-                            usuario y acciones realizadas
-                            sobre su cuenta.
+                            {t(
+                                'users.activity.history_description',
+                            )}
                         </p>
                     </div>
 
@@ -652,13 +877,15 @@ export default function UserActivity({
                             <History className="mb-3 size-10 text-muted-foreground" />
 
                             <h3 className="font-semibold">
-                                Sin actividad
+                                {t(
+                                    'users.activity.empty_title',
+                                )}
                             </h3>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Todavía no existen
-                                registros relacionados con
-                                este usuario.
+                                {t(
+                                    'users.activity.empty_description',
+                                )}
                             </p>
                         </div>
                     ) : (
@@ -698,33 +925,39 @@ export default function UserActivity({
                                                                 <span className="font-semibold">
                                                                     {eventLabel(
                                                                         activity.event,
+                                                                        t,
                                                                     )}
                                                                 </span>
 
                                                                 <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
                                                                     {relationLabel(
                                                                         activity.relation,
+                                                                        t,
                                                                     )}
                                                                 </span>
                                                             </div>
 
                                                             <p className="mt-1 text-sm">
-                                                                {activity.description ??
-                                                                    eventLabel(
-                                                                        activity.event,
-                                                                    )}
+                                                                {activityDescription(
+                                                                    activity,
+                                                                    t,
+                                                                )}
                                                             </p>
 
                                                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                                                                 <span>
                                                                     {moduleLabel(
                                                                         activity.module,
+                                                                        t,
                                                                     )}
                                                                 </span>
 
                                                                 {activity.actor && (
                                                                     <span>
-                                                                        Por:{' '}
+                                                                        {t(
+                                                                            'users.activity.by',
+                                                                        )}
+                                                                        :{' '}
                                                                         {
                                                                             activity
                                                                                 .actor
@@ -779,6 +1012,7 @@ export default function UserActivity({
                                                                                 <span className="font-medium">
                                                                                     {fieldLabel(
                                                                                         field,
+                                                                                        t,
                                                                                     )}
                                                                                 </span>
 
@@ -788,6 +1022,7 @@ export default function UserActivity({
                                                                                             .old_values?.[
                                                                                             field
                                                                                         ],
+                                                                                        t,
                                                                                     )}
                                                                                 </span>
 
@@ -801,6 +1036,7 @@ export default function UserActivity({
                                                                                             .new_values?.[
                                                                                             field
                                                                                         ],
+                                                                                        t,
                                                                                     )}
                                                                                 </span>
                                                                             </div>
@@ -822,14 +1058,16 @@ export default function UserActivity({
                                                         {isOpen ? (
                                                             <>
                                                                 <ChevronUp className="size-4" />
-                                                                Ocultar
-                                                                detalles
+                                                                {t(
+                                                                    'users.activity.hide_details',
+                                                                )}
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <ChevronDown className="size-4" />
-                                                                Ver
-                                                                detalles
+                                                                {t(
+                                                                    'users.activity.show_details',
+                                                                )}
                                                             </>
                                                         )}
                                                     </button>
@@ -838,40 +1076,52 @@ export default function UserActivity({
                                                         <div className="mt-4 grid gap-4 lg:grid-cols-2">
                                                             <div className="rounded-lg border p-4">
                                                                 <h4 className="font-semibold">
-                                                                    Actividad
+                                                                    {t(
+                                                                        'users.activity.details_activity',
+                                                                    )}
                                                                 </h4>
 
                                                                 <dl className="mt-4 space-y-3 text-sm">
                                                                     <div>
                                                                         <dt className="text-muted-foreground">
-                                                                            Actor
+                                                                            {t(
+                                                                                'users.activity.actor',
+                                                                            )}
                                                                         </dt>
                                                                         <dd>
                                                                             {activity
                                                                                 .actor
                                                                                 ?.name ??
-                                                                                'Sistema'}
+                                                                                t(
+                                                                                    'users.activity.system',
+                                                                                )}
                                                                         </dd>
                                                                     </div>
 
                                                                     <div>
                                                                         <dt className="text-muted-foreground">
-                                                                            Relación
+                                                                            {t(
+                                                                                'users.activity.relation',
+                                                                            )}
                                                                         </dt>
                                                                         <dd>
                                                                             {relationLabel(
                                                                                 activity.relation,
+                                                                                t,
                                                                             )}
                                                                         </dd>
                                                                     </div>
 
                                                                     <div>
                                                                         <dt className="text-muted-foreground">
-                                                                            Módulo
+                                                                            {t(
+                                                                                'users.activity.module',
+                                                                            )}
                                                                         </dt>
                                                                         <dd>
                                                                             {moduleLabel(
                                                                                 activity.module,
+                                                                                t,
                                                                             )}
                                                                         </dd>
                                                                     </div>
@@ -879,8 +1129,9 @@ export default function UserActivity({
                                                                     {activity.subject_id && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Registro
-                                                                                afectado
+                                                                                {t(
+                                                                                    'users.activity.affected_record',
+                                                                                )}
                                                                             </dt>
                                                                             <dd>
                                                                                 #
@@ -895,8 +1146,9 @@ export default function UserActivity({
 
                                                             <div className="rounded-lg border p-4">
                                                                 <h4 className="font-semibold">
-                                                                    Información
-                                                                    técnica
+                                                                    {t(
+                                                                        'users.activity.technical_info',
+                                                                    )}
                                                                 </h4>
 
                                                                 <dl className="mt-4 space-y-3 text-sm">
@@ -918,7 +1170,9 @@ export default function UserActivity({
                                                                     {activity.method && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Método
+                                                                                {t(
+                                                                                    'users.activity.method',
+                                                                                )}
                                                                             </dt>
                                                                             <dd>
                                                                                 {
@@ -931,7 +1185,9 @@ export default function UserActivity({
                                                                     {activity.route && (
                                                                         <div>
                                                                             <dt className="text-muted-foreground">
-                                                                                Ruta
+                                                                                {t(
+                                                                                    'users.activity.route',
+                                                                                )}
                                                                             </dt>
                                                                             <dd className="break-all">
                                                                                 {
@@ -960,9 +1216,9 @@ export default function UserActivity({
                                                                 0 && (
                                                                 <div className="rounded-lg border p-4 lg:col-span-2">
                                                                     <h4 className="font-semibold">
-                                                                        Todos
-                                                                        los
-                                                                        cambios
+                                                                        {t(
+                                                                            'users.activity.all_changes',
+                                                                        )}
                                                                     </h4>
 
                                                                     <div className="mt-4 overflow-x-auto">
@@ -970,13 +1226,19 @@ export default function UserActivity({
                                                                             <thead>
                                                                                 <tr className="border-b text-left">
                                                                                     <th className="pb-3 pr-4">
-                                                                                        Campo
+                                                                                        {t(
+                                                                                            'users.activity.field',
+                                                                                        )}
                                                                                     </th>
                                                                                     <th className="pb-3 pr-4">
-                                                                                        Antes
+                                                                                        {t(
+                                                                                            'users.activity.before',
+                                                                                        )}
                                                                                     </th>
                                                                                     <th className="pb-3">
-                                                                                        Después
+                                                                                        {t(
+                                                                                            'users.activity.after',
+                                                                                        )}
                                                                                     </th>
                                                                                 </tr>
                                                                             </thead>
@@ -994,6 +1256,7 @@ export default function UserActivity({
                                                                                             <td className="py-3 pr-4 font-medium">
                                                                                                 {fieldLabel(
                                                                                                     field,
+                                                                                                    t,
                                                                                                 )}
                                                                                             </td>
 
@@ -1003,6 +1266,7 @@ export default function UserActivity({
                                                                                                         .old_values?.[
                                                                                                         field
                                                                                                     ],
+                                                                                                    t,
                                                                                                 )}
                                                                                             </td>
 
@@ -1012,6 +1276,7 @@ export default function UserActivity({
                                                                                                         .new_values?.[
                                                                                                         field
                                                                                                     ],
+                                                                                                    t,
                                                                                                 )}
                                                                                             </td>
                                                                                         </tr>
@@ -1037,9 +1302,10 @@ export default function UserActivity({
                         1 && (
                         <div className="flex flex-col gap-3 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                Mostrando{' '}
+                                {t('users.showing')}{' '}
                                 {activities.from ?? 0} -{' '}
-                                {activities.to ?? 0} de{' '}
+                                {activities.to ?? 0}{' '}
+                                {t('users.of')}{' '}
                                 {activities.total}
                             </p>
 
@@ -1070,16 +1336,16 @@ export default function UserActivity({
                                                     );
                                                 }
                                             }}
-                                            dangerouslySetInnerHTML={{
-                                                __html:
-                                                    link.label,
-                                            }}
                                             className={`rounded-md border px-3 py-1.5 text-sm ${
                                                 link.active
                                                     ? 'bg-primary text-primary-foreground'
                                                     : 'hover:bg-muted'
                                             } disabled:opacity-40`}
-                                        />
+                                        >
+                                            {paginationLabel(
+                                                link.label,
+                                            )}
+                                        </button>
                                     ),
                                 )}
                             </div>

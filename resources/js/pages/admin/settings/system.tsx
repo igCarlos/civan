@@ -18,7 +18,12 @@ import {
     FormEvent,
 } from 'react';
 
+import {
+    useTranslation,
+} from '@/hooks/use-translation';
+
 import AppLayout from '@/layouts/app-layout';
+
 import {
     type BreadcrumbItem,
 } from '@/types';
@@ -48,7 +53,6 @@ interface Options {
 
 interface Props {
     settings: SystemSettings;
-
     options: Options;
 
     can: {
@@ -56,22 +60,30 @@ interface Props {
     };
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Configuración',
-        href: '/dashboard/configuracion/sistema',
-    },
-    {
-        title: 'Sistema',
-        href: '/dashboard/configuracion/sistema',
-    },
-];
-
 export default function SystemSettingsPage({
     settings,
     options,
     can,
 }: Props) {
+    const {
+        t,
+    } = useTranslation();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t(
+                'nav.configuration',
+            ),
+            href: '/dashboard/configuracion/sistema',
+        },
+        {
+            title: t(
+                'nav.system',
+            ),
+            href: '/dashboard/configuracion/sistema',
+        },
+    ];
+
     const form =
         useForm({
             panel_name:
@@ -116,12 +128,13 @@ export default function SystemSettingsPage({
                 breadcrumbs
             }
         >
-            <Head title="Configuración del sistema" />
+            <Head
+                title={t(
+                    'settings.title',
+                )}
+            />
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-
-                {/* Encabezado */}
-
                 <div className="flex items-start gap-3">
                     <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-card">
                         <Settings className="size-5" />
@@ -129,12 +142,15 @@ export default function SystemSettingsPage({
 
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">
-                            Configuración del sistema
+                            {t(
+                                'settings.title',
+                            )}
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Administra las preferencias generales
-                            de CIVAN.
+                            {t(
+                                'settings.description',
+                            )}
                         </p>
                     </div>
                 </div>
@@ -143,32 +159,34 @@ export default function SystemSettingsPage({
                     onSubmit={submit}
                     className="space-y-6"
                 >
-
-                    {/* Identidad */}
-
                     <section className="rounded-xl border bg-card shadow-sm">
                         <div className="border-b p-5">
                             <div className="flex items-center gap-2">
                                 <LayoutDashboard className="size-4" />
 
                                 <h2 className="font-semibold">
-                                    Identidad
+                                    {t(
+                                        'settings.identity',
+                                    )}
                                 </h2>
                             </div>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Nombre y marca visibles dentro del panel.
+                                {t(
+                                    'settings.identity_description',
+                                )}
                             </p>
                         </div>
 
                         <div className="grid gap-5 p-5 md:grid-cols-2">
-
                             <div className="space-y-2">
                                 <label
                                     htmlFor="panel_name"
                                     className="text-sm font-medium"
                                 >
-                                    Nombre del panel
+                                    {t(
+                                        'settings.panel_name',
+                                    )}
                                 </label>
 
                                 <div className="relative">
@@ -206,7 +224,9 @@ export default function SystemSettingsPage({
                                     htmlFor="short_name"
                                     className="text-sm font-medium"
                                 >
-                                    Nombre corto
+                                    {t(
+                                        'settings.short_name',
+                                    )}
                                 </label>
 
                                 <input
@@ -237,25 +257,26 @@ export default function SystemSettingsPage({
                         </div>
                     </section>
 
-                    {/* Regional */}
-
                     <section className="rounded-xl border bg-card shadow-sm">
                         <div className="border-b p-5">
                             <div className="flex items-center gap-2">
                                 <Globe2 className="size-4" />
 
                                 <h2 className="font-semibold">
-                                    Regional
+                                    {t(
+                                        'settings.regional',
+                                    )}
                                 </h2>
                             </div>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Zona horaria, idioma y formatos.
+                                {t(
+                                    'settings.regional_description',
+                                )}
                             </p>
                         </div>
 
                         <div className="grid gap-5 p-5 md:grid-cols-2 xl:grid-cols-3">
-
                             <div className="space-y-2">
                                 <label
                                     htmlFor="timezone"
@@ -263,7 +284,9 @@ export default function SystemSettingsPage({
                                 >
                                     <Globe2 className="size-4" />
 
-                                    Zona horaria
+                                    {t(
+                                        'settings.timezone',
+                                    )}
                                 </label>
 
                                 <select
@@ -309,7 +332,9 @@ export default function SystemSettingsPage({
                                 >
                                     <Languages className="size-4" />
 
-                                    Idioma
+                                    {t(
+                                        'settings.language',
+                                    )}
                                 </label>
 
                                 <select
@@ -329,17 +354,24 @@ export default function SystemSettingsPage({
                                     }
                                     className="h-10 w-full rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    {options.locales.map(
-                                        (option) => (
-                                            <option
-                                                key={option.value}
-                                                value={option.value}
-                                            >
-                                                {option.label}
-                                            </option>
-                                        ),
-                                    )}
+                                    <option value="es">
+                                        {t(
+                                            'settings.spanish',
+                                        )}
+                                    </option>
+
+                                    <option value="en">
+                                        {t(
+                                            'settings.english',
+                                        )}
+                                    </option>
                                 </select>
+
+                                {form.errors.locale && (
+                                    <p className="text-sm text-destructive">
+                                        {form.errors.locale}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -347,7 +379,9 @@ export default function SystemSettingsPage({
                                     htmlFor="per_page"
                                     className="text-sm font-medium"
                                 >
-                                    Registros por página
+                                    {t(
+                                        'settings.per_page',
+                                    )}
                                 </label>
 
                                 <select
@@ -391,7 +425,9 @@ export default function SystemSettingsPage({
                                 >
                                     <CalendarDays className="size-4" />
 
-                                    Formato de fecha
+                                    {t(
+                                        'settings.date_format',
+                                    )}
                                 </label>
 
                                 <select
@@ -433,7 +469,9 @@ export default function SystemSettingsPage({
                                 >
                                     <Clock3 className="size-4" />
 
-                                    Formato de hora
+                                    {t(
+                                        'settings.time_format',
+                                    )}
                                 </label>
 
                                 <select
@@ -470,8 +508,6 @@ export default function SystemSettingsPage({
                         </div>
                     </section>
 
-                    {/* Guardar */}
-
                     {can.update && (
                         <div className="flex justify-end">
                             <button
@@ -484,8 +520,12 @@ export default function SystemSettingsPage({
                                 <Save className="size-4" />
 
                                 {form.processing
-                                    ? 'Guardando...'
-                                    : 'Guardar configuración'}
+                                    ? t(
+                                          'settings.saving',
+                                      )
+                                    : t(
+                                          'settings.save',
+                                      )}
                             </button>
                         </div>
                     )}
