@@ -2,7 +2,7 @@
 
 Panel de administración desarrollado con **Laravel 12 + Inertia + React + TypeScript + Vite**.
 
-CIVAN está orientado a la administración de un servidor/hosting desde una interfaz web moderna. La versión actual incluye gestión de usuarios, roles y permisos, auditoría, configuración general del sistema, internacionalización Español/Inglés, personalización visual del panel y branding dinámico.
+CIVAN está orientado a la administración desde una interfaz web moderna. La versión actual incluye gestión de usuarios, roles y permisos, auditoría, configuración general del sistema, internacionalización Español/Inglés, personalización visual del panel y branding dinámico.
 
 ---
 
