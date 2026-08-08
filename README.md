@@ -6,6 +6,18 @@ CIVAN está orientado a la administración de un servidor/hosting desde una inte
 
 ---
 
+<p align="center">
+  <img
+    src="docs/images/civan-usuarios.png"
+    alt="CIVAN - Gestión de usuarios"
+    width="100%"
+  >
+</p>
+
+<p align="center">
+  <em>Vista del módulo de gestión de usuarios de CIVAN.</em>
+</p>
+
 # Tabla de contenido
 
 1. [Características actuales](#características-actuales)
