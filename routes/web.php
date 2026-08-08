@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\UserActivityController;
 use App\Http\Controllers\Admin\AuditExportController;
+use App\Http\Controllers\Admin\AuditRetentionController;
+use App\Http\Controllers\Admin\SystemSettingsController;
 
 use Inertia\Inertia;
 
@@ -142,6 +144,50 @@ Route::middleware([
                 )
                 ->name(
                     'audit.export.pdf'
+                );
+
+            // ##############################
+            // RETENCIÓN DE AUDITORÍA
+            // ##############################
+
+            Route::get(
+                '/auditoria/retencion',
+                [
+                    AuditRetentionController::class,
+                    'index',
+                ]
+            )
+                ->middleware('can:audit_logs.view')
+                ->name('audit.retention.index');
+
+
+            Route::put(
+                '/auditoria/retencion',
+                [
+                    AuditRetentionController::class,
+                    'update',
+                ]
+            )
+                ->middleware(
+                    'can:audit_logs.retention.update'
+                )
+                ->name(
+                    'audit.retention.update'
+                );
+
+
+            Route::post(
+                '/auditoria/retencion/limpiar',
+                [
+                    AuditRetentionController::class,
+                    'prune',
+                ]
+            )
+                ->middleware(
+                    'can:audit_logs.retention.update'
+                )
+                ->name(
+                    'audit.retention.prune'
                 );
 
 
@@ -392,6 +438,35 @@ Route::middleware([
                 ->name(
                     'roles.destroy'
                 );
+
+
+            // ##############################
+            // CONFIGURACIÓN DEL SISTEMA
+            // ##############################
+
+            Route::get(
+                '/configuracion/sistema',
+                [
+                    SystemSettingsController::class,
+                    'index',
+                ]
+            )
+                ->middleware('can:settings.view')
+                ->name('settings.system.index');
+
+
+            Route::put(
+                '/configuracion/sistema',
+                [
+                    SystemSettingsController::class,
+                    'update',
+                ]
+            )
+                ->middleware('can:settings.update')
+                ->name('settings.system.update');
+
+
+
         });
 });
 

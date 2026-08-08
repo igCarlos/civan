@@ -192,20 +192,27 @@
 
         if (!empty($filters['actor_id'])) {
             $activeFilters[] =
-                'Usuario ID: ' .
-                $filters['actor_id'];
+                'Usuario: ' .
+                (
+                    $filters['actor_name']
+                    ?? ('ID ' . $filters['actor_id'])
+                );
         }
 
         if (!empty($filters['date_from'])) {
             $activeFilters[] =
                 'Desde: ' .
-                $filters['date_from'];
+                \Carbon\Carbon::parse(
+                    $filters['date_from']
+                )->format('d/m/Y');
         }
 
         if (!empty($filters['date_to'])) {
             $activeFilters[] =
                 'Hasta: ' .
-                $filters['date_to'];
+                \Carbon\Carbon::parse(
+                    $filters['date_to']
+                )->format('d/m/Y');
         }
     @endphp
 

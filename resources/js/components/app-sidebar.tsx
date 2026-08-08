@@ -25,6 +25,7 @@ import {
     Folder,
     KeyRound,
     LayoutGrid,
+    Settings,
     ShieldCheck,
     Users,
 } from 'lucide-react';
@@ -88,6 +89,21 @@ const administrationNavItems: PermissionNavItem[] = [
         url: '/dashboard/auditoria',
         icon: Activity,
         permission: 'audit_logs.view',
+    },
+];
+
+/*
+|--------------------------------------------------------------------------
+| Configuración
+|--------------------------------------------------------------------------
+*/
+
+const configurationNavItems: PermissionNavItem[] = [
+    {
+        title: 'Sistema',
+        url: '/dashboard/configuracion/sistema',
+        icon: Settings,
+        permission: 'settings.view',
     },
 ];
 
@@ -162,6 +178,14 @@ export function AppSidebar() {
                 ),
         );
 
+    const visibleConfigurationItems =
+        configurationNavItems.filter(
+            (item) =>
+                hasPermission(
+                    item.permission,
+                ),
+        );
+
     return (
         <Sidebar
             collapsible="icon"
@@ -205,6 +229,18 @@ export function AppSidebar() {
                         label="Administración"
                         items={
                             visibleAdministrationItems
+                        }
+                    />
+                )}
+
+                {/* Configuración */}
+
+                {visibleConfigurationItems.length >
+                    0 && (
+                    <NavMain
+                        label="Configuración"
+                        items={
+                            visibleConfigurationItems
                         }
                     />
                 )}

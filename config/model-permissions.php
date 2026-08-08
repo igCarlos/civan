@@ -31,6 +31,7 @@ return [
 
          'AuditLog' => [
             'export',
+            'retention.update',
         ],
 
     ],
@@ -42,7 +43,7 @@ return [
     */
 
     'excluded_models' => [
-        //
+        'SystemSetting',
     ],
 
     /*
@@ -63,6 +64,10 @@ return [
         'permissions.view',
         'permissions.update',
         'permissions.sync',
+
+        // Configuración
+        'settings.view',
+        'settings.update',
 
     ],
 

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\User;
+use App\Services\AuditService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -26,10 +28,44 @@ class AuditExportController extends Controller
             $request
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Snapshot
+        |--------------------------------------------------------------------------
+        |
+        | Guardamos el último ID existente antes de registrar la exportación.
+        | Así el propio evento audit_export no termina dentro del archivo
+        | que se está generando.
+        |
+        */
+
+        $snapshotId =
+            (int) (
+                AuditLog::query()
+                    ->max('id')
+                ?? 0
+            );
+
         $query =
             $this->filteredQuery(
                 $request
+            )
+                ->where(
+                    'id',
+                    '<=',
+                    $snapshotId
+                );
+
+        $filters =
+            $this->resolvedFilters(
+                $request
             );
+
+        $this->logExport(
+            $request,
+            'CSV',
+            $filters
+        );
 
         $filename =
             'auditoria-' .
@@ -118,10 +154,33 @@ class AuditExportController extends Controller
             $request
         );
 
+        $snapshotId =
+            (int) (
+                AuditLog::query()
+                    ->max('id')
+                ?? 0
+            );
+
         $query =
             $this->filteredQuery(
                 $request
+            )
+                ->where(
+                    'id',
+                    '<=',
+                    $snapshotId
+                );
+
+        $filters =
+            $this->resolvedFilters(
+                $request
             );
+
+        $this->logExport(
+            $request,
+            'Excel',
+            $filters
+        );
 
         $spreadsheet =
             new Spreadsheet();
@@ -349,10 +408,22 @@ class AuditExportController extends Controller
         |
         */
 
+        $snapshotId =
+            (int) (
+                AuditLog::query()
+                    ->max('id')
+                ?? 0
+            );
+
         $query =
             $this->filteredQuery(
                 $request
-            );
+            )
+                ->where(
+                    'id',
+                    '<=',
+                    $snapshotId
+                );
 
         $logs =
             $query
@@ -365,46 +436,22 @@ class AuditExportController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $filters = [
-            'search' =>
-                trim(
-                    (string) $request->input(
-                        'search',
-                        ''
-                    )
-                ),
+        $filters =
+            $this->resolvedFilters(
+                $request
+            );
 
-            'event' =>
-                trim(
-                    (string) $request->input(
-                        'event',
-                        ''
-                    )
-                ),
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría de exportación
+        |--------------------------------------------------------------------------
+        */
 
-            'module' =>
-                trim(
-                    (string) $request->input(
-                        'module',
-                        ''
-                    )
-                ),
-
-            'actor_id' =>
-                $request->input(
-                    'actor_id'
-                ),
-
-            'date_from' =>
-                $request->input(
-                    'date_from'
-                ),
-
-            'date_to' =>
-                $request->input(
-                    'date_to'
-                ),
-        ];
+        $this->logExport(
+            $request,
+            'PDF',
+            $filters
+        );
 
         $pdf =
             Pdf::loadView(
@@ -638,6 +685,114 @@ class AuditExportController extends Controller
                 )
             );
         }
+    }
+
+    /**
+     * Resolver los filtros activos y el nombre del usuario seleccionado.
+     */
+    private function resolvedFilters(
+        Request $request
+    ): array {
+        $actorId =
+            $request->filled(
+                'actor_id'
+            )
+                ? $request->integer(
+                    'actor_id'
+                )
+                : null;
+
+        $actorName = null;
+
+        if ($actorId) {
+            $actorName =
+                User::query()
+                    ->whereKey(
+                        $actorId
+                    )
+                    ->value(
+                        'name'
+                    );
+        }
+
+        return [
+            'search' =>
+                trim(
+                    (string) $request->input(
+                        'search',
+                        ''
+                    )
+                ),
+
+            'event' =>
+                trim(
+                    (string) $request->input(
+                        'event',
+                        ''
+                    )
+                ),
+
+            'module' =>
+                trim(
+                    (string) $request->input(
+                        'module',
+                        ''
+                    )
+                ),
+
+            'actor_id' =>
+                $actorId,
+
+            'actor_name' =>
+                $actorName,
+
+            'date_from' =>
+                $request->input(
+                    'date_from'
+                ),
+
+            'date_to' =>
+                $request->input(
+                    'date_to'
+                ),
+        ];
+    }
+
+    /**
+     * Registrar quién exportó la auditoría y en qué formato.
+     */
+    private function logExport(
+        Request $request,
+        string $format,
+        array $filters
+    ): void {
+        $activeFilters =
+            array_filter(
+                $filters,
+                fn ($value) =>
+                    $value !== null
+                    && $value !== ''
+            );
+
+        app(AuditService::class)->log(
+            event: 'audit_export',
+
+            module: 'audit_logs',
+
+            description:
+                "Exportó la auditoría en formato {$format}.",
+
+            newValues: [
+                'format' =>
+                    $format,
+
+                'filters' =>
+                    $activeFilters,
+            ],
+
+            actor:
+                $request->user(),
+        );
     }
 
     /**

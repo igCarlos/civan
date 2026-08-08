@@ -374,6 +374,11 @@ class AuditController extends Controller
                         $request->user()->can(
                             'audit_logs.export'
                         ),
+
+                    'retentionUpdate' =>
+                        $request->user()->can(
+                            'audit_logs.retention.update'
+                        ),
                 ],
             ]
         );

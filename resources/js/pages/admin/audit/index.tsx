@@ -1,5 +1,6 @@
 import {
     Head,
+    Link,
     router,
 } from '@inertiajs/react';
 
@@ -19,6 +20,7 @@ import {
     PlusCircle,
     RotateCcw,
     Search,
+    Settings,
     ShieldCheck,
     Trash2,
     UserCog,
@@ -119,6 +121,7 @@ interface Props {
 
     can?: {
         export: boolean;
+        retentionUpdate?: boolean;
     };
 }
 
@@ -154,6 +157,9 @@ const eventLabels: Record<string, string> = {
 
     permission_change: 'Cambio de permisos',
     permission_sync: 'Sincronización de permisos',
+    audit_export: 'Exportación de auditoría',
+    audit_prune: 'Limpieza de auditoría',
+    audit_retention_update: 'Cambio de retención',
 
     page_view: 'Navegación',
 };
@@ -190,6 +196,14 @@ const fieldLabels: Record<string, string> = {
 
     created_count: 'Permisos creados',
     created_permissions: 'Permisos nuevos',
+
+    format: 'Formato',
+    filters: 'Filtros aplicados',
+
+    retention_days: 'Días de retención',
+    page_view_retention_days: 'Días de retención',
+    cutoff: 'Fecha límite',
+    deleted_count: 'Registros eliminados',
 };
 
 /*
@@ -716,6 +730,16 @@ export default function AuditIndex({
                                         ? 'Actualizando...'
                                         : 'Actualización automática'}
                                 </div>
+
+                                <Link
+                                    href="/dashboard/auditoria/retencion"
+                                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted"
+                                    title="Configurar retención de auditoría"
+                                >
+                                    <Settings className="size-4" />
+
+                                    Retención
+                                </Link>
 
                                 {can?.export && (
                                     <details className="relative">

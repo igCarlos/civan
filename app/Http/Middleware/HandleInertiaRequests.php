@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Services\SystemSettingsService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -63,6 +64,10 @@ class HandleInertiaRequests extends Middleware
 
             'sidebarOpen' =>
                 $request->cookie('sidebar_state') !== 'false',
+                'system' => fn () =>
+                app(
+                    SystemSettingsService::class
+                )->general(),
         ];
     }
 }
