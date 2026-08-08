@@ -1,5 +1,11 @@
 # CIVAN
 
+![GitHub Tag](https://img.shields.io/github/v/tag/igCarlos/civan?label=versi%C3%B3n)
+![Laravel](https://img.shields.io/badge/Laravel-12-red)
+![PHP](https://img.shields.io/badge/PHP-%3E%3D8.2-blue)
+![React](https://img.shields.io/badge/React-TypeScript-blue)
+![License](https://img.shields.io/github/license/igCarlos/CIVAN)
+
 Panel de administración desarrollado con **Laravel 12 + Inertia + React + TypeScript + Vite**.
 
 CIVAN está orientado a la administración desde una interfaz web moderna. La versión actual incluye gestión de usuarios, roles y permisos, auditoría, configuración general del sistema, internacionalización Español/Inglés, personalización visual del panel y branding dinámico.
