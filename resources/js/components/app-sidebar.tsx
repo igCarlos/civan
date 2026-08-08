@@ -20,6 +20,7 @@ import {
 } from '@inertiajs/react';
 
 import {
+    Activity,
     BookOpen,
     Folder,
     KeyRound,
@@ -67,17 +68,26 @@ const administrationNavItems: PermissionNavItem[] = [
         icon: Users,
         permission: 'users.view',
     },
+
     {
         title: 'Roles',
         url: '/dashboard/roles',
         icon: ShieldCheck,
         permission: 'roles.view',
     },
+
     {
         title: 'Permisos',
         url: '/dashboard/permisos',
         icon: KeyRound,
         permission: 'permissions.view',
+    },
+
+    {
+        title: 'Auditoría',
+        url: '/dashboard/auditoria',
+        icon: Activity,
+        permission: 'audit_logs.view',
     },
 ];
 
@@ -93,12 +103,19 @@ const footerNavItems: NavItem[] = [
         url: 'https://github.com/laravel/react-starter-kit',
         icon: Folder,
     },
+
     {
         title: 'Documentation',
         url: 'https://laravel.com/docs/starter-kits',
         icon: BookOpen,
     },
 ];
+
+/*
+|--------------------------------------------------------------------------
+| Sidebar
+|--------------------------------------------------------------------------
+*/
 
 export function AppSidebar() {
     /*
@@ -124,8 +141,10 @@ export function AppSidebar() {
     const hasPermission = (
         permission: string,
     ): boolean => {
-        return auth.permissions.includes(
-            permission,
+        return (
+            auth.permissions?.includes(
+                permission,
+            ) ?? false
         );
     };
 
@@ -148,6 +167,8 @@ export function AppSidebar() {
             collapsible="icon"
             variant="inset"
         >
+            {/* Header */}
+
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -166,22 +187,30 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
+            {/* Contenido */}
+
             <SidebarContent>
-                {/* Siempre visible */}
+                {/* General */}
+
                 <NavMain
+                    label="General"
                     items={mainNavItems}
                 />
 
-                {/* Solo módulos permitidos */}
+                {/* Administración */}
+
                 {visibleAdministrationItems.length >
                     0 && (
                     <NavMain
+                        label="Administración"
                         items={
                             visibleAdministrationItems
                         }
                     />
                 )}
             </SidebarContent>
+
+            {/* Footer */}
 
             <SidebarFooter>
                 <NavFooter

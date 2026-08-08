@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\AuditService;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
@@ -274,6 +275,7 @@ class SyncModelPermissions extends Command
         */
 
         $created = 0;
+        $createdPermissions = [];
 
         $this->newLine();
         $this->info('Creando permisos...');
@@ -291,6 +293,9 @@ class SyncModelPermissions extends Command
                 );
 
                 $created++;
+
+                $createdPermissions[] =
+                    $permissionName;
             }
         }
 
@@ -310,6 +315,40 @@ class SyncModelPermissions extends Command
 
         app(PermissionRegistrar::class)
             ->forgetCachedPermissions();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría
+        |--------------------------------------------------------------------------
+        |
+        | Los comandos Artisan no tienen una sesión web autenticada.
+        | Por eso actor_id será null y la actividad aparecerá como
+        | realizada por el Sistema.
+        |
+        | Solo registramos auditoría cuando realmente se creó al menos
+        | un permiso, evitando llenar audit_logs con sincronizaciones
+        | que no cambiaron nada.
+        |
+        */
+
+        if (! empty($createdPermissions)) {
+            app(AuditService::class)->log(
+                event: 'permission_sync',
+
+                module: 'permissions',
+
+                description:
+                    "El sistema sincronizó los permisos y creó {$created} permisos.",
+
+                newValues: [
+                    'created_count' =>
+                        $created,
+
+                    'created_permissions' =>
+                        $createdPermissions,
+                ],
+            );
+        }
 
         $this->newLine();
 

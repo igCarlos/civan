@@ -29,6 +29,10 @@ return [
             'password.update',
         ],
 
+         'AuditLog' => [
+            'export',
+        ],
+
     ],
 
     /*
@@ -58,6 +62,7 @@ return [
         // Permisos
         'permissions.view',
         'permissions.update',
+        'permissions.sync',
 
     ],
 

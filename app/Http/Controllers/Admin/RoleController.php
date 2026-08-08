@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,9 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends Controller
 {
+    /**
+     * Listado de roles.
+     */
     public function index(Request $request): Response
     {
         abort_unless(
@@ -62,6 +66,9 @@ class RoleController extends Controller
         );
     }
 
+    /**
+     * Formulario para crear rol.
+     */
     public function create(Request $request): Response
     {
         abort_unless(
@@ -72,11 +79,15 @@ class RoleController extends Controller
         return Inertia::render(
             'admin/roles/create',
             [
-                'modules' => $this->permissionModules(),
+                'modules' =>
+                    $this->permissionModules(),
             ]
         );
     }
 
+    /**
+     * Crear rol.
+     */
     public function store(
         Request $request
     ): RedirectResponse {
@@ -110,9 +121,25 @@ class RoleController extends Controller
 
             'permission_ids.*' => [
                 'integer',
-                'exists:permissions,id',
+
+                Rule::exists(
+                    'permissions',
+                    'id'
+                )->where(
+                    fn ($query) =>
+                        $query->where(
+                            'guard_name',
+                            'web'
+                        )
+                ),
             ],
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Crear rol
+        |--------------------------------------------------------------------------
+        */
 
         $role = Role::create([
             'name' => strtolower(
@@ -122,6 +149,12 @@ class RoleController extends Controller
             'guard_name' => 'web',
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Asignar permisos
+        |--------------------------------------------------------------------------
+        */
+
         $permissions = Permission::query()
             ->where('guard_name', 'web')
             ->whereIn(
@@ -130,10 +163,46 @@ class RoleController extends Controller
             )
             ->get();
 
-        $role->syncPermissions($permissions);
+        $role->syncPermissions(
+            $permissions
+        );
 
         app(PermissionRegistrar::class)
             ->forgetCachedPermissions();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: creación de rol
+        |--------------------------------------------------------------------------
+        */
+
+        $role->load('permissions');
+
+        app(AuditService::class)->log(
+            event: 'create',
+
+            subject: $role,
+
+            module: 'roles',
+
+            description:
+                "Creó el rol {$role->name}.",
+
+            newValues: [
+                'name' =>
+                    $role->name,
+
+                'guard_name' =>
+                    $role->guard_name,
+
+                'permissions' =>
+                    $role->permissions
+                        ->pluck('name')
+                        ->sort()
+                        ->values()
+                        ->all(),
+            ],
+        );
 
         return redirect()
             ->route('admin.roles.index')
@@ -143,6 +212,9 @@ class RoleController extends Controller
             );
     }
 
+    /**
+     * Formulario para editar rol.
+     */
     public function edit(
         Request $request,
         Role $role
@@ -152,6 +224,17 @@ class RoleController extends Controller
             403
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Solamente roles del guard web
+        |--------------------------------------------------------------------------
+        */
+
+        abort_unless(
+            $role->guard_name === 'web',
+            404
+        );
+
         $role->load('permissions');
 
         return Inertia::render(
@@ -159,6 +242,7 @@ class RoleController extends Controller
             [
                 'role' => [
                     'id' => $role->id,
+
                     'name' => $role->name,
 
                     'protected' =>
@@ -176,6 +260,9 @@ class RoleController extends Controller
         );
     }
 
+    /**
+     * Actualizar rol.
+     */
     public function update(
         Request $request,
         Role $role
@@ -183,6 +270,17 @@ class RoleController extends Controller
         abort_unless(
             $request->user()->can('roles.update'),
             403
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Solamente roles del guard web
+        |--------------------------------------------------------------------------
+        */
+
+        abort_unless(
+            $role->guard_name === 'web',
+            404
         );
 
         $isAdministrator =
@@ -215,13 +313,45 @@ class RoleController extends Controller
 
             'permission_ids.*' => [
                 'integer',
-                'exists:permissions,id',
+
+                Rule::exists(
+                    'permissions',
+                    'id'
+                )->where(
+                    fn ($query) =>
+                        $query->where(
+                            'guard_name',
+                            'web'
+                        )
+                ),
             ],
         ]);
 
         /*
-         * El administrador no puede renombrarse.
-         */
+        |--------------------------------------------------------------------------
+        | Estado anterior
+        |--------------------------------------------------------------------------
+        */
+
+        $oldName =
+            $role->name;
+
+        $oldPermissions =
+            $role->permissions()
+                ->orderBy('name')
+                ->pluck('name')
+                ->values()
+                ->all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Nombre
+        |--------------------------------------------------------------------------
+        |
+        | El administrador no puede renombrarse.
+        |
+        */
+
         if (! $isAdministrator) {
             $role->update([
                 'name' => strtolower(
@@ -231,9 +361,14 @@ class RoleController extends Controller
         }
 
         /*
-         * El administrador siempre conserva
-         * TODOS los permisos.
-         */
+        |--------------------------------------------------------------------------
+        | Permisos
+        |--------------------------------------------------------------------------
+        |
+        | El administrador siempre conserva TODOS los permisos.
+        |
+        */
+
         if ($isAdministrator) {
             $role->syncPermissions(
                 Permission::query()
@@ -244,13 +379,17 @@ class RoleController extends Controller
                     ->get()
             );
         } else {
-            $permissions = Permission::query()
-                ->where('guard_name', 'web')
-                ->whereIn(
-                    'id',
-                    $validated['permission_ids'] ?? []
-                )
-                ->get();
+            $permissions =
+                Permission::query()
+                    ->where(
+                        'guard_name',
+                        'web'
+                    )
+                    ->whereIn(
+                        'id',
+                        $validated['permission_ids'] ?? []
+                    )
+                    ->get();
 
             $role->syncPermissions(
                 $permissions
@@ -260,6 +399,85 @@ class RoleController extends Controller
         app(PermissionRegistrar::class)
             ->forgetCachedPermissions();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Estado nuevo
+        |--------------------------------------------------------------------------
+        */
+
+        $role->refresh();
+
+        $newName =
+            $role->name;
+
+        $newPermissions =
+            $role->permissions()
+                ->orderBy('name')
+                ->pluck('name')
+                ->values()
+                ->all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: cambio de nombre
+        |--------------------------------------------------------------------------
+        */
+
+        if ($oldName !== $newName) {
+            app(AuditService::class)->log(
+                event: 'update',
+
+                subject: $role,
+
+                module: 'roles',
+
+                description:
+                    "Renombró el rol {$oldName} a {$newName}.",
+
+                oldValues: [
+                    'name' =>
+                        $oldName,
+                ],
+
+                newValues: [
+                    'name' =>
+                        $newName,
+                ],
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: cambio de permisos del rol
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $oldPermissions !==
+            $newPermissions
+        ) {
+            app(AuditService::class)->log(
+                event: 'permission_change',
+
+                subject: $role,
+
+                module: 'roles',
+
+                description:
+                    "Modificó los permisos del rol {$role->name}.",
+
+                oldValues: [
+                    'permissions' =>
+                        $oldPermissions,
+                ],
+
+                newValues: [
+                    'permissions' =>
+                        $newPermissions,
+                ],
+            );
+        }
+
         return redirect()
             ->route('admin.roles.index')
             ->with(
@@ -268,6 +486,9 @@ class RoleController extends Controller
             );
     }
 
+    /**
+     * Eliminar rol.
+     */
     public function destroy(
         Request $request,
         Role $role
@@ -277,19 +498,104 @@ class RoleController extends Controller
             403
         );
 
-        if ($role->name === 'administrador') {
-            return back()->withErrors([
-                'role' =>
-                    'El rol administrador no puede eliminarse.',
-            ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Solamente roles del guard web
+        |--------------------------------------------------------------------------
+        */
+
+        abort_unless(
+            $role->guard_name === 'web',
+            404
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Proteger administrador
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $role->name ===
+            'administrador'
+        ) {
+            return back()
+                ->withErrors([
+                    'role' =>
+                        'El rol administrador no puede eliminarse.',
+                ]);
         }
 
-        if ($role->users()->exists()) {
-            return back()->withErrors([
-                'role' =>
-                    'No puedes eliminar un rol que tiene usuarios asignados.',
-            ]);
+        /*
+        |--------------------------------------------------------------------------
+        | No eliminar roles asignados
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $role->users()
+                ->exists()
+        ) {
+            return back()
+                ->withErrors([
+                    'role' =>
+                        'No puedes eliminar un rol que tiene usuarios asignados.',
+                ]);
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Información antes de eliminar
+        |--------------------------------------------------------------------------
+        */
+
+        $oldValues = [
+            'id' =>
+                $role->id,
+
+            'name' =>
+                $role->name,
+
+            'guard_name' =>
+                $role->guard_name,
+
+            'permissions' =>
+                $role->permissions()
+                    ->orderBy('name')
+                    ->pluck('name')
+                    ->values()
+                    ->all(),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: eliminación
+        |--------------------------------------------------------------------------
+        |
+        | Se registra antes de eliminar para conservar el nombre
+        | y los permisos que tenía el rol.
+        |
+        */
+
+        app(AuditService::class)->log(
+            event: 'delete',
+
+            subject: $role,
+
+            module: 'roles',
+
+            description:
+                "Eliminó el rol {$role->name}.",
+
+            oldValues:
+                $oldValues,
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Eliminar
+        |--------------------------------------------------------------------------
+        */
 
         $role->delete();
 
@@ -302,36 +608,61 @@ class RoleController extends Controller
         );
     }
 
+    /**
+     * Agrupar permisos por módulo.
+     */
     private function permissionModules(): array
     {
         return Permission::query()
-            ->where('guard_name', 'web')
+            ->where(
+                'guard_name',
+                'web'
+            )
             ->orderBy('name')
             ->get()
-            ->groupBy(function (Permission $permission) {
-                return explode(
-                    '.',
-                    $permission->name
-                )[0];
-            })
-            ->map(function ($permissions, $module) {
-                return [
-                    'module' => $module,
+            ->groupBy(
+                function (
+                    Permission $permission
+                ) {
+                    return explode(
+                        '.',
+                        $permission->name
+                    )[0];
+                }
+            )
+            ->map(
+                function (
+                    $permissions,
+                    $module
+                ) {
+                    return [
+                        'module' =>
+                            $module,
 
-                    'permissions' =>
-                        $permissions
-                            ->map(fn ($permission) => [
-                                'id' => $permission->id,
-                                'name' => $permission->name,
+                        'permissions' =>
+                            $permissions
+                                ->map(
+                                    fn (
+                                        $permission
+                                    ) => [
+                                        'id' =>
+                                            $permission->id,
 
-                                'action' =>
-                                    str($permission->name)
-                                        ->after('.')
-                                        ->toString(),
-                            ])
-                            ->values(),
-                ];
-            })
+                                        'name' =>
+                                            $permission->name,
+
+                                        'action' =>
+                                            str(
+                                                $permission->name
+                                            )
+                                                ->after('.')
+                                                ->toString(),
+                                    ]
+                                )
+                                ->values(),
+                    ];
+                }
+            )
             ->values()
             ->all();
     }

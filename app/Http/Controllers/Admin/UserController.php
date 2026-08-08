@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Hash;
-
 
 class UserController extends Controller
 {
@@ -32,7 +31,6 @@ class UserController extends Controller
 
         $users = User::query()
             ->with('roles:id,name')
-
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query
@@ -42,14 +40,41 @@ class UserController extends Controller
                         ->orWhere('phone', 'like', "%{$search}%");
                 });
             })
-
             ->orderBy('name')
-
             ->paginate(10)
-
             ->withQueryString()
+           ->through(function (User $user) {
+                /*
+                |--------------------------------------------------------------------------
+                | Presencia del usuario
+                |--------------------------------------------------------------------------
+                |
+                | online  = actividad en últimos 2 minutos
+                | away    = actividad entre 2 y 10 minutos
+                | offline = más de 10 minutos
+                |
+                */
 
-            ->through(function (User $user) {
+                $presence = 'offline';
+
+                if ($user->last_seen_at) {
+
+                    if (
+                        $user->last_seen_at->gte(
+                            now()->subMinutes(2)
+                        )
+                    ) {
+                        $presence = 'online';
+
+                    } elseif (
+                        $user->last_seen_at->gte(
+                            now()->subMinutes(10)
+                        )
+                    ) {
+                        $presence = 'away';
+                    }
+                }
+
                 return [
                     'id' => $user->id,
 
@@ -63,15 +88,61 @@ class UserController extends Controller
 
                     'status' => $user->status,
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Roles
+                    |--------------------------------------------------------------------------
+                    */
+
                     'roles' => $user->roles
                         ->pluck('name')
                         ->values(),
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Presencia
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'presence' => $presence,
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Último inicio de sesión
+                    |--------------------------------------------------------------------------
+                    */
+
                     'last_login_at' =>
-                        $user->last_login_at?->diffForHumans(),
+                        $user->last_login_at
+                            ?->format('d/m/Y H:i:s'),
+
+                    'last_login_at_human' =>
+                        $user->last_login_at
+                            ?->diffForHumans(),
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Última actividad
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'last_seen_at' =>
+                        $user->last_seen_at
+                            ?->format('d/m/Y H:i:s'),
+
+                    'last_seen_at_human' =>
+                        $user->last_seen_at
+                            ?->diffForHumans(),
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Creación
+                    |--------------------------------------------------------------------------
+                    */
 
                     'created_at' =>
-                        $user->created_at?->format('d/m/Y'),
+                        $user->created_at
+                            ?->format('d/m/Y'),
                 ];
             });
 
@@ -99,13 +170,17 @@ class UserController extends Controller
 
                     'updateStatus' =>
                         $request->user()->can('users.status.update'),
+                        
+                    'viewAudit' =>
+                        $request->user()->can('audit_logs.view'),
                 ],
             ]
         );
     }
 
-
-
+    /**
+     * Mostrar formulario para crear usuario.
+     */
     public function create(Request $request): Response
     {
         abort_unless(
@@ -128,6 +203,9 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Crear usuario.
+     */
     public function store(Request $request): RedirectResponse
     {
         abort_unless(
@@ -193,6 +271,25 @@ class UserController extends Controller
             ],
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Verificar permiso para crear con un estado diferente de active
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $validated['status'] !== 'active'
+            && ! $request->user()->can('users.status.update')
+        ) {
+            abort(403);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Crear usuario
+        |--------------------------------------------------------------------------
+        */
+
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'] ?: null,
@@ -201,9 +298,9 @@ class UserController extends Controller
             'status' => $validated['status'],
 
             /*
-            * User.php ya tiene:
-            * 'password' => 'hashed'
-            */
+             * User.php ya tiene:
+             * 'password' => 'hashed'
+             */
             'password' => $validated['password'],
 
             'must_change_password' =>
@@ -216,10 +313,6 @@ class UserController extends Controller
         |--------------------------------------------------------------------------
         | Asignar roles
         |--------------------------------------------------------------------------
-        |
-        | Aunque alguien pueda crear usuarios, solamente podrá
-        | asignar roles si tiene users.roles.update.
-        |
         */
 
         if (
@@ -235,6 +328,31 @@ class UserController extends Controller
             $user->syncRoles($roleNames);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: creación de usuario
+        |--------------------------------------------------------------------------
+        */
+
+        app(AuditService::class)->log(
+            event: 'create',
+            subject: $user,
+            module: 'users',
+            description: "Creó al usuario {$user->name}.",
+            newValues: [
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'status' => $user->status,
+
+                'roles' => $user
+                    ->getRoleNames()
+                    ->values()
+                    ->all(),
+            ],
+        );
+
         return redirect()
             ->route('admin.users.index')
             ->with(
@@ -243,9 +361,24 @@ class UserController extends Controller
             );
     }
 
-    public function edit(User $user)
-    {
+    /**
+     * Mostrar formulario para editar usuario.
+     */
+    public function edit(
+        Request $request,
+        User $user
+    ): Response {
+        abort_unless(
+            $request->user()->can('users.update'),
+            403
+        );
+
         $user->load('roles:id,name');
+
+        $roles = Role::query()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('admin/users/edit', [
             'user' => [
@@ -255,34 +388,52 @@ class UserController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'status' => $user->status,
-                'roles' => $user->roles->map(fn ($role) => [
-                    'id' => $role->id,
-                    'name' => $role->name,
-                ])->values(),
+
+                'roles' => $user->roles
+                    ->map(fn ($role) => [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                    ])
+                    ->values(),
             ],
 
-            'roles' => Role::query()
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get(),
+            'roles' => $roles,
 
             'can' => [
-                'assignRoles' => auth()
-                    ->user()
-                    ->can('users.roles.update'),
+                'assignRoles' =>
+                    $request->user()->can('users.roles.update'),
+
+                'updateStatus' =>
+                    $request->user()->can('users.status.update'),
             ],
         ]);
     }
 
-    public function update(Request $request, User $user)
-    {
+    /**
+     * Actualizar usuario.
+     */
+    public function update(
+        Request $request,
+        User $user
+    ): RedirectResponse {
+        abort_unless(
+            $request->user()->can('users.update'),
+            403
+        );
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
 
             'username' => [
                 'nullable',
                 'string',
-                'max:255',
+                'max:100',
+                'alpha_dash',
+
                 Rule::unique('users', 'username')
                     ->ignore($user->id),
             ],
@@ -291,6 +442,7 @@ class UserController extends Controller
                 'required',
                 'email',
                 'max:255',
+
                 Rule::unique('users', 'email')
                     ->ignore($user->id),
             ],
@@ -298,11 +450,12 @@ class UserController extends Controller
             'phone' => [
                 'nullable',
                 'string',
-                'max:50',
+                'max:30',
             ],
 
             'status' => [
                 'required',
+
                 Rule::in([
                     'active',
                     'pending',
@@ -321,33 +474,213 @@ class UserController extends Controller
             ],
         ]);
 
-        $data = [
-            'name' => $validated['name'],
-            'username' => $validated['username'] ?? null,
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'status' => $validated['status'],
+        /*
+        |--------------------------------------------------------------------------
+        | Estado anterior
+        |--------------------------------------------------------------------------
+        */
+
+        $before = [
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'status' => $user->status,
         ];
 
-        $user->update($data);
+        $oldRoles = $user
+            ->getRoleNames()
+            ->sort()
+            ->values()
+            ->all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Verificar permiso para cambiar estado
+        |--------------------------------------------------------------------------
+        */
 
         if (
-            auth()->user()->can('assign_roles')
-            && isset($validated['role_ids'])
+            $validated['status'] !== $user->status
+            && ! $request->user()->can('users.status.update')
         ) {
-            $roles = Role::whereIn(
-                'id',
-                $validated['role_ids'],
-            )->pluck('name');
+            abort(403);
+        }
 
-            $user->syncRoles($roles);
+        /*
+        |--------------------------------------------------------------------------
+        | Actualizar información básica
+        |--------------------------------------------------------------------------
+        */
+
+        $user->update([
+            'name' => $validated['name'],
+            'username' => $validated['username'] ?: null,
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?: null,
+            'status' => $validated['status'],
+        ]);
+
+        $user->refresh();
+
+        $after = [
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'status' => $user->status,
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: cambios de datos
+        |--------------------------------------------------------------------------
+        |
+        | Guardamos solamente los campos que realmente cambiaron.
+        |
+        */
+
+        $changedOldValues = [];
+        $changedNewValues = [];
+
+        foreach ($before as $field => $oldValue) {
+            $newValue = $after[$field];
+
+            if ($oldValue !== $newValue) {
+                $changedOldValues[$field] = $oldValue;
+                $changedNewValues[$field] = $newValue;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: cambio de estado
+        |--------------------------------------------------------------------------
+        */
+
+        if ($before['status'] !== $after['status']) {
+            app(AuditService::class)->log(
+                event: 'status_change',
+                subject: $user,
+                module: 'users',
+                description:
+                    "Cambió el estado de {$user->name}.",
+                oldValues: [
+                    'status' => $before['status'],
+                ],
+                newValues: [
+                    'status' => $after['status'],
+                ],
+            );
+
+            unset(
+                $changedOldValues['status'],
+                $changedNewValues['status']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: edición general
+        |--------------------------------------------------------------------------
+        */
+
+        if (! empty($changedOldValues)) {
+            app(AuditService::class)->log(
+                event: 'update',
+                subject: $user,
+                module: 'users',
+                description:
+                    "Editó al usuario {$user->name}.",
+                oldValues: $changedOldValues,
+                newValues: $changedNewValues,
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Actualizar roles
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $request->user()->can('users.roles.update')
+            && array_key_exists('role_ids', $validated)
+        ) {
+            $roleIds = $validated['role_ids'] ?? [];
+
+            $roleNames = Role::query()
+                ->where('guard_name', 'web')
+                ->whereIn('id', $roleIds)
+                ->pluck('name')
+                ->all();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Proteger al último administrador
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $user->hasRole('administrador')
+                && ! in_array(
+                    'administrador',
+                    $roleNames,
+                    true
+                )
+            ) {
+                $otherAdministratorExists =
+                    User::role('administrador')
+                        ->whereKeyNot($user->id)
+                        ->exists();
+
+                if (! $otherAdministratorExists) {
+                    return back()
+                        ->withErrors([
+                            'role_ids' =>
+                                'No puedes quitar el rol administrador al último administrador del sistema.',
+                        ])
+                        ->withInput();
+                }
+            }
+
+            $user->syncRoles($roleNames);
+
+            $newRoles = $user
+                ->fresh()
+                ->getRoleNames()
+                ->sort()
+                ->values()
+                ->all();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Auditoría: cambio de roles
+            |--------------------------------------------------------------------------
+            */
+
+            if ($oldRoles !== $newRoles) {
+                app(AuditService::class)->log(
+                    event: 'role_change',
+                    subject: $user,
+                    module: 'users',
+                    description:
+                        "Modificó los roles de {$user->name}.",
+                    oldValues: [
+                        'roles' => $oldRoles,
+                    ],
+                    newValues: [
+                        'roles' => $newRoles,
+                    ],
+                );
+            }
         }
 
         return redirect()
             ->route('admin.users.index')
             ->with(
                 'success',
-                'Usuario actualizado correctamente.',
+                'Usuario actualizado correctamente.'
             );
     }
 
@@ -389,6 +722,37 @@ class UserController extends Controller
                 ]);
             }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría: eliminación
+        |--------------------------------------------------------------------------
+        |
+        | Se registra ANTES de borrar al usuario para conservar
+        | sus datos y roles en el historial.
+        |
+        */
+
+        app(AuditService::class)->log(
+            event: 'delete',
+            subject: $user,
+            module: 'users',
+            description:
+                "Eliminó al usuario {$user->name}.",
+            oldValues: [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'status' => $user->status,
+
+                'roles' => $user
+                    ->getRoleNames()
+                    ->values()
+                    ->all(),
+            ],
+        );
 
         $user->delete();
 
