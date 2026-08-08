@@ -1,13 +1,23 @@
 <?php
 
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 test('guests are redirected to the login page', function () {
     $this->get('/dashboard')->assertRedirect('/login');
 });
 
 test('authenticated users can visit the dashboard', function () {
-    $this->actingAs($user = User::factory()->create());
+    $role = Role::firstOrCreate([
+        'name' => 'administrador',
+        'guard_name' => 'web',
+    ]);
 
-    $this->get('/dashboard')->assertOk();
+    $user = User::factory()->create();
+
+    $user->assignRole($role);
+
+    $this->actingAs($user)
+        ->get('/dashboard')
+        ->assertOk();
 });
