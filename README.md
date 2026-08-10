@@ -4,13 +4,12 @@
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-%3E%3D8.2-blue)
 ![React](https://img.shields.io/badge/React-TypeScript-blue)
+![Fortify](https://img.shields.io/badge/Laravel-Fortify-red)
 ![License](https://img.shields.io/github/license/igCarlos/civan)
 
 Panel de administración desarrollado con **Laravel 12 + Inertia + React + TypeScript + Vite**.
 
-CIVAN está orientado a la administración desde una interfaz web moderna. La versión actual incluye gestión de usuarios, roles y permisos, auditoría, configuración general del sistema, internacionalización Español/Inglés, personalización visual del panel y branding dinámico.
-
----
+CIVAN está orientado a la administración desde una interfaz web moderna. La versión actual incluye gestión de usuarios, roles y permisos, auditoría, configuración general del sistema, internacionalización Español/Inglés, personalización visual, branding dinámico, autenticación en dos pasos y administración de sesiones activas.
 
 <p align="center">
   <img
@@ -24,33 +23,45 @@ CIVAN está orientado a la administración desde una interfaz web moderna. La ve
   <em>Vista del módulo de gestión de usuarios de CIVAN.</em>
 </p>
 
+---
+
 # Tabla de contenido
 
 1. [Características actuales](#características-actuales)
 2. [Stack tecnológico](#stack-tecnológico)
-3. [Requisitos del sistema](#requisitos-del-sistema)
-4. [Extensiones de PHP necesarias](#extensiones-de-php-necesarias)
-5. [Configuración recomendada de PHP](#configuración-recomendada-de-php)
-6. [Instalación rápida para desarrollo](#instalación-rápida-para-desarrollo)
-7. [Configuración del archivo `.env`](#configuración-del-archivo-env)
-8. [Configuración de la base de datos](#configuración-de-la-base-de-datos)
-9. [Migraciones y permisos](#migraciones-y-permisos)
-10. [Crear el primer administrador](#crear-el-primer-administrador)
-11. [Storage, logos y favicon](#storage-logos-y-favicon)
-12. [Ejecutar CIVAN en desarrollo](#ejecutar-civan-en-desarrollo)
-13. [Instalación en Windows con XAMPP](#instalación-en-windows-con-xampp)
-14. [Instalación en Ubuntu Server](#instalación-en-ubuntu-server)
-15. [Configuración de Nginx](#configuración-de-nginx)
-16. [Despliegue en producción](#despliegue-en-producción)
-17. [Scheduler de Laravel](#scheduler-de-laravel)
-18. [Permisos de archivos en Linux](#permisos-de-archivos-en-linux)
-19. [Configuración inicial dentro de CIVAN](#configuración-inicial-dentro-de-civan)
-20. [Sistema de apariencia](#sistema-de-apariencia)
-21. [Auditoría](#auditoría)
-22. [Comandos útiles](#comandos-útiles)
-23. [Solución de problemas](#solución-de-problemas)
-24. [Checklist después de instalar](#checklist-después-de-instalar)
-25. [Buenas prácticas para GitHub](#buenas-prácticas-para-github)
+3. [Instalación local recomendada](#instalación-local-recomendada)
+4. [Requisitos antes de instalar](#requisitos-antes-de-instalar)
+5. [Paso 1 - Instalar y preparar XAMPP](#paso-1---instalar-y-preparar-xampp)
+6. [Paso 2 - Instalar Composer](#paso-2---instalar-composer)
+7. [Paso 3 - Instalar Node.js y npm](#paso-3---instalar-nodejs-y-npm)
+8. [Paso 4 - Instalar Git](#paso-4---instalar-git)
+9. [Paso 5 - Descargar CIVAN](#paso-5---descargar-civan)
+10. [Paso 6 - Instalar dependencias de PHP](#paso-6---instalar-dependencias-de-php)
+11. [Paso 7 - Instalar dependencias frontend](#paso-7---instalar-dependencias-frontend)
+12. [Paso 8 - Crear el archivo .env](#paso-8---crear-el-archivo-env)
+13. [Paso 9 - Crear la base de datos en XAMPP](#paso-9---crear-la-base-de-datos-en-xampp)
+14. [Paso 10 - Configurar la base de datos](#paso-10---configurar-la-base-de-datos)
+15. [Paso 11 - Generar APP_KEY](#paso-11---generar-app_key)
+16. [Paso 12 - Ejecutar migraciones](#paso-12---ejecutar-migraciones)
+17. [Paso 13 - Crear el storage link](#paso-13---crear-el-storage-link)
+18. [Paso 14 - Sincronizar permisos](#paso-14---sincronizar-permisos)
+19. [Paso 15 - Crear el primer administrador](#paso-15---crear-el-primer-administrador)
+20. [Paso 16 - Limpiar cachés](#paso-16---limpiar-cachés)
+21. [Paso 17 - Ejecutar CIVAN](#paso-17---ejecutar-civan)
+22. [Paso 18 - Comprobar la instalación](#paso-18---comprobar-la-instalación)
+23. [Autenticación y seguridad](#autenticación-y-seguridad)
+24. [Autenticación en dos pasos - 2FA](#autenticación-en-dos-pasos---2fa)
+25. [Sesiones y dispositivos](#sesiones-y-dispositivos)
+26. [Rate Limit con Fortify](#rate-limit-con-fortify)
+27. [Storage, logos y favicon](#storage-logos-y-favicon)
+28. [Configuración inicial de CIVAN](#configuración-inicial-de-civan)
+29. [Sistema de apariencia](#sistema-de-apariencia)
+30. [Auditoría](#auditoría)
+31. [Comandos útiles en XAMPP](#comandos-útiles-en-xampp)
+32. [Solución de problemas](#solución-de-problemas)
+33. [Checklist final](#checklist-final)
+34. [Buenas prácticas para GitHub](#buenas-prácticas-para-github)
+35. [Instalación resumida](#instalación-resumida)
 
 ---
 
@@ -60,8 +71,8 @@ La versión actual de CIVAN incluye:
 
 - Dashboard administrativo.
 - Gestión de usuarios.
-- Creación y edición de usuarios.
-- Estado de usuarios:
+- Creación, edición y eliminación de usuarios.
+- Estados de usuario:
   - Activo.
   - Pendiente.
   - Suspendido.
@@ -78,33 +89,19 @@ La versión actual de CIVAN incluye:
 - Sincronización automática de permisos.
 - Protección del rol `administrador`.
 - Auditoría de acciones importantes.
-- Registro de:
-  - login;
-  - logout;
-  - creación;
-  - actualización;
-  - eliminación;
-  - cambio de estado;
-  - cambio de roles;
-  - cambios de permisos;
-  - navegación;
-  - configuración;
-  - exportaciones;
-  - retención.
 - Exportación de auditoría:
-  - CSV;
-  - Excel;
+  - CSV.
+  - Excel.
   - PDF.
-- Retención configurable para eventos de navegación.
+- Retención configurable de auditoría.
 - Configuración general del sistema.
 - Nombre dinámico del panel.
 - Nombre corto.
 - Zona horaria configurable.
-- Formato de fecha.
-- Formato de hora.
+- Formato de fecha y hora.
 - Registros por página.
 - Idiomas:
-  - Español;
+  - Español.
   - English.
 - Personalización de apariencia:
   - color principal;
@@ -123,6 +120,31 @@ La versión actual de CIVAN incluye:
 - Logo adaptativo según apariencia clara/oscura.
 - Diseño responsive.
 
+## Seguridad y autenticación
+
+- Laravel Fortify.
+- Rate Limit para autenticación.
+- Autenticación en dos pasos `2FA`.
+- Compatible con aplicaciones TOTP:
+  - Google Authenticator.
+  - Microsoft Authenticator.
+  - Authy.
+  - otras aplicaciones compatibles.
+- Código QR para configurar 2FA.
+- Clave manual para configurar 2FA.
+- Confirmación mediante código TOTP de 6 dígitos.
+- Challenge 2FA durante el inicio de sesión.
+- Códigos de recuperación.
+- Regeneración de códigos de recuperación.
+- Desactivación de 2FA.
+- Gestión de sesiones y dispositivos.
+- Identificación de la sesión actual.
+- Navegador y sistema operativo de cada sesión.
+- Dirección IP.
+- Última actividad.
+- Cierre de sesiones específicas.
+- Cierre de las demás sesiones conservando la actual.
+
 ---
 
 # Stack tecnológico
@@ -131,7 +153,8 @@ La versión actual de CIVAN incluye:
 
 - PHP `>= 8.2`
 - Laravel 12
-- MySQL o MariaDB
+- Laravel Fortify
+- MySQL / MariaDB
 - Spatie Laravel Permission
 - PhpSpreadsheet
 - DomPDF
@@ -146,119 +169,203 @@ La versión actual de CIVAN incluye:
 - componentes estilo shadcn/ui
 - Lucide Icons
 
-## Herramientas
+## Herramientas locales
 
-- Composer
+- XAMPP
+- Composer 2.x
 - Node.js
 - npm
 - Git
+- PowerShell
 
 ---
 
-# Requisitos del sistema
+# Instalación local recomendada
 
-## Requisitos mínimos recomendados para desarrollo
+Esta guía utiliza **Windows + XAMPP**.
+
+La ubicación utilizada en los ejemplos es:
+
+```text
+C:\xampp\htdocs\appwebs\civan
+```
+
+La aplicación se ejecutará en desarrollo mediante:
+
+```text
+Laravel → http://localhost:8000
+Vite    → servidor de desarrollo automático
+MySQL   → XAMPP
+PHP     → XAMPP
+```
+
+> Durante desarrollo se recomienda utilizar `php artisan serve` junto con `npm run dev`. XAMPP proporciona PHP y MySQL. No es necesario configurar un VirtualHost de Apache para comenzar.
+
+---
+
+# Requisitos antes de instalar
+
+Instala las herramientas en este orden:
+
+| Orden | Requisito | Versión recomendada |
+|---|---|---|
+| 1 | XAMPP | versión con PHP 8.2+ |
+| 2 | PHP | 8.2 o superior |
+| 3 | MySQL/MariaDB | incluido con XAMPP |
+| 4 | Composer | 2.x |
+| 5 | Node.js | 20 o superior |
+| 6 | npm | incluido con Node.js |
+| 7 | Git | versión reciente |
+
+Requisitos mínimos recomendados:
 
 | Recurso | Recomendación |
 |---|---|
 | CPU | 2 núcleos |
 | RAM | 4 GB |
 | Espacio libre | 2 GB o más |
-| PHP | 8.2 o superior |
-| Composer | 2.x |
-| Node.js | 20 o superior recomendado |
-| npm | incluido con Node.js |
-| Base de datos | MySQL 8+ o MariaDB equivalente |
-| Git | versión reciente |
-
-Para producción se recomienda:
-
-- 2 o más CPU;
-- 4 GB o más de RAM;
-- SSD;
-- Nginx o Apache;
-- PHP-FPM;
-- base de datos separada o correctamente respaldada;
-- HTTPS.
+| Sistema | Windows 10/11 de 64 bits |
 
 ---
 
-# Extensiones de PHP necesarias
+# Paso 1 - Instalar y preparar XAMPP
 
-CIVAN necesita las extensiones habituales de Laravel y algunas adicionales utilizadas por Excel, PDF, imágenes y uploads.
+## 1. Instalar XAMPP
 
-Verifica:
+Instala XAMPP en:
 
-```bash
-php -m
+```text
+C:\xampp
 ```
 
-Se recomienda tener habilitadas:
+Después abre:
+
+```text
+XAMPP Control Panel
+```
+
+Inicia:
+
+```text
+Apache
+MySQL
+```
+
+MySQL debe quedar en estado:
+
+```text
+Running
+```
+
+Apache es útil para phpMyAdmin y otros proyectos locales.
+
+## 2. Verificar PHP
+
+Abre PowerShell:
+
+```powershell
+php -v
+```
+
+Debe mostrar PHP 8.2 o superior.
+
+Si `php` no existe:
+
+```powershell
+where.exe php
+```
+
+Agrega al `PATH` de Windows:
+
+```text
+C:\xampp\php
+```
+
+Cierra PowerShell, vuelve a abrirlo y ejecuta:
+
+```powershell
+php -v
+```
+
+## 3. Comprobar qué php.ini utiliza PHP
+
+```powershell
+php --ini
+```
+
+Debe apuntar preferiblemente a:
+
+```text
+C:\xampp\php\php.ini
+```
+
+## 4. Habilitar extensiones PHP
+
+Abre:
+
+```text
+C:\xampp\php\php.ini
+```
+
+Asegúrate de tener habilitadas las extensiones necesarias:
+
+```ini
+extension=curl
+extension=fileinfo
+extension=gd
+extension=mbstring
+extension=mysqli
+extension=openssl
+extension=pdo_mysql
+extension=zip
+```
+
+Además CIVAN/Laravel puede necesitar:
 
 ```text
 bcmath
 ctype
-curl
 dom
-fileinfo
 filter
-gd
 iconv
 intl
 json
-mbstring
-openssl
-pdo
-pdo_mysql
 session
 simplexml
 tokenizer
 xml
 xmlreader
 xmlwriter
-zip
 ```
 
-Las más importantes para este proyecto son:
-
-```text
-pdo_mysql
-mbstring
-xml
-curl
-zip
-gd
-fileinfo
-bcmath
-```
-
-## Verificar una extensión concreta
-
-Ejemplo:
-
-```bash
-php -m | grep gd
-```
-
-En Windows:
+Verifica:
 
 ```powershell
+php -m
+```
+
+Ejemplos:
+
+```powershell
+php -m | findstr pdo_mysql
+php -m | findstr mbstring
+php -m | findstr curl
+php -m | findstr zip
 php -m | findstr gd
+php -m | findstr openssl
 ```
 
----
+Después de cambiar `php.ini`, reinicia Apache desde XAMPP.
 
-# Configuración recomendada de PHP
+## 5. Configuración recomendada de PHP
 
-CIVAN permite subir logos de hasta aproximadamente 5 MB. Por eso PHP debe permitir requests suficientemente grandes.
+En:
 
-Busca tu archivo:
-
-```bash
-php --ini
+```text
+C:\xampp\php\php.ini
 ```
 
-Edita `php.ini` y verifica:
+usa al menos:
 
 ```ini
 memory_limit = 256M
@@ -268,113 +375,187 @@ max_execution_time = 120
 max_input_time = 120
 ```
 
-Después reinicia PHP/Apache/Nginx según tu entorno.
+Reinicia Apache.
 
-## XAMPP
+---
 
-Reinicia Apache desde el panel de XAMPP.
+# Paso 2 - Instalar Composer
 
-## Ubuntu con PHP-FPM
+Instala Composer para Windows.
+
+Durante la instalación, cuando solicite PHP, selecciona:
+
+```text
+C:\xampp\php\php.exe
+```
+
+Comprueba:
+
+```powershell
+composer --version
+```
+
+También puedes verificar:
+
+```powershell
+where.exe composer
+```
+
+---
+
+# Paso 3 - Instalar Node.js y npm
+
+Instala Node.js 20 o superior.
+
+Comprueba:
+
+```powershell
+node -v
+npm -v
+```
 
 Ejemplo:
 
-```bash
-sudo systemctl restart php8.3-fpm
-sudo systemctl restart nginx
+```text
+v20.x.x
+10.x.x
 ```
-
-Ajusta `8.3` a la versión instalada en el servidor.
 
 ---
 
-# Instalación rápida para desarrollo
+# Paso 4 - Instalar Git
 
-## 1. Clonar el repositorio
+Instala Git para Windows.
 
-```bash
-https://github.com/igCarlos/civan.git
+Comprueba:
+
+```powershell
+git --version
+```
+
+---
+
+# Paso 5 - Descargar CIVAN
+
+Ve a la carpeta donde guardarás los proyectos:
+
+```powershell
+cd C:\xampp\htdocs\appwebs
+```
+
+Clona el repositorio:
+
+```powershell
+git clone https://github.com/igCarlos/civan.git
+```
+
+Entra al proyecto:
+
+```powershell
 cd civan
 ```
 
-Si ya descargaste el ZIP:
+Comprueba:
 
-```bash
-cd ruta/al/proyecto/civan
+```powershell
+Get-Location
+```
+
+Debe ser parecido a:
+
+```text
+C:\xampp\htdocs\appwebs\civan
+```
+
+Si descargaste un ZIP, extrae CIVAN en:
+
+```text
+C:\xampp\htdocs\appwebs\civan
+```
+
+y luego:
+
+```powershell
+cd C:\xampp\htdocs\appwebs\civan
 ```
 
 ---
 
-## 2. Instalar dependencias de PHP
+# Paso 6 - Instalar dependencias de PHP
 
-```bash
+Dentro de CIVAN:
+
+```powershell
 composer install
 ```
 
-En producción se recomienda:
+Este comando instalará automáticamente las dependencias definidas en `composer.lock`, incluyendo Laravel Fortify y las demás librerías utilizadas por CIVAN.
 
-```bash
-composer install --no-dev --optimize-autoloader
+> No ejecutes `composer require laravel/fortify` en una instalación normal del proyecto si Fortify ya aparece en `composer.lock`.
+
+Si Composer indica que falta una extensión PHP:
+
+1. abre `C:\xampp\php\php.ini`;
+2. habilita la extensión;
+3. reinicia Apache;
+4. cierra/reabre PowerShell;
+5. ejecuta nuevamente:
+
+```powershell
+composer install
 ```
-
-Si Composer informa que falta una extensión PHP, instala/habilita esa extensión antes de continuar.
 
 ---
 
-## 3. Instalar dependencias de frontend
+# Paso 7 - Instalar dependencias frontend
 
-Si existe `package-lock.json`, lo ideal es:
+Si el repositorio contiene:
 
-```bash
+```text
+package-lock.json
+```
+
+utiliza:
+
+```powershell
 npm ci
 ```
 
 Si no existe:
 
-```bash
+```powershell
 npm install
+```
+
+Para comprobar:
+
+```powershell
+npm list --depth=0
 ```
 
 ---
 
-## 4. Crear `.env`
+# Paso 8 - Crear el archivo .env
 
-Linux/macOS:
-
-```bash
-cp .env.example .env
-```
-
-Windows PowerShell:
+Copia:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Windows CMD:
+Comprueba:
 
-```cmd
-copy .env.example .env
+```powershell
+Test-Path .env
 ```
 
----
-
-## 5. Generar la clave de Laravel
-
-```bash
-php artisan key:generate
-```
-
-Debe aparecer:
+Debe devolver:
 
 ```text
-Application key set successfully.
+True
 ```
 
----
-
-# Configuración del archivo `.env`
-
-Ejemplo recomendado para desarrollo:
+Usa como base:
 
 ```env
 APP_NAME=CIVAN
@@ -397,49 +578,68 @@ DB_DATABASE=civan
 DB_USERNAME=root
 DB_PASSWORD=
 
-SESSION_DRIVER=file
+SESSION_DRIVER=database
 SESSION_LIFETIME=120
 
-CACHE_STORE=file
+CACHE_STORE=database
 
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 
 FILESYSTEM_DISK=local
 ```
 
-> Después de ejecutar `php artisan key:generate`, Laravel llenará `APP_KEY`.
+## Importante: sesiones
 
-## Producción
-
-En producción:
+CIVAN utiliza:
 
 ```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://panel.tudominio.com
+SESSION_DRIVER=database
 ```
 
-Nunca dejes:
+No cambies esto a `file` si quieres utilizar correctamente:
 
-```env
-APP_DEBUG=true
+```text
+Configuración
+└── Sesiones y dispositivos
 ```
 
-en un servidor público.
+El módulo utiliza la tabla:
+
+```text
+sessions
+```
 
 ---
 
-# Configuración de la base de datos
+# Paso 9 - Crear la base de datos en XAMPP
 
-## MySQL
+Asegúrate de que MySQL esté iniciado en XAMPP.
 
-Entra a MySQL:
+Abre:
 
-```bash
-mysql -u root -p
+```text
+http://localhost/phpmyadmin
 ```
 
-Crear base de datos:
+Selecciona:
+
+```text
+Nueva
+```
+
+Crea:
+
+```text
+civan
+```
+
+Collation recomendada:
+
+```text
+utf8mb4_unicode_ci
+```
+
+También puedes hacerlo desde SQL:
 
 ```sql
 CREATE DATABASE civan
@@ -447,32 +647,9 @@ CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 ```
 
-Crear usuario recomendado para producción:
+---
 
-```sql
-CREATE USER 'civan'@'localhost'
-IDENTIFIED BY 'CAMBIA_ESTA_CONTRASENA';
-```
-
-Dar permisos:
-
-```sql
-GRANT ALL PRIVILEGES
-ON civan.*
-TO 'civan'@'localhost';
-```
-
-Aplicar:
-
-```sql
-FLUSH PRIVILEGES;
-```
-
-Salir:
-
-```sql
-EXIT;
-```
+# Paso 10 - Configurar la base de datos
 
 En `.env`:
 
@@ -481,109 +658,206 @@ DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=civan
-DB_USERNAME=civan
-DB_PASSWORD=CAMBIA_ESTA_CONTRASENA
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
-## Comprobar conexión
+Esta configuración corresponde a una instalación local típica de XAMPP.
 
-```bash
-php artisan migrate:status
+Si configuraste una contraseña para `root`, utiliza:
+
+```env
+DB_PASSWORD=TU_CONTRASENA
 ```
 
-Si Laravel puede acceder a MySQL, mostrará el estado de las migraciones.
+Después de cambiar `.env`:
 
----
-
-# Migraciones y permisos
-
-## 1. Ejecutar migraciones
-
-```bash
-php artisan migrate
-```
-
-En producción:
-
-```bash
-php artisan migrate --force
-```
-
----
-
-## 2. Limpiar caché antes de sincronizar permisos
-
-```bash
+```powershell
 php artisan optimize:clear
 ```
 
 ---
 
-## 3. Sincronizar permisos del proyecto
-
-CIVAN dispone de sincronización automática de permisos por modelos.
+# Paso 11 - Generar APP_KEY
 
 Ejecuta:
 
-```bash
-php artisan permissions:sync-models --force
+```powershell
+php artisan key:generate
 ```
 
-Si estás utilizando el paquete propio de permisos del proyecto y sus comandos están registrados, también pueden estar disponibles:
+Debe aparecer un mensaje indicando que la clave fue creada correctamente.
 
-```bash
-php artisan table-permissions:install --migrate
+Comprueba:
+
+```powershell
+php artisan about
 ```
-
-y para restaurar el administrador:
-
-```bash
-php artisan table-permissions:restore
-```
-
-Puedes comprobar qué comandos existen con:
-
-```bash
-php artisan list
-```
-
-Busca:
-
-```text
-permissions
-table-permissions
-```
-
-> No ejecutes comandos que no aparezcan en `php artisan list`.
 
 ---
 
-# Crear el primer administrador
+# Paso 12 - Ejecutar migraciones
 
-Si tu instalación todavía no tiene usuarios, puedes crear uno desde Tinker.
+Primero comprueba la conexión:
 
-```bash
+```powershell
+php artisan migrate:status
+```
+
+En una instalación nueva puede indicar que todavía existen migraciones pendientes.
+
+Ejecuta:
+
+```powershell
+php artisan migrate
+```
+
+Las migraciones deben crear las tablas necesarias para CIVAN, incluyendo las relacionadas con:
+
+```text
+users
+sessions
+cache
+jobs
+roles
+permissions
+system_settings
+auditoría
+2FA
+```
+
+## Verificar tabla de sesiones
+
+```powershell
+php artisan db:table sessions
+```
+
+Debe contener al menos:
+
+```text
+id
+user_id
+ip_address
+user_agent
+payload
+last_activity
+```
+
+## Verificar columnas 2FA
+
+Puedes comprobarlas:
+
+```powershell
+php artisan tinker --execute="dump(
+    \Illuminate\Support\Facades\Schema::hasColumn('users', 'two_factor_secret'),
+    \Illuminate\Support\Facades\Schema::hasColumn('users', 'two_factor_recovery_codes'),
+    \Illuminate\Support\Facades\Schema::hasColumn('users', 'two_factor_confirmed_at')
+);"
+```
+
+El resultado esperado es:
+
+```text
+true
+true
+true
+```
+
+---
+
+# Paso 13 - Crear el storage link
+
+Ejecuta:
+
+```powershell
+php artisan storage:link
+```
+
+Se creará:
+
+```text
+public/storage
+→ storage/app/public
+```
+
+Comprueba:
+
+```powershell
+Test-Path public\storage
+```
+
+Si Windows no permite crear el enlace:
+
+1. abre PowerShell como administrador; o
+2. activa Developer Mode en Windows.
+
+Después vuelve a ejecutar:
+
+```powershell
+php artisan storage:link
+```
+
+---
+
+# Paso 14 - Sincronizar permisos
+
+Limpia caché:
+
+```powershell
+php artisan optimize:clear
+```
+
+Después:
+
+```powershell
+php artisan permissions:sync-models --force
+```
+
+Comprueba los comandos disponibles:
+
+```powershell
+php artisan list
+```
+
+Si tu instalación utiliza comandos adicionales del paquete de permisos, pueden existir:
+
+```powershell
+php artisan table-permissions:install --migrate
+php artisan table-permissions:restore
+```
+
+> Ejecuta únicamente comandos que aparezcan realmente en `php artisan list`.
+
+---
+
+# Paso 15 - Crear el primer administrador
+
+Si la instalación está completamente vacía:
+
+```powershell
 php artisan tinker
 ```
 
-Dentro de Tinker:
+Dentro:
 
 ```php
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+
+Role::firstOrCreate([
+    'name' => 'administrador',
+    'guard_name' => 'web',
+]);
 
 $user = User::create([
     'name' => 'Administrador',
-    'username' => 'admin',
+    'username' => 'Administrador01',
     'email' => 'admin@example.com',
     'status' => 'active',
     'password' => Hash::make('CAMBIA_ESTA_CONTRASENA'),
 ]);
-```
 
-Asignar el rol administrador:
-
-```php
 $user->assignRole('administrador');
 ```
 
@@ -593,24 +867,7 @@ Salir:
 exit
 ```
 
-Si todavía no existe el rol:
-
-```php
-use Spatie\Permission\Models\Role;
-
-Role::firstOrCreate([
-    'name' => 'administrador',
-    'guard_name' => 'web',
-]);
-```
-
-Luego:
-
-```php
-$user->assignRole('administrador');
-```
-
-## Importante
+> El `username` debe respetar las reglas actuales de CIVAN. Utiliza uno con mayúsculas, minúsculas y números.
 
 Cambia inmediatamente:
 
@@ -619,7 +876,352 @@ admin@example.com
 CAMBIA_ESTA_CONTRASENA
 ```
 
-por credenciales seguras.
+por credenciales propias y seguras.
+
+---
+
+# Paso 16 - Limpiar cachés
+
+Ejecuta:
+
+```powershell
+php artisan optimize:clear
+```
+
+Comprueba configuración:
+
+```powershell
+php artisan about
+```
+
+---
+
+# Paso 17 - Ejecutar CIVAN
+
+Necesitas **dos terminales**.
+
+## Terminal 1 - Laravel
+
+```powershell
+cd C:\xampp\htdocs\appwebs\civan
+php artisan serve
+```
+
+Debería mostrar:
+
+```text
+http://127.0.0.1:8000
+```
+
+o abre:
+
+```text
+http://localhost:8000
+```
+
+## Terminal 2 - Vite
+
+```powershell
+cd C:\xampp\htdocs\appwebs\civan
+npm run dev
+```
+
+Mantén las dos terminales abiertas.
+
+## XAMPP
+
+En XAMPP mantén:
+
+```text
+MySQL → Running
+```
+
+Apache también puede permanecer iniciado para phpMyAdmin.
+
+---
+
+# Paso 18 - Comprobar la instalación
+
+Ejecuta estos comandos uno por uno:
+
+```powershell
+php artisan about
+```
+
+```powershell
+php artisan migrate:status
+```
+
+```powershell
+php artisan route:list
+```
+
+```powershell
+php artisan route:list --path=login -v
+```
+
+```powershell
+php artisan route:list --path=two-factor -v
+```
+
+```powershell
+php artisan route:list --path=settings/sessions -v
+```
+
+```powershell
+php artisan db:table sessions
+```
+
+Después abre:
+
+```text
+http://localhost:8000
+```
+
+Comprueba:
+
+```text
+Login
+Dashboard
+Usuarios
+Roles
+Permisos
+Auditoría
+Configuración
+2FA
+Sesiones y dispositivos
+```
+
+---
+
+# Autenticación y seguridad
+
+CIVAN utiliza Laravel Fortify como parte de su backend de autenticación.
+
+La arquitectura actual es:
+
+```text
+Fortify
+├── Login
+├── Rate Limit de login
+├── 2FA
+├── Two Factor Challenge
+├── Recovery Codes
+└── Rate Limit de 2FA
+
+CIVAN
+├── Roles y permisos
+├── Auditoría
+├── Control de usuario activo
+└── Sesiones y dispositivos
+```
+
+## Fortify
+
+Fortify se instala automáticamente mediante:
+
+```powershell
+composer install
+```
+
+No es necesario volver a ejecutar:
+
+```text
+composer require laravel/fortify
+```
+
+si el paquete ya existe en las dependencias del repositorio.
+
+Puedes comprobarlo:
+
+```powershell
+composer show laravel/fortify
+```
+
+---
+
+# Autenticación en dos pasos - 2FA
+
+CIVAN incluye autenticación TOTP mediante Fortify.
+
+## Características
+
+- Activar 2FA.
+- Mostrar QR.
+- Mostrar clave manual.
+- Confirmar código de 6 dígitos.
+- Challenge durante el login.
+- Recovery codes.
+- Copiar códigos.
+- Descargar códigos.
+- Regenerar códigos.
+- Desactivar 2FA.
+
+## Comprobar rutas
+
+```powershell
+php artisan route:list --path=two-factor
+```
+
+Deben existir rutas similares a:
+
+```text
+GET|HEAD  two-factor-challenge
+POST      two-factor-challenge
+POST      user/two-factor-authentication
+DELETE    user/two-factor-authentication
+GET|HEAD  user/two-factor-qr-code
+GET|HEAD  user/two-factor-recovery-codes
+POST      user/two-factor-recovery-codes
+```
+
+## Flujo de login
+
+```text
+Email + contraseña
+        ↓
+Credenciales correctas
+        ↓
+¿2FA activo?
+   ├── NO → Dashboard
+   │
+   └── SÍ
+        ↓
+/two-factor-challenge
+        ↓
+Código Authenticator
+        ↓
+Dashboard
+```
+
+## Aplicaciones compatibles
+
+Por ejemplo:
+
+```text
+Google Authenticator
+Microsoft Authenticator
+Authy
+```
+
+## Comprobar 2FA de un usuario
+
+```powershell
+php artisan tinker
+```
+
+Dentro:
+
+```php
+$user = App\Models\User::find(1);
+
+$user->two_factor_confirmed_at;
+
+$user->two_factor_secret !== null;
+```
+
+Nunca publiques:
+
+```text
+two_factor_secret
+two_factor_recovery_codes
+```
+
+---
+
+# Sesiones y dispositivos
+
+CIVAN utiliza sesiones en base de datos.
+
+En `.env`:
+
+```env
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+```
+
+La tabla `sessions` contiene:
+
+```text
+id
+user_id
+ip_address
+user_agent
+payload
+last_activity
+```
+
+El módulo permite:
+
+- ver las sesiones activas;
+- identificar la sesión actual;
+- detectar navegador;
+- detectar sistema operativo;
+- detectar escritorio, móvil o tablet;
+- mostrar IP;
+- mostrar última actividad;
+- cerrar una sesión específica;
+- cerrar las demás sesiones conservando la actual.
+
+Ruta principal:
+
+```text
+/settings/sessions
+```
+
+Comprobar:
+
+```powershell
+php artisan route:list --path=settings/sessions -v
+```
+
+## Probar múltiples sesiones
+
+1. Inicia sesión en Edge.
+2. Abre Chrome o una ventana privada.
+3. Inicia sesión nuevamente con la misma cuenta.
+4. Abre:
+
+```text
+http://localhost:8000/settings/sessions
+```
+
+Ahora CIVAN debe mostrar más de una sesión.
+
+---
+
+# Rate Limit con Fortify
+
+El Rate Limit de autenticación está centralizado en Fortify.
+
+Se utiliza para proteger principalmente:
+
+```text
+Login
+2FA
+```
+
+El login utiliza el limiter nombrado:
+
+```text
+login
+```
+
+Puedes comprobar la ruta:
+
+```powershell
+php artisan route:list --path=login -v
+```
+
+El `POST login` debe mostrar:
+
+```text
+throttle:login
+```
+
+Cuando se supera el límite, CIVAN intercepta el `429 Too Many Requests` de Inertia y muestra una alerta visual en lugar del modal de error predeterminado.
+
+Las operaciones administrativas como usuarios, roles, permisos, auditoría y configuración **no utilizan los Rate Limiters personalizados antiguos**.
 
 ---
 
@@ -631,24 +1233,15 @@ CIVAN permite subir:
 - logo para modo oscuro;
 - favicon.
 
-Los archivos se almacenan en:
+Los archivos se almacenan bajo:
 
 ```text
-storage/app/public/branding/
+storage/app/public
 ```
 
-Por ejemplo:
+Para hacerlos públicos:
 
-```text
-storage/app/public/
-└── branding/
-    ├── logos/
-    └── favicon/
-```
-
-Para que el navegador pueda acceder a ellos debes crear el enlace simbólico:
-
-```bash
+```powershell
 php artisan storage:link
 ```
 
@@ -659,31 +1252,9 @@ public/storage
 → storage/app/public
 ```
 
-## Verificar
+## Logos
 
-Comprueba que exista:
-
-```text
-public/storage
-```
-
-## Windows
-
-Si Windows no permite crear el enlace simbólico:
-
-1. abre la terminal como administrador;
-2. o activa **Developer Mode** de Windows;
-3. ejecuta nuevamente:
-
-```powershell
-php artisan storage:link
-```
-
-## Formatos de branding
-
-### Logos
-
-Permitidos:
+Formatos:
 
 ```text
 PNG
@@ -692,21 +1263,15 @@ JPEG
 WEBP
 ```
 
-Tamaño máximo configurado:
+Máximo recomendado/configurado:
 
 ```text
 5 MB
 ```
 
-Recomendación:
+## Favicon
 
-- fondo transparente;
-- formato PNG/WebP;
-- logo horizontal.
-
-### Favicon
-
-Permitidos:
+Formatos:
 
 ```text
 PNG
@@ -716,13 +1281,13 @@ WEBP
 ICO
 ```
 
-Tamaño máximo:
+Máximo recomendado/configurado:
 
 ```text
 2 MB
 ```
 
-Recomendado:
+Resoluciones recomendadas:
 
 ```text
 32x32
@@ -732,589 +1297,56 @@ Recomendado:
 
 ---
 
-# Ejecutar CIVAN en desarrollo
+# Configuración inicial de CIVAN
 
-Se necesitan dos procesos durante desarrollo.
-
-## Terminal 1 - Laravel
-
-```bash
-php artisan serve
-```
-
-Por defecto:
-
-```text
-http://127.0.0.1:8000
-```
-
-o:
-
-```text
-http://localhost:8000
-```
-
-## Terminal 2 - Vite
-
-```bash
-npm run dev
-```
-
-Mantén ambas terminales abiertas.
-
----
-
-# Instalación en Windows con XAMPP
-
-Ejemplo de ubicación:
-
-```text
-C:\xampp\htdocs\civan
-```
-
-## 1. Verificar PHP
-
-```powershell
-php -v
-```
-
-Debe ser PHP 8.2 o superior.
-
-Si PowerShell utiliza otro PHP diferente al de XAMPP:
-
-```powershell
-where.exe php
-```
-
-Puedes añadir:
-
-```text
-C:\xampp\php
-```
-
-al `PATH`.
-
----
-
-## 2. Habilitar extensiones
-
-Abre:
-
-```text
-C:\xampp\php\php.ini
-```
-
-Comprueba extensiones como:
-
-```ini
-extension=curl
-extension=fileinfo
-extension=gd
-extension=mbstring
-extension=mysqli
-extension=pdo_mysql
-extension=openssl
-extension=zip
-```
-
-Dependiendo de XAMPP, algunas pueden aparecer sin prefijo `extension=` o ya estar activas.
-
-Reinicia Apache después de modificar `php.ini`.
-
----
-
-## 3. Crear base de datos
-
-Desde phpMyAdmin:
-
-```text
-http://localhost/phpmyadmin
-```
-
-Crea:
-
-```text
-civan
-```
-
-con collation:
-
-```text
-utf8mb4_unicode_ci
-```
-
----
-
-## 4. Instalar proyecto
-
-```powershell
-cd C:\xampp\htdocs\civan
-
-composer install
-npm install
-
-Copy-Item .env.example .env
-
-php artisan key:generate
-php artisan migrate
-php artisan storage:link
-php artisan permissions:sync-models --force
-php artisan optimize:clear
-```
-
----
-
-## 5. Iniciar
-
-Terminal 1:
-
-```powershell
-php artisan serve
-```
-
-Terminal 2:
-
-```powershell
-npm run dev
-```
-
----
-
-# Instalación en Ubuntu Server
-
-## 1. Actualizar sistema
-
-```bash
-sudo apt update
-sudo apt upgrade -y
-```
-
----
-
-## 2. Instalar herramientas
-
-```bash
-sudo apt install -y \
-    nginx \
-    mysql-server \
-    git \
-    curl \
-    unzip
-```
-
----
-
-## 3. Instalar PHP y extensiones
-
-Instala PHP 8.2 o superior.
-
-Ejemplo con PHP 8.3:
-
-```bash
-sudo apt install -y \
-    php8.3-cli \
-    php8.3-fpm \
-    php8.3-mysql \
-    php8.3-mbstring \
-    php8.3-xml \
-    php8.3-curl \
-    php8.3-zip \
-    php8.3-gd \
-    php8.3-bcmath \
-    php8.3-intl
-```
-
-Verifica:
-
-```bash
-php -v
-```
-
-y:
-
-```bash
-php -m
-```
-
----
-
-## 4. Instalar Composer
-
-Comprueba primero:
-
-```bash
-composer --version
-```
-
-Si Composer no está instalado, instálalo usando el procedimiento oficial de Composer para tu servidor.
-
-Después:
-
-```bash
-composer --version
-```
-
----
-
-## 5. Instalar Node.js y npm
-
-Verifica:
-
-```bash
-node -v
-npm -v
-```
-
-Se recomienda Node.js 20 o superior compatible con las dependencias del proyecto.
-
----
-
-## 6. Clonar CIVAN
-
-Ejemplo:
-
-```bash
-cd /var/www
-sudo git clone https://github.com/igCarlos/civan.git
-sudo chown -R $USER:$USER /var/www/civan
-cd /var/www/civan
-```
-
----
-
-## 7. Instalar dependencias
-
-```bash
-composer install
-npm ci
-```
-
-Si no existe `package-lock.json`:
-
-```bash
-npm install
-```
-
----
-
-## 8. Preparar `.env`
-
-```bash
-cp .env.example .env
-nano .env
-```
-
-Configura:
-
-```env
-APP_NAME=CIVAN
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://panel.tudominio.com
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=civan
-DB_USERNAME=civan
-DB_PASSWORD=CONTRASENA_SEGURA
-```
-
----
-
-## 9. Generar clave
-
-```bash
-php artisan key:generate
-```
-
----
-
-## 10. Migraciones
-
-```bash
-php artisan migrate --force
-```
-
----
-
-## 11. Permisos de CIVAN
-
-```bash
-php artisan permissions:sync-models --force
-```
-
----
-
-## 12. Storage
-
-```bash
-php artisan storage:link
-```
-
----
-
-## 13. Compilar frontend
-
-```bash
-npm run build
-```
-
-Esto generará los assets de producción de Vite.
-
----
-
-# Configuración de Nginx
-
-Ejemplo:
-
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-
-    server_name panel.tudominio.com;
-
-    root /var/www/civan/public;
-    index index.php index.html;
-
-    charset utf-8;
-
-    client_max_body_size 16M;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location = /favicon.ico {
-        access_log off;
-        log_not_found off;
-    }
-
-    location = /robots.txt {
-        access_log off;
-        log_not_found off;
-    }
-
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-```
-
-Guarda, por ejemplo:
-
-```text
-/etc/nginx/sites-available/civan
-```
-
-Crear enlace:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/civan \
-    /etc/nginx/sites-enabled/civan
-```
-
-Comprobar sintaxis:
-
-```bash
-sudo nginx -t
-```
-
-Reiniciar:
-
-```bash
-sudo systemctl reload nginx
-```
-
-## Importante
-
-La raíz debe apuntar a:
-
-```text
-/var/www/civan/public
-```
-
-Nunca a:
-
-```text
-/var/www/civan
-```
-
----
-
-# Despliegue en producción
-
-Procedimiento recomendado después de cada actualización:
-
-```bash
-cd /var/www/civan
-```
-
-Actualizar código:
-
-```bash
-git pull
-```
-
-Instalar dependencias PHP:
-
-```bash
-composer install \
-    --no-dev \
-    --optimize-autoloader
-```
-
-Instalar frontend:
-
-```bash
-npm ci
-```
-
-Compilar:
-
-```bash
-npm run build
-```
-
-Aplicar migraciones:
-
-```bash
-php artisan migrate --force
-```
-
-Limpiar caché anterior:
-
-```bash
-php artisan optimize:clear
-```
-
-Generar cachés de producción:
-
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Si modificaste permisos:
-
-```bash
-php artisan permissions:sync-models --force
-```
-
-Revisar:
-
-```bash
-php artisan about
-```
-
----
-
-# Scheduler de Laravel
-
-CIVAN utiliza tareas programadas para procesos como la limpieza/retención de auditoría.
-
-En Linux agrega al cron:
-
-```bash
-crontab -e
-```
-
-Añade:
-
-```cron
-* * * * * cd /var/www/civan && php artisan schedule:run >> /dev/null 2>&1
-```
-
-Laravel ejecutará internamente cada tarea en el momento correspondiente.
-
-## Ver tareas configuradas
-
-```bash
-php artisan schedule:list
-```
-
-La retención de auditoría puede configurarse para limpiar eventos antiguos de navegación, manteniendo eventos importantes.
-
----
-
-# Permisos de archivos en Linux
-
-Laravel necesita escribir en:
-
-```text
-storage
-bootstrap/cache
-```
-
-Configura:
-
-```bash
-sudo chown -R www-data:www-data \
-    /var/www/civan/storage \
-    /var/www/civan/bootstrap/cache
-```
-
-Luego:
-
-```bash
-sudo chmod -R 775 \
-    /var/www/civan/storage \
-    /var/www/civan/bootstrap/cache
-```
-
-Si utilizas un usuario de despliegue diferente, ajusta propietario/grupo según tu servidor.
-
----
-
-# Configuración inicial dentro de CIVAN
-
-Después de iniciar sesión como administrador:
+Después de entrar con el administrador, revisa:
 
 ```text
 Configuración
-└── Sistema
 ```
 
-Configura:
+## Perfil
 
-## Identidad
+- nombre;
+- correo;
+- verificación del correo.
 
-- Nombre del panel.
-- Nombre corto.
+## Contraseña
 
-## Branding
+- contraseña actual;
+- contraseña nueva;
+- confirmación;
+- reglas de seguridad.
 
-- Logo modo claro.
-- Logo modo oscuro.
-- Favicon.
-- Tamaño del logo.
+## Autenticación 2FA
 
-## Regional
+- activar;
+- QR;
+- código;
+- recovery codes.
 
-- Zona horaria.
-- Idioma.
-- Registros por página.
-- Formato de fecha.
-- Formato de hora.
+## Sesiones y dispositivos
+
+- sesión actual;
+- otras sesiones;
+- IP;
+- navegador;
+- plataforma;
+- última actividad.
 
 ## Apariencia
 
-- Color principal.
-- Color del sidebar.
-- Forma del sidebar.
-- Fondo.
-- Color de cards.
-- Estilo de cards.
+- tema;
+- colores;
+- fondo;
+- cards.
+
+## Sistema
+
+- identidad;
+- branding;
+- regional;
+- preferencias globales.
 
 ---
 
@@ -1322,7 +1354,7 @@ Configura:
 
 La configuración visual se almacena en `system_settings`.
 
-Ejemplos de claves:
+Ejemplos:
 
 ```text
 system.panel_name
@@ -1354,16 +1386,12 @@ system.per_page
 
 ## Sidebar
 
-Forma:
-
 ```text
 normal
 rounded
 ```
 
 ## Fondo
-
-Modo:
 
 ```text
 auto
@@ -1372,7 +1400,7 @@ custom
 
 ## Cards
 
-Modo de color:
+Modo:
 
 ```text
 auto
@@ -1386,7 +1414,7 @@ solid
 glass
 ```
 
-`glass` activa el efecto Glassmorphism.
+`glass` activa Glassmorphism.
 
 ---
 
@@ -1394,7 +1422,7 @@ glass
 
 CIVAN registra acciones administrativas importantes.
 
-Entre los eventos actuales:
+Entre los eventos pueden encontrarse:
 
 ```text
 login
@@ -1413,7 +1441,7 @@ page_view
 system_settings_update
 ```
 
-Los logs almacenan información como:
+Los logs pueden contener:
 
 - actor;
 - evento;
@@ -1430,13 +1458,13 @@ Los logs almacenan información como:
 
 ## Privacidad
 
-Antes de almacenar auditoría, los datos sensibles deben pasar por el sistema de sanitización de `AuditService`.
-
-Nunca registres:
+Nunca registres datos como:
 
 ```text
 password
 password_confirmation
+two_factor_secret
+two_factor_recovery_codes
 tokens
 secret keys
 API secrets
@@ -1444,215 +1472,236 @@ API secrets
 
 ---
 
-# Comandos útiles
+# Comandos útiles en XAMPP
 
-## Información de Laravel
+Todos los ejemplos se ejecutan desde:
 
-```bash
+```powershell
+cd C:\xampp\htdocs\appwebs\civan
+```
+
+## Laravel
+
+```powershell
 php artisan about
 ```
 
----
+## Limpiar cachés
 
-## Limpiar caché completa
-
-```bash
+```powershell
 php artisan optimize:clear
 ```
 
----
-
-## Cache de producción
-
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
----
-
 ## Ver rutas
 
-```bash
+```powershell
 php artisan route:list
 ```
 
-Solo configuración:
+## Ver login
 
-```bash
-php artisan route:list --path=configuracion
+```powershell
+php artisan route:list --path=login -v
 ```
 
----
+## Ver 2FA
+
+```powershell
+php artisan route:list --path=two-factor -v
+```
+
+## Ver sesiones
+
+```powershell
+php artisan route:list --path=settings/sessions -v
+```
+
+## Ver tabla sessions
+
+```powershell
+php artisan db:table sessions
+```
 
 ## Ver migraciones
 
-```bash
+```powershell
 php artisan migrate:status
 ```
 
----
-
 ## Ejecutar migraciones
 
-```bash
+```powershell
 php artisan migrate
 ```
 
----
-
-## Rollback de la última migración
-
-```bash
-php artisan migrate:rollback
-```
-
-Úsalo con cuidado en producción.
-
----
-
 ## Sincronizar permisos
 
-```bash
+```powershell
 php artisan permissions:sync-models --force
 ```
 
----
+## Storage
 
-## Storage link
-
-```bash
+```powershell
 php artisan storage:link
 ```
 
----
+## Iniciar Laravel
 
-## Ver scheduler
-
-```bash
-php artisan schedule:list
-```
-
----
-
-## Iniciar servidor local
-
-```bash
+```powershell
 php artisan serve
 ```
 
----
+## Iniciar Vite
 
-## Vite desarrollo
-
-```bash
+```powershell
 npm run dev
 ```
 
----
+## Build
 
-## Build frontend
-
-```bash
+```powershell
 npm run build
 ```
 
----
+## PHP
 
-## Revisar PHP
-
-```bash
+```powershell
 php -v
 php -m
 php --ini
 ```
 
----
+## Composer
 
-## Revisar Node/npm
+```powershell
+composer --version
+composer show
+```
 
-```bash
+## Fortify
+
+```powershell
+composer show laravel/fortify
+```
+
+## Node
+
+```powershell
 node -v
 npm -v
 ```
 
----
+## Git
 
-## Revisar Composer
-
-```bash
-composer --version
+```powershell
+git --version
 ```
 
 ---
 
 # Solución de problemas
 
-## Pantalla blanca o interfaz sin estilos
+## Pantalla blanca
 
-Ejecuta:
+Primero abre:
 
-```bash
+```text
+F12
+→ Console
+```
+
+Busca el primer error rojo.
+
+Después ejecuta:
+
+```powershell
 npm install
+php artisan optimize:clear
 npm run dev
 ```
 
-En producción:
+Si Vite estaba abierto, ciérralo con:
 
-```bash
-npm run build
+```text
+Ctrl + C
 ```
 
-Después:
+y vuelve a iniciarlo:
 
-```bash
-php artisan optimize:clear
+```powershell
+npm run dev
+```
+
+Recarga con:
+
+```text
+Ctrl + F5
 ```
 
 ---
 
-## Error `Vite manifest not found`
-
-No se ha generado el frontend de producción.
+## Vite manifest not found
 
 Ejecuta:
 
-```bash
+```powershell
+npm install
 npm run build
+```
+
+En desarrollo utiliza:
+
+```powershell
+npm run dev
 ```
 
 ---
 
-## Error de conexión a MySQL
+## No conecta con MySQL
 
-Ejemplo:
+Asegúrate de que MySQL esté:
 
 ```text
-SQLSTATE[HY000] [1045] Access denied
+Running
 ```
+
+en XAMPP.
 
 Comprueba:
 
 ```env
-DB_HOST
-DB_PORT
-DB_DATABASE
-DB_USERNAME
-DB_PASSWORD
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=civan
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
 Después:
 
-```bash
-php artisan config:clear
+```powershell
+php artisan optimize:clear
+php artisan migrate:status
 ```
 
 ---
 
-## `Unknown database`
+## Unknown database
 
-Crea primero la base:
+Abre:
+
+```text
+http://localhost/phpmyadmin
+```
+
+y crea:
+
+```text
+civan
+```
+
+o ejecuta:
 
 ```sql
 CREATE DATABASE civan
@@ -1662,89 +1711,142 @@ COLLATE utf8mb4_unicode_ci;
 
 ---
 
-## Cambié `.env` pero Laravel sigue usando datos anteriores
+## Access denied for user root
 
-```bash
+Verifica si MySQL de XAMPP tiene contraseña para root.
+
+Ajusta:
+
+```env
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+o coloca la contraseña configurada.
+
+Luego:
+
+```powershell
 php artisan optimize:clear
 ```
 
 ---
 
-## Logo o favicon se guarda pero no aparece
+## php no reconocido
+
+Ejecuta:
+
+```powershell
+where.exe php
+```
+
+Agrega:
+
+```text
+C:\xampp\php
+```
+
+al `PATH`.
+
+---
+
+## Composer utiliza otro PHP
 
 Comprueba:
 
-```bash
-php artisan storage:link
+```powershell
+php -v
+where.exe php
+composer diagnose
 ```
 
-Debe existir:
-
-```text
-public/storage
-```
-
-Comprueba también que `APP_URL` sea correcto.
+Composer debe utilizar una versión compatible con PHP 8.2+.
 
 ---
 
-## El formulario de configuración no guarda
+## Falta una extensión PHP
 
-Verifica la ruta:
-
-```bash
-php artisan route:list --path=configuracion/sistema
-```
-
-La configuración con archivos debe disponer de una ruta POST para recibir `multipart/form-data`.
-
-Ejemplo esperado:
+Ejemplo:
 
 ```text
-GET|HEAD  dashboard/configuracion/sistema
-POST      dashboard/configuracion/sistema
+ext-gd is missing
+ext-zip is missing
 ```
 
-Después:
+Abre:
 
-```bash
+```text
+C:\xampp\php\php.ini
+```
+
+habilita la extensión, reinicia Apache y ejecuta:
+
+```powershell
+php -m
+composer install
+```
+
+---
+
+## Cambié .env pero Laravel sigue usando valores viejos
+
+```powershell
 php artisan optimize:clear
+```
+
+---
+
+## Logo o favicon no aparece
+
+```powershell
+php artisan storage:link
+```
+
+Comprueba:
+
+```powershell
+Test-Path public\storage
+```
+
+También verifica:
+
+```env
+APP_URL=http://localhost:8000
 ```
 
 ---
 
 ## Error al subir logos
 
-Comprueba `php.ini`:
+En:
+
+```text
+C:\xampp\php\php.ini
+```
+
+comprueba:
 
 ```ini
 upload_max_filesize = 8M
 post_max_size = 16M
 ```
 
-Reinicia PHP/Apache.
+Reinicia Apache.
 
 ---
 
-## Error 403 en Usuarios/Roles/Permisos
+## Error 403 en Usuarios, Roles o Permisos
 
-El usuario probablemente no tiene el permiso necesario.
+Sincroniza permisos:
 
-Sincroniza:
-
-```bash
+```powershell
 php artisan permissions:sync-models --force
-```
-
-Luego limpia caché de permisos/aplicación:
-
-```bash
 php artisan optimize:clear
 ```
 
-Comprueba el rol:
+Comprueba desde Tinker:
 
-```bash
+```powershell
 php artisan tinker
 ```
 
@@ -1758,136 +1860,243 @@ $user->getAllPermissions()->pluck('name');
 
 ---
 
-## Los permisos nuevos no aparecen
+## 2FA no aparece al iniciar sesión
 
-```bash
-php artisan permissions:sync-models --force
+Comprueba:
+
+```powershell
+php artisan route:list --path=two-factor
+```
+
+Después:
+
+```powershell
+php artisan tinker
+```
+
+```php
+$user = App\Models\User::find(1);
+
+$user->two_factor_confirmed_at;
+
+$user->two_factor_secret !== null;
+```
+
+Si está correctamente configurado, al iniciar sesión debe ocurrir:
+
+```text
+/login
+↓
+/two-factor-challenge
+↓
+/dashboard
 ```
 
 ---
 
-## La hora aparece adelantada o atrasada
+## Error TwoFactorChallengeViewResponse is not instantiable
 
-Mantén como base una configuración segura del servidor y luego configura desde:
+Comprueba que `FortifyServiceProvider` registre la vista del challenge 2FA.
 
-```text
-Configuración → Sistema → Regional → Zona horaria
+Después:
+
+```powershell
+php artisan optimize:clear
 ```
 
-Por ejemplo:
+---
+
+## Código 2FA correcto pero termina en 404
+
+Comprueba:
+
+```powershell
+php artisan tinker --execute="dump(config('fortify.home'));"
+```
+
+Para CIVAN debe apuntar al dashboard, por ejemplo:
+
+```text
+/dashboard
+```
+
+Después:
+
+```powershell
+php artisan optimize:clear
+```
+
+---
+
+## Sesiones y dispositivos no muestra datos
+
+Comprueba `.env`:
+
+```env
+SESSION_DRIVER=database
+```
+
+Después:
+
+```powershell
+php artisan optimize:clear
+```
+
+Comprueba la tabla:
+
+```powershell
+php artisan db:table sessions
+```
+
+Y las rutas:
+
+```powershell
+php artisan route:list --path=settings/sessions -v
+```
+
+---
+
+## Sesiones y dispositivos muestra solo una sesión
+
+Eso significa normalmente que solo existe una sesión activa para tu usuario.
+
+Para probar:
+
+1. inicia sesión en Edge;
+2. inicia sesión en Chrome/Incógnito;
+3. recarga `/settings/sessions`.
+
+---
+
+## Error 429 Too Many Requests
+
+El Rate Limit de autenticación está funcionando.
+
+CIVAN debe mostrar su alerta visual para el `429`.
+
+Si vuelve a aparecer el modal oscuro de Inertia:
+
+1. reinicia Vite;
+2. limpia caché;
+3. recarga completamente.
+
+```powershell
+php artisan optimize:clear
+npm run dev
+```
+
+---
+
+## Hora incorrecta
+
+Configura la zona horaria desde CIVAN.
+
+Ejemplo:
 
 ```text
 America/Managua
 ```
 
-Evita cambiar manualmente timestamps almacenados en la base de datos.
+No modifiques manualmente timestamps de la base.
 
 ---
 
-## El sidebar o colores vuelven al recargar
+## Configuración visual se pierde al recargar
 
 Comprueba que:
 
-- `SystemSettingsService` comparte las configuraciones;
-- `HandleInertiaRequests` comparte la prop `system`;
-- `app.tsx` llama a `applySystemAppearance()` con la configuración inicial;
-- los valores existan en `system_settings`.
-
-Puedes revisar:
-
-```bash
-php artisan tinker
-```
-
-```php
-App\Models\SystemSetting::where(
-    'group',
-    'system'
-)->get([
-    'key',
-    'value',
-]);
-```
-
----
-
-## Error de permisos en `storage`
-
-Linux:
-
-```bash
-sudo chown -R www-data:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-```
+- `SystemSettingsService` lea la configuración;
+- `HandleInertiaRequests` comparta `system`;
+- `app.tsx` aplique `applySystemAppearance()`;
+- existan los valores en `system_settings`.
 
 ---
 
 ## Error 500
 
-Revisa:
+Abre:
 
 ```text
-storage/logs/laravel.log
+storage\logs\laravel.log
 ```
 
-En Linux:
+En PowerShell:
 
-```bash
-tail -f storage/logs/laravel.log
+```powershell
+Get-Content storage\logs\laravel.log -Tail 100
 ```
 
-Luego reproduce el error.
+Para seguir el log:
+
+```powershell
+Get-Content storage\logs\laravel.log -Wait
+```
 
 ---
 
-# Checklist después de instalar
+# Checklist final
 
-Comprueba uno por uno:
+Comprueba todo en orden:
 
+- [ ] XAMPP instalado.
+- [ ] Apache inicia.
+- [ ] MySQL inicia.
+- [ ] PHP 8.2+ funciona.
+- [ ] `php --ini` utiliza el PHP correcto.
+- [ ] Extensiones PHP habilitadas.
+- [ ] Composer instalado.
+- [ ] Node.js instalado.
+- [ ] npm instalado.
+- [ ] Git instalado.
+- [ ] Repositorio clonado.
 - [ ] `composer install` completado.
-- [ ] `npm install` o `npm ci` completado.
+- [ ] `npm ci` o `npm install` completado.
 - [ ] `.env` creado.
+- [ ] Base de datos `civan` creada.
+- [ ] `.env` conectado a MySQL de XAMPP.
 - [ ] `APP_KEY` generado.
-- [ ] MySQL conectado.
+- [ ] `SESSION_DRIVER=database`.
 - [ ] Migraciones ejecutadas.
+- [ ] Tabla `sessions` creada.
+- [ ] Columnas 2FA creadas.
+- [ ] `storage:link` creado.
 - [ ] Permisos sincronizados.
 - [ ] Administrador creado.
-- [ ] `storage:link` creado.
-- [ ] `storage` tiene permisos de escritura.
-- [ ] Vite funciona.
-- [ ] Laravel inicia.
+- [ ] Caché limpiada.
+- [ ] `php artisan serve` funciona.
+- [ ] `npm run dev` funciona.
 - [ ] Login funciona.
+- [ ] Dashboard abre.
 - [ ] Usuarios abre.
 - [ ] Roles abre.
 - [ ] Permisos abre.
 - [ ] Auditoría abre.
-- [ ] Configuración del sistema guarda.
-- [ ] Idioma Español/Inglés cambia correctamente.
-- [ ] Zona horaria funciona.
-- [ ] Color principal permanece después de recargar.
-- [ ] Sidebar permanece después de recargar.
-- [ ] Fondo permanece después de recargar.
-- [ ] Cards permanecen después de recargar.
-- [ ] Glassmorphism funciona.
-- [ ] Logo modo claro aparece.
-- [ ] Logo modo oscuro aparece.
-- [ ] Favicon aparece.
-- [ ] Tamaño del logo permanece después de recargar.
-- [ ] Build de producción se genera correctamente.
+- [ ] Configuración guarda.
+- [ ] Branding funciona.
+- [ ] Apariencia se conserva al recargar.
+- [ ] 2FA puede activarse.
+- [ ] QR de 2FA aparece.
+- [ ] Challenge 2FA funciona.
+- [ ] Recovery codes funcionan.
+- [ ] Rate Limit de login funciona.
+- [ ] Sesiones y dispositivos abre.
+- [ ] Sesión actual se identifica correctamente.
+- [ ] Otras sesiones pueden cerrarse.
+- [ ] Build frontend funciona.
+
+Build:
+
+```powershell
+npm run build
+```
 
 ---
 
 # Buenas prácticas para GitHub
 
-## No subir secretos
+## Nunca subir .env
 
-Nunca publiques:
-
-```text
-.env
-```
-
-Asegúrate de tener:
+Debe estar ignorado:
 
 ```gitignore
 .env
@@ -1895,56 +2104,47 @@ Asegúrate de tener:
 !.env.example
 ```
 
----
-
 ## No subir dependencias
-
-Normalmente deben estar ignoradas:
 
 ```text
 /vendor
 /node_modules
 ```
 
-Los usuarios las reconstruyen con:
+Se reconstruyen con:
 
-```bash
+```powershell
 composer install
-npm install
+npm ci
 ```
 
----
-
-## Sí subir locks
-
-Se recomienda versionar:
+## Sí versionar locks
 
 ```text
 composer.lock
 package-lock.json
 ```
 
-Esto ayuda a que todos instalen las mismas versiones de dependencias.
+## No publicar secretos 2FA
 
----
+Nunca subas ni muestres:
 
-## No subir uploads del usuario
+```text
+two_factor_secret
+two_factor_recovery_codes
+```
 
-El contenido dinámico de:
+## No subir archivos generados por usuarios
+
+No uses Git como almacenamiento de:
 
 ```text
 storage/app/public
 ```
 
-no debería utilizar Git como sistema de almacenamiento.
+## Mantener .env.example actualizado
 
-Los logos/favicon configurados en una instalación pertenecen a esa instalación.
-
----
-
-## Mantener `.env.example`
-
-Incluye únicamente valores de ejemplo:
+Debe incluir, como mínimo:
 
 ```env
 APP_NAME=CIVAN
@@ -1959,9 +2159,10 @@ DB_PORT=3306
 DB_DATABASE=civan
 DB_USERNAME=root
 DB_PASSWORD=
-```
 
-Nunca pongas contraseñas reales.
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+```
 
 ---
 
@@ -1970,14 +2171,20 @@ Nunca pongas contraseñas reales.
 ```text
 civan/
 ├── app/
+│   ├── Actions/
 │   ├── Http/
+│   │   ├── Controllers/
+│   │   ├── Middleware/
+│   │   └── Requests/
 │   ├── Models/
+│   ├── Providers/
 │   ├── Services/
 │   └── ...
 │
 ├── bootstrap/
 │
 ├── config/
+│   └── fortify.php
 │
 ├── database/
 │   ├── migrations/
@@ -1994,9 +2201,14 @@ civan/
 │   │   ├── layouts/
 │   │   ├── lib/
 │   │   └── pages/
+│   │       ├── auth/
+│   │       └── settings/
 │   └── views/
 │
 ├── routes/
+│   ├── auth.php
+│   ├── settings.php
+│   └── web.php
 │
 ├── storage/
 │
@@ -2015,97 +2227,130 @@ civan/
 
 # Instalación resumida
 
-Para una instalación local limpia:
+> Esta sección es un resumen. Para una instalación nueva se recomienda seguir primero todos los pasos anteriores en orden.
 
-```bash
+## 1. XAMPP
+
+Inicia:
+
+```text
+MySQL
+Apache
+```
+
+## 2. PowerShell
+
+```powershell
+cd C:\xampp\htdocs\appwebs
+
 git clone https://github.com/igCarlos/civan.git
+
 cd civan
 
 composer install
-npm install
 
-cp .env.example .env
+npm ci
 
-php artisan key:generate
-
-# Configurar MySQL en .env
-
-php artisan migrate
-php artisan storage:link
-php artisan permissions:sync-models --force
-
-php artisan optimize:clear
+Copy-Item .env.example .env
 ```
 
-Terminal 1:
+Si `npm ci` no puede ejecutarse porque no existe `package-lock.json`:
 
-```bash
+```powershell
+npm install
+```
+
+## 3. Crear la base de datos
+
+En:
+
+```text
+http://localhost/phpmyadmin
+```
+
+crea:
+
+```text
+civan
+```
+
+## 4. Configurar .env
+
+```env
+APP_NAME=CIVAN
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=civan
+DB_USERNAME=root
+DB_PASSWORD=
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+```
+
+## 5. Preparar Laravel
+
+```powershell
+php artisan key:generate
+
+php artisan migrate
+
+php artisan storage:link
+
+php artisan optimize:clear
+
+php artisan permissions:sync-models --force
+```
+
+## 6. Crear administrador si es necesario
+
+```powershell
+php artisan tinker
+```
+
+Crea el usuario y asigna el rol `administrador`.
+
+## 7. Terminal Laravel
+
+```powershell
 php artisan serve
 ```
 
-Terminal 2:
+## 8. Terminal Vite
 
-```bash
+```powershell
 npm run dev
 ```
 
-Abrir:
+## 9. Abrir CIVAN
 
 ```text
 http://localhost:8000
 ```
 
----
+## 10. Comprobación final
 
-# Instalación resumida de producción
-
-```bash
-git clone https://github.com/igCarlos/civan.git /var/www/civan
-
-cd /var/www/civan
-
-composer install \
-    --no-dev \
-    --optimize-autoloader
-
-npm ci
-npm run build
-
-cp .env.example .env
-
-php artisan key:generate
-
-# Configurar .env
-
-php artisan migrate --force
-php artisan storage:link
-php artisan permissions:sync-models --force
-
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Configura Nginx apuntando a:
-
-```text
-/var/www/civan/public
-```
-
-y agrega el scheduler:
-
-```cron
-* * * * * cd /var/www/civan && php artisan schedule:run >> /dev/null 2>&1
+```powershell
+php artisan about
+php artisan migrate:status
+php artisan route:list --path=login -v
+php artisan route:list --path=two-factor -v
+php artisan route:list --path=settings/sessions -v
+php artisan db:table sessions
 ```
 
 ---
 
 # Nota final
 
-Antes de publicar una nueva versión de CIVAN verifica siempre:
+Antes de subir una nueva versión de CIVAN a GitHub comprueba:
 
-```bash
+```powershell
 composer install
 npm ci
 php artisan migrate:status
@@ -2115,7 +2360,7 @@ npm run build
 php artisan optimize:clear
 ```
 
-Si todos los comandos terminan sin errores, la instalación está preparada para ejecutarse correctamente.
+Si todos los comandos terminan sin errores, la instalación local está correctamente preparada.
 
 ---
 
