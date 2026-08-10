@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SystemSettingsService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Services\SystemSettingsService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,33 +38,61 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
 
-            'name' => config('app.name'),
+            'name' =>
+                config('app.name'),
 
             'quote' => [
-                'message' => trim($message),
-                'author' => trim($author),
+                'message' =>
+                    trim($message),
+
+                'author' =>
+                    trim($author),
             ],
 
             'auth' => [
-                'user' => $user,
+                'user' =>
+                    $user,
 
-                'roles' => $user
-                    ? $user->getRoleNames()
-                        ->values()
-                        ->all()
-                    : [],
+                'roles' =>
+                    $user
+                        ? $user
+                            ->getRoleNames()
+                            ->values()
+                            ->all()
+                        : [],
 
-                'permissions' => $user
-                    ? $user->getAllPermissions()
-                        ->pluck('name')
-                        ->values()
-                        ->all()
-                    : [],
+                'permissions' =>
+                    $user
+                        ? $user
+                            ->getAllPermissions()
+                            ->pluck('name')
+                            ->values()
+                            ->all()
+                        : [],
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Mensajes flash globales
+            |--------------------------------------------------------------------------
+            */
+
+            'flash' => [
+                'rate_limit' => fn () =>
+                    $request
+                        ->session()
+                        ->get(
+                            'rate_limit'
+                        ),
             ],
 
             'sidebarOpen' =>
-                $request->cookie('sidebar_state') !== 'false',
-                'system' => fn () =>
+                $request
+                    ->cookie(
+                        'sidebar_state'
+                    ) !== 'false',
+
+            'system' => fn () =>
                 app(
                     SystemSettingsService::class
                 )->general(),

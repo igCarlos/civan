@@ -33,7 +33,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             Login::class,
             function (Login $event) {
-
                 $now = now();
 
                 DB::table('users')
@@ -79,7 +78,6 @@ class AppServiceProvider extends ServiceProvider
             }
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | LOGOUT
@@ -89,7 +87,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             Logout::class,
             function (Logout $event) {
-
                 if (! $event->user) {
                     return;
                 }

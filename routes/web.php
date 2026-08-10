@@ -97,9 +97,9 @@ Route::middleware([
                     'csv',
                 ]
             )
-                ->middleware(
-                    'can:audit_logs.export'
-                )
+                ->middleware([
+                    'can:audit_logs.export',
+                ])
                 ->name(
                     'audit.export.csv'
                 );
@@ -118,9 +118,9 @@ Route::middleware([
                     'excel',
                 ]
             )
-                ->middleware(
-                    'can:audit_logs.export'
-                )
+                ->middleware([
+                    'can:audit_logs.export',
+                ])
                 ->name(
                     'audit.export.excel'
                 );
@@ -139,9 +139,9 @@ Route::middleware([
                     'pdf',
                 ]
             )
-                ->middleware(
-                    'can:audit_logs.export'
-                )
+                ->middleware([
+                    'can:audit_logs.export',
+                ])
                 ->name(
                     'audit.export.pdf'
                 );
@@ -168,9 +168,9 @@ Route::middleware([
                     'update',
                 ]
             )
-                ->middleware(
-                    'can:audit_logs.retention.update'
-                )
+                ->middleware([
+                    'can:audit_logs.retention.update',
+                ])
                 ->name(
                     'audit.retention.update'
                 );
@@ -183,9 +183,9 @@ Route::middleware([
                     'prune',
                 ]
             )
-                ->middleware(
-                    'can:audit_logs.retention.update'
-                )
+                ->middleware([
+                    'can:audit_logs.retention.update',
+                ])
                 ->name(
                     'audit.retention.prune'
                 );
@@ -218,7 +218,7 @@ Route::middleware([
                 ]
             )
                 ->middleware(
-                    'can:users.view'
+                    'can:users.create'
                 )
                 ->name(
                     'users.create'
@@ -232,9 +232,9 @@ Route::middleware([
                     'store',
                 ]
             )
-                ->middleware(
-                    'can:users.view'
-                )
+                ->middleware([
+                    'can:users.create',
+                ])
                 ->name(
                     'users.store'
                 );
@@ -262,9 +262,9 @@ Route::middleware([
                     'update',
                 ]
             )
-                ->middleware(
-                    'can:users.update'
-                )
+                ->middleware([
+                    'can:users.update',
+                ])
                 ->name(
                     'users.update'
                 );
@@ -277,11 +277,25 @@ Route::middleware([
                     'destroy',
                 ]
             )
-                ->middleware(
-                    'can:users.view'
-                )
+                ->middleware([
+                    'can:users.delete',
+                ])
                 ->name(
                     'users.destroy'
+                );
+
+            Route::get(
+                '/usuarios/verificar-username',
+                [
+                    UserController::class,
+                    'checkUsername',
+                ]
+            )
+                ->middleware(
+                    'can:users.update'
+                )
+                ->name(
+                    'users.username.check'
                 );
 
 
@@ -338,9 +352,9 @@ Route::middleware([
                     'sync',
                 ]
             )
-                ->middleware(
-                    'can:permissions.sync'
-                )
+                ->middleware([
+                    'can:permissions.sync',
+                ])
                 ->name(
                     'permissions.sync'
                 );
@@ -373,7 +387,7 @@ Route::middleware([
                 ]
             )
                 ->middleware(
-                    'can:roles.view'
+                    'can:roles.create'
                 )
                 ->name(
                     'roles.create'
@@ -387,9 +401,9 @@ Route::middleware([
                     'store',
                 ]
             )
-                ->middleware(
-                    'can:roles.view'
-                )
+                ->middleware([
+                    'can:roles.create',
+                ])
                 ->name(
                     'roles.store'
                 );
@@ -403,7 +417,7 @@ Route::middleware([
                 ]
             )
                 ->middleware(
-                    'can:roles.view'
+                    'can:roles.update'
                 )
                 ->name(
                     'roles.edit'
@@ -417,9 +431,9 @@ Route::middleware([
                     'update',
                 ]
             )
-                ->middleware(
-                    'can:roles.view'
-                )
+                ->middleware([
+                    'can:roles.update',
+                ])
                 ->name(
                     'roles.update'
                 );
@@ -432,9 +446,9 @@ Route::middleware([
                     'destroy',
                 ]
             )
-                ->middleware(
-                    'can:roles.view'
-                )
+                ->middleware([
+                    'can:roles.delete',
+                ])
                 ->name(
                     'roles.destroy'
                 );
@@ -462,9 +476,11 @@ Route::middleware([
                     'update',
                 ]
             )
-                ->middleware('can:settings.update')
+                ->middleware([
+                    'can:settings.update',
+                ])
                 ->name('settings.system.update');
-
+            
 
 
         });

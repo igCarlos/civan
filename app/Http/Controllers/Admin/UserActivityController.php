@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\SystemSetting;
 
 class UserActivityController extends Controller
 {
@@ -49,6 +50,11 @@ class UserActivityController extends Controller
             }
         }
 
+        $perPage = (int) SystemSetting::valueOf(
+            'system.per_page',
+            20
+        );
+
         /*
         |--------------------------------------------------------------------------
         | Actividad
@@ -84,7 +90,7 @@ class UserActivityController extends Controller
                     });
             })
             ->latest('created_at')
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(
                 function (AuditLog $log) use ($user) {

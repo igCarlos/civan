@@ -10,6 +10,8 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { route as routeFn } from 'ziggy-js';
 
+import RateLimitAlert from '@/components/ui/rate-limit-alert';
+
 import { initializeTheme } from './hooks/use-appearance';
 
 import {
@@ -18,6 +20,10 @@ import {
 
 declare global {
     const route: typeof routeFn;
+
+    interface Window {
+        __civanRateLimitListenerInstalled?: boolean;
+    }
 }
 
 type SharedPageProps = {
@@ -36,6 +42,13 @@ type SharedPageProps = {
         card_style?: string;
     };
 };
+
+interface InertiaHttpExceptionDetail {
+    response?: {
+        status?: number;
+        headers?: unknown;
+    };
+}
 
 let appName =
     import.meta.env.VITE_APP_NAME ||
@@ -75,7 +88,6 @@ function applyAppearance(
             system?.card_style,
     });
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +143,210 @@ function applyFavicon(
         initialFavicon;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Helpers del Rate Limiter
+|--------------------------------------------------------------------------
+*/
+
+function getHeaderValue(
+    headers: unknown,
+    name: string,
+): string | null {
+    if (
+        !headers ||
+        typeof headers !==
+            'object'
+    ) {
+        return null;
+    }
+
+    const source =
+        headers as {
+            get?: (
+                key: string,
+            ) =>
+                | string
+                | null
+                | undefined;
+
+            [key: string]:
+                unknown;
+        };
+
+    if (
+        typeof source.get ===
+        'function'
+    ) {
+        const value =
+            source.get(
+                name,
+            ) ??
+            source.get(
+                name.toLowerCase(),
+            );
+
+        if (
+            value !== null &&
+            value !== undefined
+        ) {
+            return String(
+                value,
+            );
+        }
+    }
+
+    const direct =
+        source[name] ??
+        source[
+            name.toLowerCase()
+        ];
+
+    if (
+        direct === null ||
+        direct === undefined
+    ) {
+        return null;
+    }
+
+    if (
+        Array.isArray(
+            direct,
+        )
+    ) {
+        return String(
+            direct[0] ??
+                '',
+        );
+    }
+
+    return String(
+        direct,
+    );
+}
+
+function dispatchRateLimitAlert(
+    detail:
+        InertiaHttpExceptionDetail,
+): void {
+    const response =
+        detail.response;
+
+    if (
+        response?.status !==
+        429
+    ) {
+        return;
+    }
+
+    const retryAfterRaw =
+        getHeaderValue(
+            response.headers,
+            'Retry-After',
+        );
+
+    const retryAfter =
+        Math.max(
+            1,
+            Number.parseInt(
+                retryAfterRaw ??
+                    '60',
+                10,
+            ) ||
+                60,
+        );
+
+    window.dispatchEvent(
+        new CustomEvent(
+            'civan:rate-limit',
+            {
+                detail: {
+                    id:
+                        `${Date.now()}-${Math.random()}`,
+
+                    retryAfter,
+
+                    title:
+                        'Demasiadas solicitudes',
+
+                    message:
+                        `Has alcanzado el límite de solicitudes. ` +
+                        `Intenta nuevamente en ${retryAfter} ` +
+                        `${retryAfter === 1 ? 'segundo' : 'segundos'}.`,
+                },
+            },
+        ),
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Capturar HTTP 429 globalmente
+|--------------------------------------------------------------------------
+|
+| Inertia v3 usa:
+|   inertia:httpException
+|
+| Inertia v2 usaba:
+|   inertia:invalid
+|
+| Escuchamos ambos para mantener CIVAN compatible.
+|
+*/
+
+function installRateLimitListener(): void {
+    if (
+        window
+            .__civanRateLimitListenerInstalled
+    ) {
+        return;
+    }
+
+    window.__civanRateLimitListenerInstalled =
+        true;
+
+    const handleHttpException =
+        (
+            nativeEvent:
+                Event,
+        ) => {
+            const event =
+                nativeEvent as
+                    CustomEvent<InertiaHttpExceptionDetail>;
+
+            if (
+                event.detail
+                    ?.response
+                    ?.status !==
+                429
+            ) {
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Evitar el modal de error de Inertia
+            |--------------------------------------------------------------------------
+            */
+
+            event.preventDefault();
+
+            dispatchRateLimitAlert(
+                event.detail,
+            );
+        };
+
+    document.addEventListener(
+        'inertia:httpException',
+        handleHttpException,
+    );
+
+    document.addEventListener(
+        'inertia:invalid',
+        handleHttpException,
+    );
+}
+
 createInertiaApp({
     title: (title) =>
         title
@@ -151,7 +367,8 @@ createInertiaApp({
         props,
     }) {
         const initialProps =
-            props.initialPage.props as
+            props.initialPage
+                .props as
                 SharedPageProps;
 
         /*
@@ -161,26 +378,19 @@ createInertiaApp({
         */
 
         if (
-            initialProps.system?.panel_name
+            initialProps.system
+                ?.panel_name
         ) {
             appName =
-                initialProps.system.panel_name;
+                initialProps
+                    .system
+                    .panel_name;
         }
 
         /*
         |--------------------------------------------------------------------------
         | Apariencia personal claro / oscuro
         |--------------------------------------------------------------------------
-        |
-        | Primero dejamos que el Starter Kit determine claro/oscuro.
-        | Luego CIVAN aplica sus personalizaciones globales.
-        |
-        | Esto es importante para:
-        | - fondo automático
-        | - cards automáticas
-        | - fondo personalizado
-        | - sidebar
-        |
         */
 
         initializeTheme();
@@ -189,10 +399,6 @@ createInertiaApp({
         |--------------------------------------------------------------------------
         | Apariencia global guardada
         |--------------------------------------------------------------------------
-        |
-        | ESTA LLAMADA es la que hace que los valores guardados en
-        | system_settings vuelvan a aplicarse después de F5 / Ctrl+R.
-        |
         */
 
         applyAppearance(
@@ -200,8 +406,21 @@ createInertiaApp({
         );
 
         applyFavicon(
-            initialProps.system?.favicon,
+            initialProps.system
+                ?.favicon,
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Rate Limiter global
+        |--------------------------------------------------------------------------
+        |
+        | Se instala antes de renderizar React para garantizar que CIVAN pueda
+        | cancelar el modal de respuesta inválida de Inertia.
+        |
+        */
+
+        installRateLimitListener();
 
         /*
         |--------------------------------------------------------------------------
@@ -213,25 +432,18 @@ createInertiaApp({
             'navigate',
             (event) => {
                 const pageProps =
-                    event.detail.page.props as
+                    event.detail
+                        .page
+                        .props as
                         SharedPageProps;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reaplicar apariencia
-                |--------------------------------------------------------------------------
-                |
-                | También restaura la configuración guardada si el administrador
-                | hizo cambios de vista previa pero salió sin guardar.
-                |
-                */
 
                 applyAppearance(
                     pageProps.system,
                 );
 
                 applyFavicon(
-                    pageProps.system?.favicon,
+                    pageProps.system
+                        ?.favicon,
                 );
 
                 /*
@@ -241,11 +453,13 @@ createInertiaApp({
                 */
 
                 const nextAppName =
-                    pageProps.system?.panel_name;
+                    pageProps.system
+                        ?.panel_name;
 
                 if (
                     !nextAppName ||
-                    nextAppName === appName
+                    nextAppName ===
+                        appName
                 ) {
                     return;
                 }
@@ -295,10 +509,28 @@ createInertiaApp({
         );
 
         const root =
-            createRoot(el);
+            createRoot(
+                el,
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Alert global
+        |--------------------------------------------------------------------------
+        |
+        | Está fuera de AppLayout. Por eso también puede mostrarse en login,
+        | register, forgot-password, etc.
+        |
+        */
 
         root.render(
-            <App {...props} />,
+            <>
+                <RateLimitAlert />
+
+                <App
+                    {...props}
+                />
+            </>,
         );
     },
 

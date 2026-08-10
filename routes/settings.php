@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\SessionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,4 +19,44 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');
+
+    Route::get(
+                '/settings/2fa',
+                fn () => Inertia::render(
+                    'settings/2FA'
+                )
+            )->name('settings.2fa');
+
+     Route::get(
+            '/settings/sessions',
+            [
+                SessionController::class,
+                'index',
+            ]
+        )->name(
+            'sessions.index'
+        );
+
+        /*
+        | Esta ruta debe estar ANTES de sessions/{sessionId}.
+        */
+        Route::delete(
+            'settings/sessions/others',
+            [
+                SessionController::class,
+                'destroyOthers',
+            ]
+        )->name(
+            'sessions.destroy-others'
+        );
+
+        Route::delete(
+            'settings/sessions/{sessionId}',
+            [
+                SessionController::class,
+                'destroy',
+            ]
+        )->name(
+            'sessions.destroy'
+        );
 });

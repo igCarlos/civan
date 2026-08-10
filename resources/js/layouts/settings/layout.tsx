@@ -17,10 +17,21 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+        title: 'Autenticación 2FA',
+        url: '/settings/2fa',
+        icon: null,
+    },
+     {
+        title: 'Sesiones y dispositivos',
+        url: '/settings/sessions',
+        icon: null,
+    },
+    {
         title: 'Appearance',
         url: '/settings/appearance',
         icon: null,
     },
+
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

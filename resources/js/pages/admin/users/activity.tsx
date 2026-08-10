@@ -1,7 +1,13 @@
-import { Head, Link, router } from '@inertiajs/react';
+import {
+    Head,
+    Link,
+    router,
+} from '@inertiajs/react';
+
 import {
     Activity,
     ArrowLeft,
+    CheckCircle2,
     ChevronDown,
     ChevronUp,
     Clock3,
@@ -11,12 +17,44 @@ import {
     LogOut,
     Pencil,
     PlusCircle,
+    RefreshCw,
     Shield,
     ShieldCheck,
+    Sparkles,
     Trash2,
     UserCog,
+    UserRound,
+    Wifi,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+
+import {
+    type ReactNode,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+
+import { Separator } from '@/components/ui/separator';
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 import { useTranslation } from '@/hooks/use-translation';
 import { type TranslationKey } from '@/i18n/translations';
@@ -362,24 +400,9 @@ function statusLabel(
     }
 }
 
-function statusClass(status: string) {
-    switch (status) {
-        case 'active':
-            return 'bg-green-500/10 text-green-600 dark:text-green-400';
-
-        case 'pending':
-            return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400';
-
-        case 'suspended':
-            return 'bg-red-500/10 text-red-600 dark:text-red-400';
-
-        default:
-            return 'bg-muted text-muted-foreground';
-    }
-}
-
 function presenceLabel(
-    presence: UserItem['presence'],
+    presence:
+        UserItem['presence'],
     t: Translate,
 ) {
     switch (presence) {
@@ -401,24 +424,9 @@ function presenceLabel(
     }
 }
 
-function presenceClass(
-    presence: UserItem['presence'],
-) {
-    switch (presence) {
-        case 'online':
-            return 'bg-green-500';
-
-        case 'away':
-            return 'bg-yellow-500';
-
-        case 'offline':
-        default:
-            return 'bg-zinc-400 dark:bg-zinc-600';
-    }
-}
-
 function relationLabel(
-    relation: ActivityItem['relation'],
+    relation:
+        ActivityItem['relation'],
     t: Translate,
 ) {
     switch (relation) {
@@ -459,62 +467,79 @@ function EventIcon({
 }: {
     event: string;
 }) {
-    const className = 'size-5';
+    const className =
+        'size-4';
 
     switch (event) {
         case 'login':
             return (
                 <LogIn
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         case 'logout':
             return (
                 <LogOut
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         case 'create':
             return (
                 <PlusCircle
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         case 'update':
             return (
                 <Pencil
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         case 'delete':
             return (
                 <Trash2
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         case 'role_change':
             return (
                 <UserCog
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         case 'status_change':
             return (
                 <ShieldCheck
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
 
         default:
             return (
                 <Activity
-                    className={className}
+                    className={
+                        className
+                    }
                 />
             );
     }
@@ -525,16 +550,24 @@ export default function UserActivity({
     activities,
     can,
 }: Props) {
-    const { t } = useTranslation();
+    const { t } =
+        useTranslation();
 
     const [
         expanded,
         setExpanded,
     ] = useState<number[]>([]);
 
+    const [
+        isRefreshing,
+        setIsRefreshing,
+    ] = useState(false);
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: t('users.title'),
+            title: t(
+                'users.title',
+            ),
             href: '/dashboard/usuarios',
         },
         {
@@ -542,10 +575,71 @@ export default function UserActivity({
             href: `/dashboard/usuarios/${user.id}/editar`,
         },
         {
-            title: t('users.activity.title'),
+            title: t(
+                'users.activity.title',
+            ),
             href: `/dashboard/usuarios/${user.id}/actividad`,
         },
     ];
+
+    const initials =
+        useMemo(
+            () =>
+                user.name
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map(
+                        (
+                            part,
+                        ) =>
+                            part[0]
+                                ?.toUpperCase(),
+                    )
+                    .join(''),
+            [
+                user.name,
+            ],
+        );
+
+    const currentPageChanges =
+        useMemo(
+            () =>
+                activities.data.filter(
+                    (
+                        activity,
+                    ) =>
+                        changedFields(
+                            activity,
+                        ).length >
+                        0,
+                ).length,
+            [
+                activities.data,
+            ],
+        );
+
+    const currentPageSecurityEvents =
+        useMemo(
+            () =>
+                activities.data.filter(
+                    (
+                        activity,
+                    ) =>
+                        [
+                            'login',
+                            'logout',
+                            'status_change',
+                            'role_change',
+                            'permission_change',
+                        ].includes(
+                            activity.event,
+                        ),
+                ).length,
+            [
+                activities.data,
+            ],
+        );
 
     /*
     |--------------------------------------------------------------------------
@@ -567,6 +661,24 @@ export default function UserActivity({
                     'user',
                     'activities',
                 ],
+
+                preserveState:
+                    true,
+
+                preserveScroll:
+                    true,
+
+                onStart: () => {
+                    setIsRefreshing(
+                        true,
+                    );
+                },
+
+                onFinish: () => {
+                    setIsRefreshing(
+                        false,
+                    );
+                },
             });
         };
 
@@ -606,27 +718,50 @@ export default function UserActivity({
     const toggleExpanded = (
         id: number,
     ) => {
-        setExpanded((current) =>
-            current.includes(id)
-                ? current.filter(
-                    (item) => item !== id,
+        setExpanded(
+            (
+                current,
+            ) =>
+                current.includes(
+                    id,
                 )
-                : [...current, id],
+                    ? current.filter(
+                          (
+                              item,
+                          ) =>
+                              item !==
+                              id,
+                      )
+                    : [
+                          ...current,
+                          id,
+                      ],
         );
     };
 
     const paginationLabel = (
         label: string,
     ): string => {
-        const normalized = label
-            .replace(/&laquo;|&raquo;/g, '')
-            .replace(/«|»/g, '')
-            .trim()
-            .toLowerCase();
+        const normalized =
+            label
+                .replace(
+                    /&laquo;|&raquo;/g,
+                    '',
+                )
+                .replace(
+                    /«|»/g,
+                    '',
+                )
+                .trim()
+                .toLowerCase();
 
         if (
-            normalized.includes('previous') ||
-            normalized.includes('anterior')
+            normalized.includes(
+                'previous',
+            ) ||
+            normalized.includes(
+                'anterior',
+            )
         ) {
             return `« ${t(
                 'pagination.previous',
@@ -634,8 +769,12 @@ export default function UserActivity({
         }
 
         if (
-            normalized.includes('next') ||
-            normalized.includes('siguiente')
+            normalized.includes(
+                'next',
+            ) ||
+            normalized.includes(
+                'siguiente',
+            )
         ) {
             return `${t(
                 'pagination.next',
@@ -647,666 +786,447 @@ export default function UserActivity({
 
     return (
         <AppLayout
-            breadcrumbs={breadcrumbs}
+            breadcrumbs={
+                breadcrumbs
+            }
         >
             <Head
-                title={`${t('users.activity.title')} - ${user.name}`}
+                title={`${t(
+                    'users.activity.title',
+                )} - ${user.name}`}
             />
 
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-                {/* Encabezado */}
+            <div className="flex min-w-0 flex-1 flex-col gap-5 p-3 sm:p-4 lg:gap-6 lg:p-6">
+                {/* =========================================================
+                    ENCABEZADO
+                ========================================================== */}
 
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-start gap-3">
-                        <Link
-                            href="/dashboard/usuarios"
-                            className="mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-md border hover:bg-muted"
-                        >
-                            <ArrowLeft className="size-4" />
-                        </Link>
+                <Card className="relative overflow-hidden rounded-3xl border-primary/10 shadow-sm">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.07] via-transparent to-transparent" />
+                    <div className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full bg-primary/10 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-24 left-1/3 size-52 rounded-full bg-primary/[0.04] blur-3xl" />
 
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <h1 className="text-2xl font-bold tracking-tight">
-                                    {user.name}
-                                </h1>
-
-                                <span
-                                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(
-                                        user.status,
-                                    )}`}
+                    <CardContent className="relative p-5 sm:p-6 lg:p-7">
+                        <div className="flex min-w-0 flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+                            <div className="flex min-w-0 items-start gap-4">
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    size="icon"
+                                    className="size-10 shrink-0 rounded-xl"
                                 >
-                                    {statusLabel(
-                                        user.status,
-                                        t,
-                                    )}
-                                </span>
+                                    <Link
+                                        href="/dashboard/usuarios"
+                                        aria-label="Volver a usuarios"
+                                    >
+                                        <ArrowLeft className="size-4" />
+                                    </Link>
+                                </Button>
+
+                                <div className="relative flex size-13 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-sm font-bold text-primary shadow-sm">
+                                    {initials}
+
+                                    <span
+                                        className={[
+                                            'absolute -bottom-1 -right-1 size-3.5 rounded-full border-2 border-card',
+                                            presenceDotClass(
+                                                user.presence,
+                                            ),
+                                        ].join(
+                                            ' ',
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                                            {user.name}
+                                        </h1>
+
+                                        <StatusBadge
+                                            status={
+                                                user.status
+                                            }
+                                            label={statusLabel(
+                                                user.status,
+                                                t,
+                                            )}
+                                        />
+                                    </div>
+
+                                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                                        {t(
+                                            'users.activity.description',
+                                        )}
+                                    </p>
+
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        <Badge
+                                            variant="outline"
+                                            className="gap-1.5 rounded-full"
+                                        >
+                                            <Wifi className="size-3" />
+
+                                            {presenceLabel(
+                                                user.presence,
+                                                t,
+                                            )}
+                                        </Badge>
+
+                                        <Badge
+                                            variant="outline"
+                                            className="gap-1.5 rounded-full"
+                                        >
+                                            <History className="size-3" />
+
+                                            {
+                                                activities.total
+                                            }{' '}
+                                            actividades
+                                        </Badge>
+
+                                        <Badge
+                                            variant="outline"
+                                            className="gap-1.5 rounded-full"
+                                        >
+                                            <span
+                                                className={[
+                                                    'size-2 rounded-full',
+                                                    isRefreshing
+                                                        ? 'animate-pulse bg-amber-500'
+                                                        : 'bg-emerald-500',
+                                                ].join(
+                                                    ' ',
+                                                )}
+                                            />
+
+                                            {isRefreshing
+                                                ? 'Actualizando...'
+                                                : 'Actualización automática'}
+                                        </Badge>
+                                    </div>
+                                </div>
                             </div>
 
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {t(
-                                    'users.activity.description',
-                                )}
-                            </p>
-                        </div>
-                    </div>
+                            {can.updateUser && (
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="h-11 rounded-xl"
+                                >
+                                    <Link
+                                        href={`/dashboard/usuarios/${user.id}/editar`}
+                                    >
+                                        <Pencil className="size-4" />
 
-                    {can.updateUser && (
-                        <Link
-                            href={`/dashboard/usuarios/${user.id}/editar`}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium hover:bg-muted"
-                        >
-                            <Pencil className="size-4" />
-                            {t(
-                                'users.activity.manage_user',
+                                        {t(
+                                            'users.activity.manage_user',
+                                        )}
+                                    </Link>
+                                </Button>
                             )}
-                        </Link>
-                    )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* =========================================================
+                    RESUMEN
+                ========================================================== */}
+
+                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 2xl:grid-cols-4">
+                    <StatCard
+                        icon={
+                            <Wifi className="size-4" />
+                        }
+                        label={t(
+                            'users.activity.presence',
+                        )}
+                        value={presenceLabel(
+                            user.presence,
+                            t,
+                        )}
+                        description={
+                            user.last_seen_at_human ??
+                            t(
+                                'users.no_activity',
+                            )
+                        }
+                        tone={
+                            user.presence ===
+                            'online'
+                                ? 'success'
+                                : user.presence ===
+                                    'away'
+                                  ? 'warning'
+                                  : 'default'
+                        }
+                    />
+
+                    <StatCard
+                        icon={
+                            <Clock3 className="size-4" />
+                        }
+                        label={t(
+                            'users.last_login',
+                        )}
+                        value={
+                            user.last_login_at_human ??
+                            t(
+                                'users.never',
+                            )
+                        }
+                        description={
+                            user.last_login_at ??
+                            '—'
+                        }
+                    />
+
+                    <StatCard
+                        icon={
+                            <History className="size-4" />
+                        }
+                        label={t(
+                            'users.activity.activities',
+                        )}
+                        value={String(
+                            activities.total,
+                        )}
+                        description={t(
+                            'users.activity.related_records',
+                        )}
+                    />
+
+                    <StatCard
+                        icon={
+                            <Shield className="size-4" />
+                        }
+                        label={t(
+                            'users.activity.roles',
+                        )}
+                        value={String(
+                            user.roles.length,
+                        )}
+                        description={
+                            user.roles.length
+                                ? user.roles.join(
+                                      ', ',
+                                  )
+                                : t(
+                                      'users.no_role',
+                                  )
+                        }
+                        tone="primary"
+                    />
                 </div>
 
-                {/* Resumen */}
+                {/* =========================================================
+                    IDENTIDAD
+                ========================================================== */}
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <p className="text-sm text-muted-foreground">
-                            {t(
-                                'users.activity.presence',
-                            )}
-                        </p>
+                <Card className="overflow-hidden rounded-2xl border-primary/10 shadow-sm">
+                    <CardHeader className="border-b bg-muted/[0.08]">
+                        <div className="flex items-start gap-3">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-primary">
+                                <UserRound className="size-4" />
+                            </div>
 
-                        <div className="mt-3 flex items-center gap-2">
-                            <span
-                                className={`size-2.5 rounded-full ${presenceClass(
-                                    user.presence,
-                                )}`}
+                            <div>
+                                <CardTitle className="text-base">
+                                    Información del usuario
+                                </CardTitle>
+
+                                <CardDescription className="mt-1">
+                                    Datos de identidad y actividad reciente.
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+
+                    <CardContent className="p-5 sm:p-6">
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <IdentityItem
+                                label={t(
+                                    'users.activity.email',
+                                )}
+                                value={
+                                    user.email
+                                }
                             />
 
-                            <span className="font-semibold">
-                                {presenceLabel(
-                                    user.presence,
-                                    t,
+                            <IdentityItem
+                                label={t(
+                                    'users.activity.username',
                                 )}
-                            </span>
-                        </div>
+                                value={
+                                    user.username
+                                        ? `@${user.username}`
+                                        : '—'
+                                }
+                                mono
+                            />
 
-                        <p className="mt-2 text-xs text-muted-foreground">
-                            {user.last_seen_at_human ??
-                                t(
-                                    'users.no_activity',
+                            <IdentityItem
+                                label={t(
+                                    'users.last_activity',
                                 )}
-                        </p>
-                    </div>
+                                value={
+                                    user.last_seen_at ??
+                                    t(
+                                        'users.never',
+                                    )
+                                }
+                            />
 
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock3 className="size-4" />
-                            {t(
-                                'users.last_login',
-                            )}
-                        </div>
-
-                        <p className="mt-3 font-semibold">
-                            {user.last_login_at_human ??
-                                t(
-                                    'users.never',
+                            <IdentityItem
+                                label={t(
+                                    'users.activity.roles',
                                 )}
-                        </p>
-
-                        <p className="mt-2 text-xs text-muted-foreground">
-                            {user.last_login_at ?? '—'}
-                        </p>
-                    </div>
-
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <History className="size-4" />
-                            {t(
-                                'users.activity.activities',
-                            )}
-                        </div>
-
-                        <p className="mt-3 text-2xl font-bold">
-                            {activities.total}
-                        </p>
-
-                        <p className="mt-1 text-xs text-muted-foreground">
-                            {t(
-                                'users.activity.related_records',
-                            )}
-                        </p>
-                    </div>
-
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Shield className="size-4" />
-                            {t(
-                                'users.activity.roles',
-                            )}
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-1">
-                            {user.roles.length ? (
-                                user.roles.map(
-                                    (role) => (
-                                        <span
-                                            key={role}
-                                            className="rounded-full border px-2 py-1 text-xs"
-                                        >
-                                            {role}
-                                        </span>
-                                    ),
-                                )
-                            ) : (
-                                <span className="text-sm text-muted-foreground">
-                                    {t(
+                            >
+                                <RoleBadges
+                                    roles={
+                                        user.roles
+                                    }
+                                    emptyLabel={t(
                                         'users.no_role',
                                     )}
-                                </span>
-                            )}
+                                />
+                            </IdentityItem>
                         </div>
-                    </div>
+                    </CardContent>
+                </Card>
+
+                {/* =========================================================
+                    INSIGHTS DE LA PÁGINA ACTUAL
+                ========================================================== */}
+
+                <div className="grid gap-3 md:grid-cols-2">
+                    <MiniInsight
+                        icon={
+                            <Sparkles className="size-4" />
+                        }
+                        title="Cambios detectados"
+                        value={
+                            currentPageChanges
+                        }
+                        description="Registros de esta página que modificaron uno o más campos."
+                    />
+
+                    <MiniInsight
+                        icon={
+                            <ShieldCheck className="size-4" />
+                        }
+                        title="Eventos de seguridad"
+                        value={
+                            currentPageSecurityEvents
+                        }
+                        description="Inicios, cierres y cambios de acceso visibles en esta página."
+                    />
                 </div>
 
-                {/* Identidad */}
+                {/* =========================================================
+                    HISTORIAL
+                ========================================================== */}
 
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <div>
-                            <p className="text-xs text-muted-foreground">
-                                {t(
-                                'users.activity.email',
-                            )}
-                            </p>
+                <Card className="overflow-hidden rounded-2xl border-primary/10 shadow-sm">
+                    <CardHeader className="border-b bg-gradient-to-r from-muted/[0.16] to-transparent">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="text-base">
+                                    {t(
+                                        'users.activity.history',
+                                    )}
+                                </CardTitle>
 
-                            <p className="mt-1 text-sm font-medium">
-                                {user.email}
-                            </p>
+                                <CardDescription className="mt-1">
+                                    {t(
+                                        'users.activity.history_description',
+                                    )}
+                                </CardDescription>
+                            </div>
+
+                            <Badge
+                                variant="secondary"
+                                className="w-fit rounded-full px-3"
+                            >
+                                {
+                                    activities.total
+                                }{' '}
+                                registros
+                            </Badge>
                         </div>
-
-                        <div>
-                            <p className="text-xs text-muted-foreground">
-                                {t(
-                                'users.activity.username',
-                            )}
-                            </p>
-
-                            <p className="mt-1 text-sm font-medium">
-                                {user.username
-                                    ? `@${user.username}`
-                                    : '—'}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs text-muted-foreground">
-                                {t(
-                                'users.last_activity',
-                            )}
-                            </p>
-
-                            <p className="mt-1 text-sm font-medium">
-                                {user.last_seen_at ??
-                                    t(
-                                    'users.never',
-                                )}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Historial */}
-
-                <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
-                    <div className="border-b p-5">
-                        <h2 className="font-semibold">
-                            {t(
-                                'users.activity.history',
-                            )}
-                        </h2>
-
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {t(
-                                'users.activity.history_description',
-                            )}
-                        </p>
-                    </div>
+                    </CardHeader>
 
                     {activities.data.length ===
                     0 ? (
-                        <div className="flex min-h-56 flex-col items-center justify-center p-8 text-center">
-                            <History className="mb-3 size-10 text-muted-foreground" />
-
-                            <h3 className="font-semibold">
-                                {t(
-                                    'users.activity.empty_title',
-                                )}
-                            </h3>
-
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {t(
-                                    'users.activity.empty_description',
-                                )}
-                            </p>
-                        </div>
+                        <EmptyActivity
+                            t={t}
+                        />
                     ) : (
-                        <div className="divide-y">
-                            {activities.data.map(
-                                (activity) => {
-                                    const isOpen =
-                                        expanded.includes(
-                                            activity.id,
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-border/70">
+                                {activities.data.map(
+                                    (
+                                        activity,
+                                    ) => {
+                                        const isOpen =
+                                            expanded.includes(
+                                                activity.id,
+                                            );
+
+                                        const fields =
+                                            changedFields(
+                                                activity,
+                                            );
+
+                                        return (
+                                            <ActivityEntry
+                                                key={
+                                                    activity.id
+                                                }
+                                                activity={
+                                                    activity
+                                                }
+                                                fields={
+                                                    fields
+                                                }
+                                                isOpen={
+                                                    isOpen
+                                                }
+                                                t={
+                                                    t
+                                                }
+                                                onToggle={() =>
+                                                    toggleExpanded(
+                                                        activity.id,
+                                                    )
+                                                }
+                                            />
                                         );
-
-                                    const fields =
-                                        changedFields(
-                                            activity,
-                                        );
-
-                                    return (
-                                        <article
-                                            key={
-                                                activity.id
-                                            }
-                                            className="p-5"
-                                        >
-                                            <div className="flex gap-4">
-                                                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted/40">
-                                                    <EventIcon
-                                                        event={
-                                                            activity.event
-                                                        }
-                                                    />
-                                                </div>
-
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-                                                        <div>
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <span className="font-semibold">
-                                                                    {eventLabel(
-                                                                        activity.event,
-                                                                        t,
-                                                                    )}
-                                                                </span>
-
-                                                                <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                                                                    {relationLabel(
-                                                                        activity.relation,
-                                                                        t,
-                                                                    )}
-                                                                </span>
-                                                            </div>
-
-                                                            <p className="mt-1 text-sm">
-                                                                {activityDescription(
-                                                                    activity,
-                                                                    t,
-                                                                )}
-                                                            </p>
-
-                                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                                                                <span>
-                                                                    {moduleLabel(
-                                                                        activity.module,
-                                                                        t,
-                                                                    )}
-                                                                </span>
-
-                                                                {activity.actor && (
-                                                                    <span>
-                                                                        {t(
-                                                                            'users.activity.by',
-                                                                        )}
-                                                                        :{' '}
-                                                                        {
-                                                                            activity
-                                                                                .actor
-                                                                                .name
-                                                                        }
-                                                                    </span>
-                                                                )}
-
-                                                                {activity.ip_address && (
-                                                                    <span>
-                                                                        IP:{' '}
-                                                                        {
-                                                                            activity.ip_address
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="shrink-0 sm:text-right">
-                                                            <p className="text-sm font-medium">
-                                                                {activity.created_at_human ??
-                                                                    '—'}
-                                                            </p>
-
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {activity.created_at ??
-                                                                    ''}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    {fields.length >
-                                                        0 && (
-                                                        <div className="mt-4 rounded-lg border bg-muted/20">
-                                                            <div className="divide-y">
-                                                                {fields
-                                                                    .slice(
-                                                                        0,
-                                                                        3,
-                                                                    )
-                                                                    .map(
-                                                                        (
-                                                                            field,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    field
-                                                                                }
-                                                                                className="grid gap-2 p-3 text-sm sm:grid-cols-[140px_1fr_30px_1fr]"
-                                                                            >
-                                                                                <span className="font-medium">
-                                                                                    {fieldLabel(
-                                                                                        field,
-                                                                                        t,
-                                                                                    )}
-                                                                                </span>
-
-                                                                                <span className="break-words text-muted-foreground">
-                                                                                    {formatValue(
-                                                                                        activity
-                                                                                            .old_values?.[
-                                                                                            field
-                                                                                        ],
-                                                                                        t,
-                                                                                    )}
-                                                                                </span>
-
-                                                                                <span className="text-center text-muted-foreground">
-                                                                                    →
-                                                                                </span>
-
-                                                                                <span className="break-words font-medium">
-                                                                                    {formatValue(
-                                                                                        activity
-                                                                                            .new_values?.[
-                                                                                            field
-                                                                                        ],
-                                                                                        t,
-                                                                                    )}
-                                                                                </span>
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            toggleExpanded(
-                                                                activity.id,
-                                                            )
-                                                        }
-                                                        className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        {isOpen ? (
-                                                            <>
-                                                                <ChevronUp className="size-4" />
-                                                                {t(
-                                                                    'users.activity.hide_details',
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <ChevronDown className="size-4" />
-                                                                {t(
-                                                                    'users.activity.show_details',
-                                                                )}
-                                                            </>
-                                                        )}
-                                                    </button>
-
-                                                    {isOpen && (
-                                                        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                                                            <div className="rounded-lg border p-4">
-                                                                <h4 className="font-semibold">
-                                                                    {t(
-                                                                        'users.activity.details_activity',
-                                                                    )}
-                                                                </h4>
-
-                                                                <dl className="mt-4 space-y-3 text-sm">
-                                                                    <div>
-                                                                        <dt className="text-muted-foreground">
-                                                                            {t(
-                                                                                'users.activity.actor',
-                                                                            )}
-                                                                        </dt>
-                                                                        <dd>
-                                                                            {activity
-                                                                                .actor
-                                                                                ?.name ??
-                                                                                t(
-                                                                                    'users.activity.system',
-                                                                                )}
-                                                                        </dd>
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <dt className="text-muted-foreground">
-                                                                            {t(
-                                                                                'users.activity.relation',
-                                                                            )}
-                                                                        </dt>
-                                                                        <dd>
-                                                                            {relationLabel(
-                                                                                activity.relation,
-                                                                                t,
-                                                                            )}
-                                                                        </dd>
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <dt className="text-muted-foreground">
-                                                                            {t(
-                                                                                'users.activity.module',
-                                                                            )}
-                                                                        </dt>
-                                                                        <dd>
-                                                                            {moduleLabel(
-                                                                                activity.module,
-                                                                                t,
-                                                                            )}
-                                                                        </dd>
-                                                                    </div>
-
-                                                                    {activity.subject_id && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t(
-                                                                                    'users.activity.affected_record',
-                                                                                )}
-                                                                            </dt>
-                                                                            <dd>
-                                                                                #
-                                                                                {
-                                                                                    activity.subject_id
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-                                                                </dl>
-                                                            </div>
-
-                                                            <div className="rounded-lg border p-4">
-                                                                <h4 className="font-semibold">
-                                                                    {t(
-                                                                        'users.activity.technical_info',
-                                                                    )}
-                                                                </h4>
-
-                                                                <dl className="mt-4 space-y-3 text-sm">
-                                                                    {activity.ip_address && (
-                                                                        <div>
-                                                                            <dt className="flex items-center gap-2 text-muted-foreground">
-                                                                                <Globe2 className="size-4" />
-                                                                                IP
-                                                                            </dt>
-
-                                                                            <dd className="mt-1">
-                                                                                {
-                                                                                    activity.ip_address
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {activity.method && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t(
-                                                                                    'users.activity.method',
-                                                                                )}
-                                                                            </dt>
-                                                                            <dd>
-                                                                                {
-                                                                                    activity.method
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {activity.route && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t(
-                                                                                    'users.activity.route',
-                                                                                )}
-                                                                            </dt>
-                                                                            <dd className="break-all">
-                                                                                {
-                                                                                    activity.route
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {activity.url && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                URL
-                                                                            </dt>
-                                                                            <dd className="break-all">
-                                                                                {
-                                                                                    activity.url
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-                                                                </dl>
-                                                            </div>
-
-                                                            {fields.length >
-                                                                0 && (
-                                                                <div className="rounded-lg border p-4 lg:col-span-2">
-                                                                    <h4 className="font-semibold">
-                                                                        {t(
-                                                                            'users.activity.all_changes',
-                                                                        )}
-                                                                    </h4>
-
-                                                                    <div className="mt-4 overflow-x-auto">
-                                                                        <table className="w-full text-sm">
-                                                                            <thead>
-                                                                                <tr className="border-b text-left">
-                                                                                    <th className="pb-3 pr-4">
-                                                                                        {t(
-                                                                                            'users.activity.field',
-                                                                                        )}
-                                                                                    </th>
-                                                                                    <th className="pb-3 pr-4">
-                                                                                        {t(
-                                                                                            'users.activity.before',
-                                                                                        )}
-                                                                                    </th>
-                                                                                    <th className="pb-3">
-                                                                                        {t(
-                                                                                            'users.activity.after',
-                                                                                        )}
-                                                                                    </th>
-                                                                                </tr>
-                                                                            </thead>
-
-                                                                            <tbody className="divide-y">
-                                                                                {fields.map(
-                                                                                    (
-                                                                                        field,
-                                                                                    ) => (
-                                                                                        <tr
-                                                                                            key={
-                                                                                                field
-                                                                                            }
-                                                                                        >
-                                                                                            <td className="py-3 pr-4 font-medium">
-                                                                                                {fieldLabel(
-                                                                                                    field,
-                                                                                                    t,
-                                                                                                )}
-                                                                                            </td>
-
-                                                                                            <td className="py-3 pr-4 text-muted-foreground">
-                                                                                                {formatValue(
-                                                                                                    activity
-                                                                                                        .old_values?.[
-                                                                                                        field
-                                                                                                    ],
-                                                                                                    t,
-                                                                                                )}
-                                                                                            </td>
-
-                                                                                            <td className="py-3">
-                                                                                                {formatValue(
-                                                                                                    activity
-                                                                                                        .new_values?.[
-                                                                                                        field
-                                                                                                    ],
-                                                                                                    t,
-                                                                                                )}
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    ),
-                                                                                )}
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </article>
-                                    );
-                                },
-                            )}
-                        </div>
+                                    },
+                                )}
+                            </div>
+                        </CardContent>
                     )}
 
                     {activities.last_page >
                         1 && (
-                        <div className="flex flex-col gap-3 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 flex-col gap-3 border-t bg-muted/[0.08] p-4 lg:flex-row lg:items-center lg:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                {t('users.showing')}{' '}
-                                {activities.from ?? 0} -{' '}
-                                {activities.to ?? 0}{' '}
-                                {t('users.of')}{' '}
-                                {activities.total}
+                                {t(
+                                    'users.showing',
+                                )}{' '}
+                                {activities.from ??
+                                    0}{' '}
+                                –{' '}
+                                {activities.to ??
+                                    0}{' '}
+                                {t(
+                                    'users.of',
+                                )}{' '}
+                                {
+                                    activities.total
+                                }
                             </p>
 
                             <div className="flex flex-wrap gap-2">
@@ -1315,11 +1235,17 @@ export default function UserActivity({
                                         link,
                                         index,
                                     ) => (
-                                        <button
+                                        <Button
                                             key={
                                                 index
                                             }
                                             type="button"
+                                            size="sm"
+                                            variant={
+                                                link.active
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
                                             disabled={
                                                 !link.url
                                             }
@@ -1336,23 +1262,965 @@ export default function UserActivity({
                                                     );
                                                 }
                                             }}
-                                            className={`rounded-md border px-3 py-1.5 text-sm ${
-                                                link.active
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'hover:bg-muted'
-                                            } disabled:opacity-40`}
+                                            className="min-w-9 rounded-xl"
                                         >
                                             {paginationLabel(
                                                 link.label,
                                             )}
-                                        </button>
+                                        </Button>
                                     ),
                                 )}
                             </div>
                         </div>
                     )}
-                </section>
+                </Card>
             </div>
         </AppLayout>
+    );
+}
+
+/* ==========================================================================
+   ENTRADA DE ACTIVIDAD
+   ========================================================================== */
+
+function ActivityEntry({
+    activity,
+    fields,
+    isOpen,
+    t,
+    onToggle,
+}: {
+    activity: ActivityItem;
+    fields: string[];
+    isOpen: boolean;
+    t: Translate;
+    onToggle: () => void;
+}) {
+    return (
+        <article className="relative p-4 transition-colors hover:bg-muted/[0.08] sm:p-5">
+            <div className="flex min-w-0 gap-3 sm:gap-4">
+                <div className="relative shrink-0">
+                    <div
+                        className={[
+                            'flex size-10 items-center justify-center rounded-xl border',
+                            eventTone(
+                                activity.event,
+                            ),
+                        ].join(
+                            ' ',
+                        )}
+                    >
+                        <EventIcon
+                            event={
+                                activity.event
+                            }
+                        />
+                    </div>
+
+                    <div className="absolute bottom-[-18px] left-1/2 hidden h-[18px] w-px -translate-x-1/2 bg-border sm:block" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <EventBadge
+                                    event={
+                                        activity.event
+                                    }
+                                    label={eventLabel(
+                                        activity.event,
+                                        t,
+                                    )}
+                                />
+
+                                <RelationBadge
+                                    relation={
+                                        activity.relation
+                                    }
+                                    label={relationLabel(
+                                        activity.relation,
+                                        t,
+                                    )}
+                                />
+
+                                <Badge
+                                    variant="outline"
+                                    className="text-[10px]"
+                                >
+                                    {moduleLabel(
+                                        activity.module,
+                                        t,
+                                    )}
+                                </Badge>
+                            </div>
+
+                            <p className="mt-2 max-w-3xl text-sm leading-6">
+                                {activityDescription(
+                                    activity,
+                                    t,
+                                )}
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {activity.actor && (
+                                    <MetaBadge>
+                                        <UserRound className="size-3" />
+
+                                        {t(
+                                            'users.activity.by',
+                                        )}
+                                        :{' '}
+                                        {
+                                            activity
+                                                .actor
+                                                .name
+                                        }
+                                    </MetaBadge>
+                                )}
+
+                                {activity.ip_address && (
+                                    <MetaBadge>
+                                        <Globe2 className="size-3" />
+
+                                        {
+                                            activity.ip_address
+                                        }
+                                    </MetaBadge>
+                                )}
+
+                                {activity.method && (
+                                    <MetaBadge>
+                                        {
+                                            activity.method
+                                        }
+                                    </MetaBadge>
+                                )}
+
+                                {activity.subject_id && (
+                                    <MetaBadge>
+                                        #
+                                        {
+                                            activity.subject_id
+                                        }
+                                    </MetaBadge>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="shrink-0 lg:text-right">
+                            <p className="text-sm font-semibold">
+                                {activity.created_at_human ??
+                                    '—'}
+                            </p>
+
+                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                {activity.created_at ??
+                                    ''}
+                            </p>
+                        </div>
+                    </div>
+
+                    {fields.length >
+                        0 && (
+                        <QuickChanges
+                            activity={
+                                activity
+                            }
+                            fields={
+                                fields
+                            }
+                            t={
+                                t
+                            }
+                        />
+                    )}
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={
+                            onToggle
+                        }
+                        className="mt-3 -ml-2 rounded-xl text-muted-foreground"
+                    >
+                        {isOpen ? (
+                            <ChevronUp className="size-4" />
+                        ) : (
+                            <ChevronDown className="size-4" />
+                        )}
+
+                        {isOpen
+                            ? t(
+                                  'users.activity.hide_details',
+                              )
+                            : t(
+                                  'users.activity.show_details',
+                              )}
+                    </Button>
+
+                    {isOpen && (
+                        <ActivityDetails
+                            activity={
+                                activity
+                            }
+                            fields={
+                                fields
+                            }
+                            t={
+                                t
+                            }
+                        />
+                    )}
+                </div>
+            </div>
+        </article>
+    );
+}
+
+/* ==========================================================================
+   CAMBIOS RÁPIDOS
+   ========================================================================== */
+
+function QuickChanges({
+    activity,
+    fields,
+    t,
+}: {
+    activity: ActivityItem;
+    fields: string[];
+    t: Translate;
+}) {
+    return (
+        <div className="mt-4 overflow-hidden rounded-xl border bg-muted/[0.10]">
+            <div className="divide-y">
+                {fields
+                    .slice(
+                        0,
+                        3,
+                    )
+                    .map(
+                        (
+                            field,
+                        ) => (
+                            <div
+                                key={
+                                    field
+                                }
+                                className="grid gap-2 p-3 text-sm lg:grid-cols-[140px_minmax(0,1fr)_30px_minmax(0,1fr)] lg:items-center"
+                            >
+                                <span className="font-medium">
+                                    {fieldLabel(
+                                        field,
+                                        t,
+                                    )}
+                                </span>
+
+                                <ValueBox
+                                    value={formatValue(
+                                        activity
+                                            .old_values?.[
+                                            field
+                                        ],
+                                        t,
+                                    )}
+                                    muted
+                                />
+
+                                <span className="hidden text-center text-muted-foreground lg:block">
+                                    →
+                                </span>
+
+                                <ValueBox
+                                    value={formatValue(
+                                        activity
+                                            .new_values?.[
+                                            field
+                                        ],
+                                        t,
+                                    )}
+                                />
+                            </div>
+                        ),
+                    )}
+            </div>
+        </div>
+    );
+}
+
+/* ==========================================================================
+   DETALLES
+   ========================================================================== */
+
+function ActivityDetails({
+    activity,
+    fields,
+    t,
+}: {
+    activity: ActivityItem;
+    fields: string[];
+    t: Translate;
+}) {
+    return (
+        <div className="mt-3 grid min-w-0 gap-4 xl:grid-cols-2">
+            <DetailCard
+                title={t(
+                    'users.activity.details_activity',
+                )}
+                icon={
+                    <Activity className="size-4" />
+                }
+            >
+                <DetailRow
+                    label={t(
+                        'users.activity.actor',
+                    )}
+                    value={
+                        activity.actor
+                            ?.name ??
+                        t(
+                            'users.activity.system',
+                        )
+                    }
+                />
+
+                {activity.actor
+                    ?.email && (
+                    <DetailRow
+                        label="Email"
+                        value={
+                            activity.actor
+                                .email
+                        }
+                    />
+                )}
+
+                <DetailRow
+                    label={t(
+                        'users.activity.relation',
+                    )}
+                    value={relationLabel(
+                        activity.relation,
+                        t,
+                    )}
+                />
+
+                <DetailRow
+                    label={t(
+                        'users.activity.module',
+                    )}
+                    value={moduleLabel(
+                        activity.module,
+                        t,
+                    )}
+                />
+
+                {activity.subject_type && (
+                    <DetailRow
+                        label="Tipo afectado"
+                        value={
+                            activity.subject_type
+                        }
+                        mono
+                    />
+                )}
+
+                {activity.subject_id && (
+                    <DetailRow
+                        label={t(
+                            'users.activity.affected_record',
+                        )}
+                        value={`#${activity.subject_id}`}
+                    />
+                )}
+            </DetailCard>
+
+            <DetailCard
+                title={t(
+                    'users.activity.technical_info',
+                )}
+                icon={
+                    <Globe2 className="size-4" />
+                }
+            >
+                {activity.ip_address && (
+                    <DetailRow
+                        label="IP"
+                        value={
+                            activity.ip_address
+                        }
+                        mono
+                    />
+                )}
+
+                {activity.method && (
+                    <DetailRow
+                        label={t(
+                            'users.activity.method',
+                        )}
+                        value={
+                            activity.method
+                        }
+                    />
+                )}
+
+                {activity.route && (
+                    <DetailRow
+                        label={t(
+                            'users.activity.route',
+                        )}
+                        value={
+                            activity.route
+                        }
+                        mono
+                    />
+                )}
+
+                {activity.url && (
+                    <DetailRow
+                        label="URL"
+                        value={
+                            activity.url
+                        }
+                        mono
+                    />
+                )}
+
+                {activity.user_agent && (
+                    <DetailRow
+                        label="Navegador / dispositivo"
+                        value={
+                            activity.user_agent
+                        }
+                    />
+                )}
+            </DetailCard>
+
+            {fields.length >
+                0 && (
+                <Card className="overflow-hidden rounded-xl shadow-none xl:col-span-2">
+                    <CardHeader className="border-b bg-muted/[0.08]">
+                        <CardTitle className="text-sm">
+                            {t(
+                                'users.activity.all_changes',
+                            )}
+                        </CardTitle>
+                    </CardHeader>
+
+                    <CardContent className="p-0">
+                        <Table className="min-w-[680px]">
+                            <TableHeader className="bg-muted/30">
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="w-[24%]">
+                                        {t(
+                                            'users.activity.field',
+                                        )}
+                                    </TableHead>
+
+                                    <TableHead className="w-[38%]">
+                                        {t(
+                                            'users.activity.before',
+                                        )}
+                                    </TableHead>
+
+                                    <TableHead className="w-[38%]">
+                                        {t(
+                                            'users.activity.after',
+                                        )}
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+
+                            <TableBody>
+                                {fields.map(
+                                    (
+                                        field,
+                                    ) => (
+                                        <TableRow
+                                            key={
+                                                field
+                                            }
+                                        >
+                                            <TableCell className="whitespace-normal font-medium">
+                                                {fieldLabel(
+                                                    field,
+                                                    t,
+                                                )}
+                                            </TableCell>
+
+                                            <TableCell className="max-w-[340px] whitespace-pre-wrap break-words text-muted-foreground">
+                                                {formatValue(
+                                                    activity
+                                                        .old_values?.[
+                                                        field
+                                                    ],
+                                                    t,
+                                                )}
+                                            </TableCell>
+
+                                            <TableCell className="max-w-[340px] whitespace-pre-wrap break-words font-medium">
+                                                {formatValue(
+                                                    activity
+                                                        .new_values?.[
+                                                        field
+                                                    ],
+                                                    t,
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ),
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+}
+
+/* ==========================================================================
+   COMPONENTES VISUALES
+   ========================================================================== */
+
+function StatCard({
+    icon,
+    label,
+    value,
+    description,
+    tone = 'default',
+}: {
+    icon: ReactNode;
+    label: string;
+    value: string;
+    description?: string;
+    tone?:
+        | 'default'
+        | 'success'
+        | 'warning'
+        | 'primary';
+}) {
+    const iconClass =
+        tone === 'success'
+            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+            : tone === 'warning'
+              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              : 'bg-primary/10 text-primary';
+
+    return (
+        <Card className="group relative overflow-hidden rounded-2xl border-primary/10 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-muted-foreground">
+                            {label}
+                        </p>
+
+                        <p
+                            className="mt-2 truncate text-xl font-bold tracking-tight"
+                            title={
+                                value
+                            }
+                        >
+                            {value}
+                        </p>
+
+                        {description && (
+                            <p
+                                className="mt-1 truncate text-[11px] text-muted-foreground"
+                                title={
+                                    description
+                                }
+                            >
+                                {
+                                    description
+                                }
+                            </p>
+                        )}
+                    </div>
+
+                    <div
+                        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
+                    >
+                        {icon}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function MiniInsight({
+    icon,
+    title,
+    value,
+    description,
+}: {
+    icon: ReactNode;
+    title: string;
+    value: number;
+    description: string;
+}) {
+    return (
+        <Card className="rounded-2xl border-primary/10 shadow-sm">
+            <CardContent className="flex items-center gap-4 p-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    {icon}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                        <p className="text-xl font-bold">
+                            {value}
+                        </p>
+
+                        <p className="text-sm font-semibold">
+                            {title}
+                        </p>
+                    </div>
+
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {description}
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function IdentityItem({
+    label,
+    value,
+    mono = false,
+    children,
+}: {
+    label: string;
+    value?: string;
+    mono?: boolean;
+    children?: ReactNode;
+}) {
+    return (
+        <div className="min-w-0 rounded-xl border bg-muted/[0.07] p-3.5">
+            <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                {label}
+            </p>
+
+            {children ?? (
+                <p
+                    className={[
+                        'mt-1.5 break-words text-sm font-medium',
+                        mono
+                            ? 'font-mono text-xs'
+                            : '',
+                    ].join(
+                        ' ',
+                    )}
+                >
+                    {value}
+                </p>
+            )}
+        </div>
+    );
+}
+
+function RoleBadges({
+    roles,
+    emptyLabel,
+}: {
+    roles: string[];
+    emptyLabel: string;
+}) {
+    if (!roles.length) {
+        return (
+            <p className="mt-1.5 text-sm text-muted-foreground">
+                {emptyLabel}
+            </p>
+        );
+    }
+
+    return (
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {roles.map(
+                (
+                    role,
+                ) => (
+                    <Badge
+                        key={
+                            role
+                        }
+                        variant="outline"
+                        className="gap-1.5 rounded-full capitalize"
+                    >
+                        <Shield className="size-3 text-primary" />
+
+                        {role}
+                    </Badge>
+                ),
+            )}
+        </div>
+    );
+}
+
+function StatusBadge({
+    status,
+    label,
+}: {
+    status: string;
+    label: string;
+}) {
+    const classes: Record<
+        string,
+        string
+    > = {
+        active:
+            'border-transparent bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+        pending:
+            'border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400',
+        suspended:
+            'border-transparent bg-destructive/10 text-destructive',
+    };
+
+    return (
+        <Badge
+            variant="outline"
+            className={`rounded-full ${
+                classes[status] ??
+                'border-transparent bg-muted text-muted-foreground'
+            }`}
+        >
+            {label}
+        </Badge>
+    );
+}
+
+function EventBadge({
+    event,
+    label,
+}: {
+    event: string;
+    label: string;
+}) {
+    return (
+        <Badge
+            variant="outline"
+            className={[
+                'text-[10px]',
+                eventBadgeTone(
+                    event,
+                ),
+            ].join(
+                ' ',
+            )}
+        >
+            {label}
+        </Badge>
+    );
+}
+
+function RelationBadge({
+    relation,
+    label,
+}: {
+    relation:
+        ActivityItem['relation'];
+    label: string;
+}) {
+    const classes =
+        relation ===
+        'performed'
+            ? 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+            : relation ===
+                'affected'
+              ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              : 'border-primary/20 bg-primary/10 text-primary';
+
+    return (
+        <Badge
+            variant="outline"
+            className={`text-[10px] ${classes}`}
+        >
+            {label}
+        </Badge>
+    );
+}
+
+function MetaBadge({
+    children,
+}: {
+    children: ReactNode;
+}) {
+    return (
+        <Badge
+            variant="outline"
+            className="gap-1.5 font-normal text-[10px] text-muted-foreground"
+        >
+            {children}
+        </Badge>
+    );
+}
+
+function ValueBox({
+    value,
+    muted = false,
+}: {
+    value: string;
+    muted?: boolean;
+}) {
+    return (
+        <div
+            className={[
+                'min-w-0 whitespace-pre-wrap break-words rounded-lg border bg-background px-2.5 py-2 text-xs',
+                muted
+                    ? 'text-muted-foreground'
+                    : 'font-medium',
+            ].join(
+                ' ',
+            )}
+        >
+            {value}
+        </div>
+    );
+}
+
+function DetailCard({
+    title,
+    icon,
+    children,
+}: {
+    title: string;
+    icon: ReactNode;
+    children: ReactNode;
+}) {
+    return (
+        <Card className="rounded-xl shadow-none">
+            <CardHeader className="border-b bg-muted/[0.08]">
+                <div className="flex items-center gap-2">
+                    <span className="text-primary">
+                        {icon}
+                    </span>
+
+                    <CardTitle className="text-sm">
+                        {title}
+                    </CardTitle>
+                </div>
+            </CardHeader>
+
+            <CardContent className="space-y-3 p-4">
+                {children}
+            </CardContent>
+        </Card>
+    );
+}
+
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
+    return (
+        <div className="min-w-0">
+            <p className="text-[10px] font-medium uppercase tracking-[0.05em] text-muted-foreground">
+                {label}
+            </p>
+
+            <p
+                className={[
+                    'mt-1 break-words text-sm',
+                    mono
+                        ? 'font-mono text-xs'
+                        : 'font-medium',
+                ].join(
+                    ' ',
+                )}
+            >
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function EmptyActivity({
+    t,
+}: {
+    t: Translate;
+}) {
+    return (
+        <CardContent className="flex min-h-64 flex-col items-center justify-center p-8 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <History className="size-6" />
+            </div>
+
+            <h3 className="mt-4 font-semibold">
+                {t(
+                    'users.activity.empty_title',
+                )}
+            </h3>
+
+            <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">
+                {t(
+                    'users.activity.empty_description',
+                )}
+            </p>
+        </CardContent>
+    );
+}
+
+/* ==========================================================================
+   COLORES
+   ========================================================================== */
+
+function presenceDotClass(
+    presence:
+        UserItem['presence'],
+): string {
+    switch (presence) {
+        case 'online':
+            return 'bg-emerald-500';
+
+        case 'away':
+            return 'bg-amber-500';
+
+        case 'offline':
+        default:
+            return 'bg-zinc-400 dark:bg-zinc-600';
+    }
+}
+
+function eventTone(
+    event: string,
+): string {
+    switch (event) {
+        case 'login':
+            return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+
+        case 'logout':
+            return 'border-slate-500/20 bg-slate-500/10 text-slate-600 dark:text-slate-400';
+
+        case 'create':
+            return 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400';
+
+        case 'update':
+        case 'role_change':
+        case 'status_change':
+            return 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400';
+
+        case 'delete':
+            return 'border-destructive/20 bg-destructive/10 text-destructive';
+
+        default:
+            return 'border-primary/15 bg-primary/10 text-primary';
+    }
+}
+
+function eventBadgeTone(
+    event: string,
+): string {
+    return eventTone(
+        event,
     );
 }

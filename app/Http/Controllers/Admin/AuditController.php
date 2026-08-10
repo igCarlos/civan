@@ -9,6 +9,7 @@ use App\Services\SystemDateTimeService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\SystemSetting;
 
 class AuditController extends Controller
 {
@@ -89,6 +90,11 @@ class AuditController extends Controller
                 ->localDayEndUtc(
                     $dateTo
                 );
+
+        $perPage = (int) SystemSetting::valueOf(
+            'system.per_page',
+            20
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -191,7 +197,7 @@ class AuditController extends Controller
             )
 
             ->latest('created_at')
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(
                 function (

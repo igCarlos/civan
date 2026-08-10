@@ -13,24 +13,71 @@ import {
     Download,
     FileSpreadsheet,
     FileText,
+    Filter,
     Globe2,
+    History,
+    KeyRound,
     LogIn,
     LogOut,
     Pencil,
     PlusCircle,
+    RefreshCw,
     RotateCcw,
     Search,
     Settings,
     ShieldCheck,
     Trash2,
     UserCog,
+    Users,
 } from 'lucide-react';
 
 import {
-    FormEvent,
+    type FormEvent,
+    type ReactNode,
     useEffect,
+    useMemo,
     useState,
 } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
+import { Separator } from '@/components/ui/separator';
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
@@ -575,11 +622,14 @@ function EventIcon({
     }
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Componente
 |--------------------------------------------------------------------------
 */
+
+const ALL_FILTERS = '__all__';
 
 export default function AuditIndex({
     logs,
@@ -600,6 +650,7 @@ export default function AuditIndex({
             href: '/dashboard/auditoria',
         },
     ];
+
     /*
     |--------------------------------------------------------------------------
     | Filtros
@@ -637,7 +688,9 @@ export default function AuditIndex({
         setActorId,
     ] = useState(
         filters.actor_id
-            ? String(filters.actor_id)
+            ? String(
+                  filters.actor_id,
+              )
             : '',
     );
 
@@ -666,62 +719,99 @@ export default function AuditIndex({
         setExpanded,
     ] = useState<number[]>([]);
 
+    const activeFilterCount =
+        useMemo(
+            () =>
+                [
+                    filters.search,
+                    filters.event,
+                    filters.module,
+                    filters.actor_id,
+                    filters.date_from,
+                    filters.date_to,
+                ].filter(Boolean).length,
+            [
+                filters,
+            ],
+        );
+
+    const visibleActors =
+        useMemo(
+            () =>
+                new Set(
+                    logs.data
+                        .map(
+                            (
+                                log,
+                            ) =>
+                                log.actor
+                                    ?.id,
+                        )
+                        .filter(
+                            (
+                                id,
+                            ): id is number =>
+                                typeof id ===
+                                'number',
+                        ),
+                ).size,
+            [
+                logs.data,
+            ],
+        );
+
     /*
     |--------------------------------------------------------------------------
     | Actualización automática
     |--------------------------------------------------------------------------
     |
-    | Consulta nuevos registros cada 15 segundos.
-    | Si la pestaña no está visible, no hace peticiones.
+    | Conserva el comportamiento original:
+    | consulta nuevos registros cada 15 segundos si la pestaña está visible.
     |
     */
 
     useEffect(() => {
-        const refreshAudit = () => {
-            if (
-                document.visibilityState !==
-                'visible'
-            ) {
-                return;
-            }
+        const refreshAudit =
+            () => {
+                if (
+                    document.visibilityState !==
+                    'visible'
+                ) {
+                    return;
+                }
 
-            router.reload({
-                only: [
-                    'logs',
-                    'events',
-                    'modules',
-                ],
+                router.reload({
+                    only: [
+                        'logs',
+                        'events',
+                        'modules',
+                    ],
 
-                preserveState: true,
-                preserveScroll: true,
+                    preserveState:
+                        true,
 
-                onStart: () => {
-                    setIsRefreshing(true);
-                },
+                    preserveScroll:
+                        true,
 
-                onFinish: () => {
-                    setIsRefreshing(false);
-                },
-            });
-        };
+                    onStart: () => {
+                        setIsRefreshing(
+                            true,
+                        );
+                    },
 
-        /*
-        |--------------------------------------------------------------------------
-        | Actualizar cada 15 segundos
-        |--------------------------------------------------------------------------
-        */
+                    onFinish: () => {
+                        setIsRefreshing(
+                            false,
+                        );
+                    },
+                });
+            };
 
         const interval =
             window.setInterval(
                 refreshAudit,
                 15_000,
             );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Actualizar inmediatamente al volver a la pestaña
-        |--------------------------------------------------------------------------
-        */
 
         const handleVisibilityChange =
             () => {
@@ -737,12 +827,6 @@ export default function AuditIndex({
             'visibilitychange',
             handleVisibilityChange,
         );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Limpiar
-        |--------------------------------------------------------------------------
-        */
 
         return () => {
             window.clearInterval(
@@ -763,7 +847,8 @@ export default function AuditIndex({
     */
 
     const submit = (
-        eventSubmit: FormEvent<HTMLFormElement>,
+        eventSubmit:
+            FormEvent<HTMLFormElement>,
     ) => {
         eventSubmit.preventDefault();
 
@@ -771,27 +856,38 @@ export default function AuditIndex({
             '/dashboard/auditoria',
             {
                 search:
-                    search || undefined,
+                    search ||
+                    undefined,
 
                 event:
-                    event || undefined,
+                    event ||
+                    undefined,
 
                 module:
-                    module || undefined,
+                    module ||
+                    undefined,
 
                 actor_id:
-                    actorId || undefined,
+                    actorId ||
+                    undefined,
 
                 date_from:
-                    dateFrom || undefined,
+                    dateFrom ||
+                    undefined,
 
                 date_to:
-                    dateTo || undefined,
+                    dateTo ||
+                    undefined,
             },
             {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
+                preserveState:
+                    true,
+
+                preserveScroll:
+                    true,
+
+                replace:
+                    true,
             },
         );
     };
@@ -802,24 +898,30 @@ export default function AuditIndex({
     |--------------------------------------------------------------------------
     */
 
-    const resetFilters = () => {
-        setSearch('');
-        setEvent('');
-        setModule('');
-        setActorId('');
-        setDateFrom('');
-        setDateTo('');
+    const resetFilters =
+        () => {
+            setSearch('');
+            setEvent('');
+            setModule('');
+            setActorId('');
+            setDateFrom('');
+            setDateTo('');
 
-        router.get(
-            '/dashboard/auditoria',
-            {},
-            {
-                preserveState: false,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
-    };
+            router.get(
+                '/dashboard/auditoria',
+                {},
+                {
+                    preserveState:
+                        false,
+
+                    preserveScroll:
+                        true,
+
+                    replace:
+                        true,
+                },
+            );
+        };
 
     /*
     |--------------------------------------------------------------------------
@@ -886,7 +988,9 @@ export default function AuditIndex({
 
         const url =
             `/dashboard/auditoria/exportar/${format}` +
-            (query ? `?${query}` : '');
+            (query
+                ? `?${query}`
+                : '');
 
         window.location.href =
             url;
@@ -901,18 +1005,30 @@ export default function AuditIndex({
     const toggleExpanded = (
         id: number,
     ) => {
-        setExpanded((current) => {
-            if (current.includes(id)) {
-                return current.filter(
-                    (item) => item !== id,
-                );
-            }
+        setExpanded(
+            (
+                current,
+            ) => {
+                if (
+                    current.includes(
+                        id,
+                    )
+                ) {
+                    return current.filter(
+                        (
+                            item,
+                        ) =>
+                            item !==
+                            id,
+                    );
+                }
 
-            return [
-                ...current,
-                id,
-            ];
-        });
+                return [
+                    ...current,
+                    id,
+                ];
+            },
+        );
     };
 
     const paginationLabel = (
@@ -962,908 +1078,724 @@ export default function AuditIndex({
 
     return (
         <AppLayout
-            breadcrumbs={breadcrumbs}
+            breadcrumbs={
+                breadcrumbs
+            }
         >
-            <Head title={t('audit.title')} />
+            <Head
+                title={t(
+                    'audit.title',
+                )}
+            />
 
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex min-w-0 flex-1 flex-col gap-5 p-3 sm:p-4 lg:gap-6 lg:p-6">
+                {/* =========================================================
+                    ENCABEZADO
+                ========================================================== */}
 
-                {/* Encabezado */}
+                <Card className="relative overflow-hidden rounded-2xl">
+                    <div className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full bg-primary/10 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-24 left-1/3 size-52 rounded-full bg-primary/[0.04] blur-3xl" />
 
-                <div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-11 items-center justify-center rounded-xl border bg-card">
-                            <Activity className="size-5" />
-                        </div>
-
-                        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold tracking-tight">
-                                    {t('audit.title')}
-                                </h1>
-
-                                <p className="text-sm text-muted-foreground">
-                                    {t('audit.description')}
-                                </p>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span
-                                        className={`size-2 rounded-full ${
-                                            isRefreshing
-                                                ? 'animate-pulse bg-yellow-500'
-                                                : 'bg-green-500'
-                                        }`}
-                                    />
-
-                                    {isRefreshing
-                                        ? t('audit.refreshing')
-                                        : t('audit.auto_refresh')}
+                    <CardContent className="relative p-5 sm:p-6">
+                        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                            <div className="flex min-w-0 items-start gap-4">
+                                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary">
+                                    <Activity className="size-5" />
                                 </div>
 
-                                <Link
-                                    href="/dashboard/auditoria/retencion"
-                                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted"
-                                    title={t('audit.retention_title')}
-                                >
-                                    <Settings className="size-4" />
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                                            {t(
+                                                'audit.title',
+                                            )}
+                                        </h1>
 
-                                    {t('audit.retention')}
-                                </Link>
+                                        <Badge
+                                            variant="outline"
+                                            className="border-primary/20 bg-primary/10 text-[10px] uppercase tracking-[0.08em] text-primary"
+                                        >
+                                            Seguridad
+                                        </Badge>
+                                    </div>
+
+                                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                                        {t(
+                                            'audit.description',
+                                        )}
+                                    </p>
+
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <Badge
+                                            variant="outline"
+                                            className="gap-1.5"
+                                        >
+                                            <span
+                                                className={[
+                                                    'size-2 rounded-full',
+                                                    isRefreshing
+                                                        ? 'animate-pulse bg-amber-500'
+                                                        : 'bg-emerald-500',
+                                                ].join(
+                                                    ' ',
+                                                )}
+                                            />
+
+                                            {isRefreshing
+                                                ? t(
+                                                      'audit.refreshing',
+                                                  )
+                                                : t(
+                                                      'audit.auto_refresh',
+                                                  )}
+                                        </Badge>
+
+                                        {activeFilterCount >
+                                            0 && (
+                                            <Badge
+                                                variant="secondary"
+                                                className="gap-1.5"
+                                            >
+                                                <Filter className="size-3" />
+                                                {
+                                                    activeFilterCount
+                                                }{' '}
+                                                filtros activos
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                                <Button
+                                    asChild
+                                    variant="outline"
+                                    className="h-10 rounded-xl"
+                                >
+                                    <Link
+                                        href="/dashboard/auditoria/retencion"
+                                        title={t(
+                                            'audit.retention_title',
+                                        )}
+                                    >
+                                        <Settings className="size-4" />
+
+                                        {t(
+                                            'audit.retention',
+                                        )}
+                                    </Link>
+                                </Button>
 
                                 {can?.export && (
-                                    <details className="relative">
-                                        <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted">
-                                            <Download className="size-4" />
-
-                                            {t('audit.export')}
-
-                                            <ChevronDown className="size-4" />
-                                        </summary>
-
-                                        <div className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg">
-                                            <button
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger
+                                            asChild
+                                        >
+                                            <Button
                                                 type="button"
+                                                variant="outline"
+                                                className="h-10 rounded-xl"
+                                            >
+                                                <Download className="size-4" />
+
+                                                {t(
+                                                    'audit.export',
+                                                )}
+
+                                                <ChevronDown className="size-3.5" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+
+                                        <DropdownMenuContent
+                                            align="end"
+                                            className="w-52"
+                                        >
+                                            <DropdownMenuItem
                                                 onClick={() =>
                                                     exportReport(
                                                         'csv',
                                                     )
                                                 }
-                                                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
                                             >
                                                 <Download className="size-4" />
 
-                                                <span>
-                                                    CSV
-                                                </span>
-                                            </button>
+                                                CSV
+                                            </DropdownMenuItem>
 
-                                            <button
-                                                type="button"
+                                            <DropdownMenuItem
                                                 onClick={() =>
                                                     exportReport(
                                                         'excel',
                                                     )
                                                 }
-                                                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
                                             >
                                                 <FileSpreadsheet className="size-4" />
 
-                                                <span>
-                                                    Excel (.xlsx)
-                                                </span>
-                                            </button>
+                                                Excel (.xlsx)
+                                            </DropdownMenuItem>
 
-                                            <button
-                                                type="button"
+                                            <DropdownMenuItem
                                                 onClick={() =>
                                                     exportReport(
                                                         'pdf',
                                                     )
                                                 }
-                                                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
                                             >
                                                 <FileText className="size-4" />
 
-                                                <span>
-                                                    PDF
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </details>
+                                                PDF
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 )}
                             </div>
                         </div>
+                    </CardContent>
+                </Card>
 
-                    </div>
+                {/* =========================================================
+                    ESTADÍSTICAS
+                ========================================================== */}
+
+                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 xl:grid-cols-4">
+                    <StatCard
+                        icon={
+                            <History className="size-4" />
+                        }
+                        label={t(
+                            'audit.records',
+                        )}
+                        value={
+                            logs.total
+                        }
+                    />
+
+                    <StatCard
+                        icon={
+                            <ShieldCheck className="size-4" />
+                        }
+                        label={t(
+                            'audit.registered_modules',
+                        )}
+                        value={
+                            modules.length
+                        }
+                    />
+
+                    <StatCard
+                        icon={
+                            <CircleDot className="size-4" />
+                        }
+                        label={t(
+                            'audit.event_types',
+                        )}
+                        value={
+                            events.length
+                        }
+                        tone="warning"
+                    />
+
+                    <StatCard
+                        icon={
+                            <Users className="size-4" />
+                        }
+                        label="Actores en esta página"
+                        value={
+                            visibleActors
+                        }
+                        tone="success"
+                    />
                 </div>
 
-                {/* Estadística */}
+                {/* =========================================================
+                    FILTROS
+                ========================================================== */}
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <p className="text-sm text-muted-foreground">
-                            {t('audit.records')}
-                        </p>
+                <Card className="overflow-hidden rounded-2xl">
+                    <CardHeader className="border-b bg-muted/[0.08]">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-3">
+                                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-primary">
+                                    <Filter className="size-4" />
+                                </div>
 
-                        <p className="mt-2 text-2xl font-bold">
-                            {logs.total}
-                        </p>
-                    </div>
+                                <div>
+                                    <CardTitle className="text-base">
+                                        {t(
+                                            'audit.filters',
+                                        )}
+                                    </CardTitle>
 
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <p className="text-sm text-muted-foreground">
-                            {t('audit.registered_modules')}
-                        </p>
-
-                        <p className="mt-2 text-2xl font-bold">
-                            {modules.length}
-                        </p>
-                    </div>
-
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                        <p className="text-sm text-muted-foreground">
-                            {t('audit.event_types')}
-                        </p>
-
-                        <p className="mt-2 text-2xl font-bold">
-                            {events.length}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Filtros */}
-
-                <section className="rounded-xl border bg-card shadow-sm">
-                    <div className="border-b p-5">
-                        <h2 className="font-semibold">
-                            {t('audit.filters')}
-                        </h2>
-
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {t('audit.filters_description')}
-                        </p>
-                    </div>
-
-                    <form
-                        onSubmit={submit}
-                        className="p-5"
-                    >
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-
-                            {/* Buscar */}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('common.search')}
-                                </label>
-
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
-                                    <input
-                                        type="text"
-                                        value={search}
-                                        onChange={(e) =>
-                                            setSearch(
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder={t('audit.search_placeholder')}
-                                        className="h-10 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                                    />
+                                    <CardDescription className="mt-1">
+                                        {t(
+                                            'audit.filters_description',
+                                        )}
+                                    </CardDescription>
                                 </div>
                             </div>
 
-                            {/* Usuario */}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('audit.user')}
-                                </label>
-
-                                <select
-                                    value={actorId}
-                                    onChange={(e) =>
-                                        setActorId(
-                                            e.target.value,
-                                        )
+                            {activeFilterCount >
+                                0 && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={
+                                        resetFilters
                                     }
-                                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                                    className="w-fit"
                                 >
-                                    <option value="">
-                                        {t('audit.all')}
-                                    </option>
+                                    <RotateCcw className="size-3.5" />
 
-                                    {users.map(
-                                        (user) => (
-                                            <option
-                                                key={
-                                                    user.id
-                                                }
-                                                value={
-                                                    user.id
-                                                }
-                                            >
-                                                {
-                                                    user.name
-                                                }
-                                            </option>
-                                        ),
+                                    {t(
+                                        'audit.clear',
                                     )}
-                                </select>
-                            </div>
-
-                            {/* Evento */}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('audit.event')}
-                                </label>
-
-                                <select
-                                    value={event}
-                                    onChange={(e) =>
-                                        setEvent(
-                                            e.target.value,
-                                        )
-                                    }
-                                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                                >
-                                    <option value="">
-                                        {t('audit.all')}
-                                    </option>
-
-                                    {events.map(
-                                        (
-                                            eventItem,
-                                        ) => (
-                                            <option
-                                                key={
-                                                    eventItem
-                                                }
-                                                value={
-                                                    eventItem
-                                                }
-                                            >
-                                                {getEventLabel(
-                                                    eventItem,
-                                                    t,
-                                                )}
-                                            </option>
-                                        ),
-                                    )}
-                                </select>
-                            </div>
-
-                            {/* Módulo */}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('audit.module')}
-                                </label>
-
-                                <select
-                                    value={module}
-                                    onChange={(e) =>
-                                        setModule(
-                                            e.target.value,
-                                        )
-                                    }
-                                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                                >
-                                    <option value="">
-                                        {t('audit.all')}
-                                    </option>
-
-                                    {modules.map(
-                                        (
-                                            moduleItem,
-                                        ) => (
-                                            <option
-                                                key={
-                                                    moduleItem
-                                                }
-                                                value={
-                                                    moduleItem
-                                                }
-                                            >
-                                                {getModuleLabel(
-                                                    moduleItem,
-                                                    t,
-                                                )}
-                                            </option>
-                                        ),
-                                    )}
-                                </select>
-                            </div>
-
-                            {/* Desde */}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('audit.from')}
-                                </label>
-
-                                <div className="relative">
-                                    <CalendarDays className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
-                                    <input
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) =>
-                                            setDateFrom(
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="h-10 w-full rounded-md border bg-background pl-9 pr-3 text-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Hasta */}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('audit.to')}
-                                </label>
-
-                                <div className="relative">
-                                    <CalendarDays className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
-                                    <input
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) =>
-                                            setDateTo(
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="h-10 w-full rounded-md border bg-background pl-9 pr-3 text-sm"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap gap-3">
-                            <button
-                                type="submit"
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-                            >
-                                <Search className="size-4" />
-
-                                {t('common.search')}
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={
-                                    resetFilters
-                                }
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted"
-                            >
-                                <RotateCcw className="size-4" />
-
-                                {t('audit.clear')}
-                            </button>
-                        </div>
-                    </form>
-                </section>
-
-                {/* Actividad */}
-
-                <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
-                    <div className="border-b p-5">
-                        <h2 className="font-semibold">
-                            {t('audit.activity_registered')}
-                        </h2>
-
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {logs.total === 1
-                                ? `1 ${t(
-                                      'audit.activity_found_singular',
-                                  )}`
-                                : `${logs.total} ${t(
-                                      'audit.activity_found_plural',
-                                  )}`}
-                        </p>
-                    </div>
-
-                    {logs.data.length === 0 ? (
-                        <div className="flex min-h-56 flex-col items-center justify-center p-8 text-center">
-                            <Activity className="mb-4 size-10 text-muted-foreground" />
-
-                            <h3 className="font-semibold">
-                                {t('audit.no_activity')}
-                            </h3>
-
-                            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                                {t('audit.no_activity_description')}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="divide-y">
-                            {logs.data.map(
-                                (log) => {
-                                    const isOpen =
-                                        expanded.includes(
-                                            log.id,
-                                        );
-
-                                    const changedFields =
-                                        getChangedFields(
-                                            log,
-                                        );
-
-                                    return (
-                                        <article
-                                            key={
-                                                log.id
-                                            }
-                                            className="p-5"
-                                        >
-                                            <div className="flex gap-4">
-
-                                                {/* Icono */}
-
-                                                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted/40">
-                                                    <EventIcon
-                                                        event={
-                                                            log.event
-                                                        }
-                                                    />
-                                                </div>
-
-                                                {/* Contenido */}
-
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex flex-col justify-between gap-2 sm:flex-row">
-                                                        <div>
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <span className="font-semibold">
-                                                                    {log
-                                                                        .actor
-                                                                        ?.name ??
-                                                                        t('audit.system')}
-                                                                </span>
-
-                                                                <span className="rounded-md bg-muted px-2 py-0.5 text-xs">
-                                                                    {getEventLabel(
-                                                                        log.event,
-                                                                        t,
-                                                                    )}
-                                                                </span>
-                                                            </div>
-
-                                                            <p className="mt-1 text-sm">
-                                                                {getDescription(
-                                                                    log,
-                                                                    t,
-                                                                )}
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="shrink-0 text-left sm:text-right">
-                                                            <p className="text-sm font-medium">
-                                                                {log.created_at_human ??
-                                                                    '—'}
-                                                            </p>
-
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {log.created_at ??
-                                                                    ''}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Resumen */}
-
-                                                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                                                        <span>
-                                                            {getModuleLabel(
-                                                                log.module,
-                                                                t,
-                                                            )}
-                                                        </span>
-
-                                                        {log.ip_address && (
-                                                            <span>
-                                                                IP:{' '}
-                                                                {
-                                                                    log.ip_address
-                                                                }
-                                                            </span>
-                                                        )}
-
-                                                        {log.method && (
-                                                            <span>
-                                                                {
-                                                                    log.method
-                                                                }
-                                                            </span>
-                                                        )}
-
-                                                        {log.subject_id && (
-                                                            <span>
-                                                                {t('audit.record')}
-                                                                #{' '}
-                                                                {
-                                                                    log.subject_id
-                                                                }
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Cambios rápidos */}
-
-                                                    {changedFields.length >
-                                                        0 && (
-                                                        <div className="mt-4 rounded-lg border bg-muted/20">
-                                                            <div className="divide-y">
-                                                                {changedFields
-                                                                    .slice(
-                                                                        0,
-                                                                        3,
-                                                                    )
-                                                                    .map(
-                                                                        (
-                                                                            field,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    field
-                                                                                }
-                                                                                className="grid gap-2 p-3 text-sm sm:grid-cols-[150px_1fr_40px_1fr]"
-                                                                            >
-                                                                                <span className="font-medium">
-                                                                                    {getFieldLabel(
-                                                                                        field,
-                                                                                        t,
-                                                                                    )}
-                                                                                </span>
-
-                                                                                <span className="break-words text-muted-foreground">
-                                                                                    {formatValue(
-                                                                                        log
-                                                                                            .old_values?.[
-                                                                                            field
-                                                                                        ],
-                                                                                        t,
-                                                                                    )}
-                                                                                </span>
-
-                                                                                <span className="text-center text-muted-foreground">
-                                                                                    →
-                                                                                </span>
-
-                                                                                <span className="break-words font-medium">
-                                                                                    {formatValue(
-                                                                                        log
-                                                                                            .new_values?.[
-                                                                                            field
-                                                                                        ],
-                                                                                        t,
-                                                                                    )}
-                                                                                </span>
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Ver detalle */}
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            toggleExpanded(
-                                                                log.id,
-                                                            )
-                                                        }
-                                                        className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        {isOpen ? (
-                                                            <>
-                                                                <ChevronUp className="size-4" />
-                                                                {t('audit.hide_details')}
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <ChevronDown className="size-4" />
-                                                                {t('audit.view_details')}
-                                                            </>
-                                                        )}
-                                                    </button>
-
-                                                    {/* Detalle */}
-
-                                                    {isOpen && (
-                                                        <div className="mt-4 grid gap-4 xl:grid-cols-2">
-
-                                                            {/* Información */}
-
-                                                            <div className="rounded-lg border p-4">
-                                                                <h4 className="font-semibold">
-                                                                    {t('audit.activity_information')}
-                                                                </h4>
-
-                                                                <dl className="mt-4 space-y-3 text-sm">
-                                                                    <div>
-                                                                        <dt className="text-muted-foreground">
-                                                                            {t('audit.user')}
-                                                                        </dt>
-
-                                                                        <dd className="font-medium">
-                                                                            {log
-                                                                                .actor
-                                                                                ?.name ??
-                                                                                t('audit.system')}
-                                                                        </dd>
-                                                                    </div>
-
-                                                                    {log
-                                                                        .actor
-                                                                        ?.email && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t('audit.email')}
-                                                                            </dt>
-
-                                                                            <dd>
-                                                                                {
-                                                                                    log
-                                                                                        .actor
-                                                                                        .email
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    <div>
-                                                                        <dt className="text-muted-foreground">
-                                                                            {t('audit.event')}
-                                                                        </dt>
-
-                                                                        <dd>
-                                                                            {getEventLabel(
-                                                                                log.event,
-                                                                                t,
-                                                                            )}
-                                                                        </dd>
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <dt className="text-muted-foreground">
-                                                                            {t('audit.module')}
-                                                                        </dt>
-
-                                                                        <dd>
-                                                                            {getModuleLabel(
-                                                                                log.module,
-                                                                                t,
-                                                                            )}
-                                                                        </dd>
-                                                                    </div>
-
-                                                                    {log.subject_type && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t('audit.affected_type')}
-                                                                            </dt>
-
-                                                                            <dd className="break-all">
-                                                                                {
-                                                                                    log.subject_type
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {log.subject_id && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t('audit.affected_id')}
-                                                                            </dt>
-
-                                                                            <dd>
-                                                                                {
-                                                                                    log.subject_id
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-                                                                </dl>
-                                                            </div>
-
-                                                            {/* Información técnica */}
-
-                                                            <div className="rounded-lg border p-4">
-                                                                <h4 className="font-semibold">
-                                                                    {t('audit.technical_information')}
-                                                                </h4>
-
-                                                                <dl className="mt-4 space-y-3 text-sm">
-                                                                    {log.ip_address && (
-                                                                        <div>
-                                                                            <dt className="flex items-center gap-2 text-muted-foreground">
-                                                                                <Globe2 className="size-4" />
-
-                                                                                IP
-                                                                            </dt>
-
-                                                                            <dd className="mt-1">
-                                                                                {
-                                                                                    log.ip_address
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {log.method && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t('audit.method')}
-                                                                            </dt>
-
-                                                                            <dd>
-                                                                                {
-                                                                                    log.method
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {log.route && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t('audit.route')}
-                                                                            </dt>
-
-                                                                            <dd className="break-all">
-                                                                                {
-                                                                                    log.route
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {log.url && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                URL
-                                                                            </dt>
-
-                                                                            <dd className="break-all">
-                                                                                {
-                                                                                    log.url
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {log.user_agent && (
-                                                                        <div>
-                                                                            <dt className="text-muted-foreground">
-                                                                                {t('audit.browser_device')}
-                                                                            </dt>
-
-                                                                            <dd className="mt-1 break-words text-xs">
-                                                                                {
-                                                                                    log.user_agent
-                                                                                }
-                                                                            </dd>
-                                                                        </div>
-                                                                    )}
-                                                                </dl>
-                                                            </div>
-
-                                                            {/* Todos los cambios */}
-
-                                                            {changedFields.length >
-                                                                0 && (
-                                                                <div className="rounded-lg border p-4 xl:col-span-2">
-                                                                    <h4 className="font-semibold">
-                                                                        {t('audit.changes_made')}
-                                                                    </h4>
-
-                                                                    <div className="mt-4 overflow-x-auto">
-                                                                        <table className="w-full text-sm">
-                                                                            <thead>
-                                                                                <tr className="border-b text-left">
-                                                                                    <th className="pb-3 pr-4 font-medium">
-                                                                                        {t('audit.field')}
-                                                                                    </th>
-
-                                                                                    <th className="pb-3 pr-4 font-medium">
-                                                                                        {t('audit.before')}
-                                                                                    </th>
-
-                                                                                    <th className="pb-3 font-medium">
-                                                                                        {t('audit.after')}
-                                                                                    </th>
-                                                                                </tr>
-                                                                            </thead>
-
-                                                                            <tbody className="divide-y">
-                                                                                {changedFields.map(
-                                                                                    (
-                                                                                        field,
-                                                                                    ) => (
-                                                                                        <tr
-                                                                                            key={
-                                                                                                field
-                                                                                            }
-                                                                                        >
-                                                                                            <td className="py-3 pr-4 font-medium">
-                                                                                                {getFieldLabel(
-                                                                                                    field,
-                                                                                                    t,
-                                                                                                )}
-                                                                                            </td>
-
-                                                                                            <td className="py-3 pr-4 text-muted-foreground">
-                                                                                                {formatValue(
-                                                                                                    log
-                                                                                                        .old_values?.[
-                                                                                                        field
-                                                                                                    ],
-                                                                                                    t,
-                                                                                                )}
-                                                                                            </td>
-
-                                                                                            <td className="py-3">
-                                                                                                {formatValue(
-                                                                                                    log
-                                                                                                        .new_values?.[
-                                                                                                        field
-                                                                                                    ],
-                                                                                                    t,
-                                                                                                )}
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    ),
-                                                                                )}
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </article>
-                                    );
-                                },
+                                </Button>
                             )}
                         </div>
+                    </CardHeader>
+
+                    <CardContent className="p-4 sm:p-5">
+                        <form
+                            onSubmit={
+                                submit
+                            }
+                        >
+                            <div className="grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                                {/* Buscar */}
+
+                                <FilterField
+                                    label={t(
+                                        'common.search',
+                                    )}
+                                >
+                                    <div className="relative">
+                                        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+                                        <Input
+                                            type="text"
+                                            value={
+                                                search
+                                            }
+                                            onChange={(
+                                                e,
+                                            ) =>
+                                                setSearch(
+                                                    e
+                                                        .target
+                                                        .value,
+                                                )
+                                            }
+                                            placeholder={t(
+                                                'audit.search_placeholder',
+                                            )}
+                                            className="h-10 rounded-xl pl-9"
+                                        />
+                                    </div>
+                                </FilterField>
+
+                                {/* Usuario */}
+
+                                <FilterField
+                                    label={t(
+                                        'audit.user',
+                                    )}
+                                >
+                                    <Select
+                                        value={
+                                            actorId ||
+                                            ALL_FILTERS
+                                        }
+                                        onValueChange={(
+                                            value,
+                                        ) =>
+                                            setActorId(
+                                                value ===
+                                                    ALL_FILTERS
+                                                    ? ''
+                                                    : value,
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger className="h-10 w-full rounded-xl">
+                                            <SelectValue />
+                                        </SelectTrigger>
+
+                                        <SelectContent>
+                                            <SelectItem
+                                                value={
+                                                    ALL_FILTERS
+                                                }
+                                            >
+                                                {t(
+                                                    'audit.all',
+                                                )}
+                                            </SelectItem>
+
+                                            {users.map(
+                                                (
+                                                    user,
+                                                ) => (
+                                                    <SelectItem
+                                                        key={
+                                                            user.id
+                                                        }
+                                                        value={String(
+                                                            user.id,
+                                                        )}
+                                                    >
+                                                        {
+                                                            user.name
+                                                        }
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </FilterField>
+
+                                {/* Evento */}
+
+                                <FilterField
+                                    label={t(
+                                        'audit.event',
+                                    )}
+                                >
+                                    <Select
+                                        value={
+                                            event ||
+                                            ALL_FILTERS
+                                        }
+                                        onValueChange={(
+                                            value,
+                                        ) =>
+                                            setEvent(
+                                                value ===
+                                                    ALL_FILTERS
+                                                    ? ''
+                                                    : value,
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger className="h-10 w-full rounded-xl">
+                                            <SelectValue />
+                                        </SelectTrigger>
+
+                                        <SelectContent>
+                                            <SelectItem
+                                                value={
+                                                    ALL_FILTERS
+                                                }
+                                            >
+                                                {t(
+                                                    'audit.all',
+                                                )}
+                                            </SelectItem>
+
+                                            {events.map(
+                                                (
+                                                    eventItem,
+                                                ) => (
+                                                    <SelectItem
+                                                        key={
+                                                            eventItem
+                                                        }
+                                                        value={
+                                                            eventItem
+                                                        }
+                                                    >
+                                                        {getEventLabel(
+                                                            eventItem,
+                                                            t,
+                                                        )}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </FilterField>
+
+                                {/* Módulo */}
+
+                                <FilterField
+                                    label={t(
+                                        'audit.module',
+                                    )}
+                                >
+                                    <Select
+                                        value={
+                                            module ||
+                                            ALL_FILTERS
+                                        }
+                                        onValueChange={(
+                                            value,
+                                        ) =>
+                                            setModule(
+                                                value ===
+                                                    ALL_FILTERS
+                                                    ? ''
+                                                    : value,
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger className="h-10 w-full rounded-xl">
+                                            <SelectValue />
+                                        </SelectTrigger>
+
+                                        <SelectContent>
+                                            <SelectItem
+                                                value={
+                                                    ALL_FILTERS
+                                                }
+                                            >
+                                                {t(
+                                                    'audit.all',
+                                                )}
+                                            </SelectItem>
+
+                                            {modules.map(
+                                                (
+                                                    moduleItem,
+                                                ) => (
+                                                    <SelectItem
+                                                        key={
+                                                            moduleItem
+                                                        }
+                                                        value={
+                                                            moduleItem
+                                                        }
+                                                    >
+                                                        {getModuleLabel(
+                                                            moduleItem,
+                                                            t,
+                                                        )}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </FilterField>
+
+                                {/* Desde */}
+
+                                <FilterField
+                                    label={t(
+                                        'audit.from',
+                                    )}
+                                >
+                                    <div className="relative">
+                                        <CalendarDays className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+                                        <Input
+                                            type="date"
+                                            value={
+                                                dateFrom
+                                            }
+                                            onChange={(
+                                                e,
+                                            ) =>
+                                                setDateFrom(
+                                                    e
+                                                        .target
+                                                        .value,
+                                                )
+                                            }
+                                            className="h-10 rounded-xl pl-9"
+                                        />
+                                    </div>
+                                </FilterField>
+
+                                {/* Hasta */}
+
+                                <FilterField
+                                    label={t(
+                                        'audit.to',
+                                    )}
+                                >
+                                    <div className="relative">
+                                        <CalendarDays className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+                                        <Input
+                                            type="date"
+                                            value={
+                                                dateTo
+                                            }
+                                            onChange={(
+                                                e,
+                                            ) =>
+                                                setDateTo(
+                                                    e
+                                                        .target
+                                                        .value,
+                                                )
+                                            }
+                                            className="h-10 rounded-xl pl-9"
+                                        />
+                                    </div>
+                                </FilterField>
+                            </div>
+
+                            <div className="mt-5 flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={
+                                        resetFilters
+                                    }
+                                    className="rounded-xl"
+                                >
+                                    <RotateCcw className="size-4" />
+
+                                    {t(
+                                        'audit.clear',
+                                    )}
+                                </Button>
+
+                                <Button
+                                    type="submit"
+                                    className="rounded-xl px-5"
+                                >
+                                    <Search className="size-4" />
+
+                                    {t(
+                                        'common.search',
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                {/* =========================================================
+                    ACTIVIDAD
+                ========================================================== */}
+
+                <Card className="overflow-hidden rounded-2xl">
+                    <CardHeader className="border-b bg-muted/[0.08]">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="text-base">
+                                    {t(
+                                        'audit.activity_registered',
+                                    )}
+                                </CardTitle>
+
+                                <CardDescription className="mt-1">
+                                    {logs.total ===
+                                    1
+                                        ? `1 ${t(
+                                              'audit.activity_found_singular',
+                                          )}`
+                                        : `${logs.total} ${t(
+                                              'audit.activity_found_plural',
+                                          )}`}
+                                </CardDescription>
+                            </div>
+
+                            <Badge
+                                variant="secondary"
+                                className="w-fit rounded-full"
+                            >
+                                {
+                                    logs.total
+                                }
+                            </Badge>
+                        </div>
+                    </CardHeader>
+
+                    {logs.data.length ===
+                    0 ? (
+                        <EmptyAudit
+                            t={t}
+                        />
+                    ) : (
+                        <CardContent className="p-0">
+                            <div className="divide-y">
+                                {logs.data.map(
+                                    (
+                                        log,
+                                    ) => {
+                                        const isOpen =
+                                            expanded.includes(
+                                                log.id,
+                                            );
+
+                                        const changedFields =
+                                            getChangedFields(
+                                                log,
+                                            );
+
+                                        return (
+                                            <AuditEntry
+                                                key={
+                                                    log.id
+                                                }
+                                                log={
+                                                    log
+                                                }
+                                                isOpen={
+                                                    isOpen
+                                                }
+                                                changedFields={
+                                                    changedFields
+                                                }
+                                                t={
+                                                    t
+                                                }
+                                                onToggle={() =>
+                                                    toggleExpanded(
+                                                        log.id,
+                                                    )
+                                                }
+                                            />
+                                        );
+                                    },
+                                )}
+                            </div>
+                        </CardContent>
                     )}
 
-                    {/* Paginación */}
+                    {/* PAGINACIÓN */}
 
-                    {logs.last_page > 1 && (
-                        <div className="flex flex-col gap-4 border-t p-5 sm:flex-row sm:items-center sm:justify-between">
+                    {logs.last_page >
+                        1 && (
+                        <div className="flex min-w-0 flex-col gap-3 border-t bg-muted/[0.08] p-4 lg:flex-row lg:items-center lg:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                {t('users.showing')}{' '}
-                                {logs.from ?? 0} -{' '}
-                                {logs.to ?? 0}{' '}
-                                {t('users.of')}{' '}
-                                {logs.total}
+                                {t(
+                                    'users.showing',
+                                )}{' '}
+                                {logs.from ??
+                                    0}{' '}
+                                -{' '}
+                                {logs.to ??
+                                    0}{' '}
+                                {t(
+                                    'users.of',
+                                )}{' '}
+                                {
+                                    logs.total
+                                }
                             </p>
 
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-2">
                                 {logs.links.map(
                                     (
                                         link,
                                         index,
                                     ) => (
-                                        <button
+                                        <Button
                                             key={
                                                 index
                                             }
                                             type="button"
+                                            size="sm"
+                                            variant={
+                                                link.active
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
                                             disabled={
                                                 !link.url
                                             }
@@ -1880,31 +1812,755 @@ export default function AuditIndex({
                                                     );
                                                 }
                                             }}
-                                            className={[
-                                                'min-w-9 rounded-md border px-3 py-2 text-sm',
-
-                                                link.active
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'bg-background hover:bg-muted',
-
-                                                !link.url
-                                                    ? 'cursor-not-allowed opacity-40'
-                                                    : '',
-                                            ].join(
-                                                ' ',
-                                            )}
+                                            className="min-w-9 rounded-xl"
                                         >
                                             {paginationLabel(
                                                 link.label,
                                             )}
-                                        </button>
+                                        </Button>
                                     ),
                                 )}
                             </div>
                         </div>
                     )}
-                </section>
+                </Card>
             </div>
         </AppLayout>
     );
+}
+
+/* ==========================================================================
+   REGISTRO DE AUDITORÍA
+   ========================================================================== */
+
+function AuditEntry({
+    log,
+    isOpen,
+    changedFields,
+    t,
+    onToggle,
+}: {
+    log: AuditLog;
+    isOpen: boolean;
+    changedFields: string[];
+    t: Translator;
+    onToggle: () => void;
+}) {
+    return (
+        <article className="p-4 transition-colors hover:bg-muted/[0.08] sm:p-5">
+            <div className="flex min-w-0 gap-3 sm:gap-4">
+                <div
+                    className={[
+                        'flex size-10 shrink-0 items-center justify-center rounded-xl border',
+                        eventTone(
+                            log.event,
+                        ),
+                    ].join(
+                        ' ',
+                    )}
+                >
+                    <EventIcon
+                        event={
+                            log.event
+                        }
+                    />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="truncate font-semibold">
+                                    {log.actor
+                                        ?.name ??
+                                        t(
+                                            'audit.system',
+                                        )}
+                                </span>
+
+                                <EventBadge
+                                    event={
+                                        log.event
+                                    }
+                                    label={getEventLabel(
+                                        log.event,
+                                        t,
+                                    )}
+                                />
+
+                                <Badge
+                                    variant="outline"
+                                    className="text-[10px]"
+                                >
+                                    {getModuleLabel(
+                                        log.module,
+                                        t,
+                                    )}
+                                </Badge>
+                            </div>
+
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                                {getDescription(
+                                    log,
+                                    t,
+                                )}
+                            </p>
+                        </div>
+
+                        <div className="shrink-0 lg:text-right">
+                            <p className="text-sm font-medium">
+                                {log.created_at_human ??
+                                    '—'}
+                            </p>
+
+                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                {log.created_at ??
+                                    ''}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {log.ip_address && (
+                            <MetaBadge>
+                                <Globe2 className="size-3" />
+                                {log.ip_address}
+                            </MetaBadge>
+                        )}
+
+                        {log.method && (
+                            <MetaBadge>
+                                {
+                                    log.method
+                                }
+                            </MetaBadge>
+                        )}
+
+                        {log.subject_id && (
+                            <MetaBadge>
+                                {t(
+                                    'audit.record',
+                                )}{' '}
+                                #
+                                {
+                                    log.subject_id
+                                }
+                            </MetaBadge>
+                        )}
+                    </div>
+
+                    {/* Cambios rápidos */}
+
+                    {changedFields.length >
+                        0 && (
+                        <div className="mt-4 overflow-hidden rounded-xl border bg-muted/[0.12]">
+                            <div className="divide-y">
+                                {changedFields
+                                    .slice(
+                                        0,
+                                        3,
+                                    )
+                                    .map(
+                                        (
+                                            field,
+                                        ) => (
+                                            <div
+                                                key={
+                                                    field
+                                                }
+                                                className="grid gap-2 p-3 text-sm lg:grid-cols-[150px_minmax(0,1fr)_30px_minmax(0,1fr)] lg:items-center"
+                                            >
+                                                <span className="font-medium">
+                                                    {getFieldLabel(
+                                                        field,
+                                                        t,
+                                                    )}
+                                                </span>
+
+                                                <ValueBox
+                                                    value={formatValue(
+                                                        log
+                                                            .old_values?.[
+                                                            field
+                                                        ],
+                                                        t,
+                                                    )}
+                                                    muted
+                                                />
+
+                                                <span className="hidden text-center text-muted-foreground lg:block">
+                                                    →
+                                                </span>
+
+                                                <ValueBox
+                                                    value={formatValue(
+                                                        log
+                                                            .new_values?.[
+                                                            field
+                                                        ],
+                                                        t,
+                                                    )}
+                                                />
+                                            </div>
+                                        ),
+                                    )}
+                            </div>
+                        </div>
+                    )}
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={
+                            onToggle
+                        }
+                        className="mt-3 -ml-2 rounded-xl text-muted-foreground"
+                    >
+                        {isOpen ? (
+                            <ChevronUp className="size-4" />
+                        ) : (
+                            <ChevronDown className="size-4" />
+                        )}
+
+                        {isOpen
+                            ? t(
+                                  'audit.hide_details',
+                              )
+                            : t(
+                                  'audit.view_details',
+                              )}
+                    </Button>
+
+                    {isOpen && (
+                        <AuditDetails
+                            log={
+                                log
+                            }
+                            changedFields={
+                                changedFields
+                            }
+                            t={
+                                t
+                            }
+                        />
+                    )}
+                </div>
+            </div>
+        </article>
+    );
+}
+
+/* ==========================================================================
+   DETALLE
+   ========================================================================== */
+
+function AuditDetails({
+    log,
+    changedFields,
+    t,
+}: {
+    log: AuditLog;
+    changedFields: string[];
+    t: Translator;
+}) {
+    return (
+        <div className="mt-3 grid min-w-0 gap-4 xl:grid-cols-2">
+            <DetailCard
+                title={t(
+                    'audit.activity_information',
+                )}
+                icon={
+                    <Activity className="size-4" />
+                }
+            >
+                <DetailRow
+                    label={t(
+                        'audit.user',
+                    )}
+                    value={
+                        log.actor
+                            ?.name ??
+                        t(
+                            'audit.system',
+                        )
+                    }
+                />
+
+                {log.actor
+                    ?.email && (
+                    <DetailRow
+                        label={t(
+                            'audit.email',
+                        )}
+                        value={
+                            log.actor
+                                .email
+                        }
+                    />
+                )}
+
+                <DetailRow
+                    label={t(
+                        'audit.event',
+                    )}
+                    value={getEventLabel(
+                        log.event,
+                        t,
+                    )}
+                />
+
+                <DetailRow
+                    label={t(
+                        'audit.module',
+                    )}
+                    value={getModuleLabel(
+                        log.module,
+                        t,
+                    )}
+                />
+
+                {log.subject_type && (
+                    <DetailRow
+                        label={t(
+                            'audit.affected_type',
+                        )}
+                        value={
+                            log.subject_type
+                        }
+                        mono
+                    />
+                )}
+
+                {log.subject_id && (
+                    <DetailRow
+                        label={t(
+                            'audit.affected_id',
+                        )}
+                        value={String(
+                            log.subject_id,
+                        )}
+                    />
+                )}
+            </DetailCard>
+
+            <DetailCard
+                title={t(
+                    'audit.technical_information',
+                )}
+                icon={
+                    <Globe2 className="size-4" />
+                }
+            >
+                {log.ip_address && (
+                    <DetailRow
+                        label="IP"
+                        value={
+                            log.ip_address
+                        }
+                        mono
+                    />
+                )}
+
+                {log.method && (
+                    <DetailRow
+                        label={t(
+                            'audit.method',
+                        )}
+                        value={
+                            log.method
+                        }
+                    />
+                )}
+
+                {log.route && (
+                    <DetailRow
+                        label={t(
+                            'audit.route',
+                        )}
+                        value={
+                            log.route
+                        }
+                        mono
+                    />
+                )}
+
+                {log.url && (
+                    <DetailRow
+                        label="URL"
+                        value={
+                            log.url
+                        }
+                        mono
+                    />
+                )}
+
+                {log.user_agent && (
+                    <DetailRow
+                        label={t(
+                            'audit.browser_device',
+                        )}
+                        value={
+                            log.user_agent
+                        }
+                    />
+                )}
+            </DetailCard>
+
+            {changedFields.length >
+                0 && (
+                <Card className="overflow-hidden rounded-xl shadow-none xl:col-span-2">
+                    <CardHeader className="border-b bg-muted/[0.08]">
+                        <CardTitle className="text-sm">
+                            {t(
+                                'audit.changes_made',
+                            )}
+                        </CardTitle>
+                    </CardHeader>
+
+                    <CardContent className="p-0">
+                        <div className="w-full overflow-x-auto">
+                            <Table className="min-w-[650px]">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>
+                                            {t(
+                                                'audit.field',
+                                            )}
+                                        </TableHead>
+
+                                        <TableHead>
+                                            {t(
+                                                'audit.before',
+                                            )}
+                                        </TableHead>
+
+                                        <TableHead>
+                                            {t(
+                                                'audit.after',
+                                            )}
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+
+                                <TableBody>
+                                    {changedFields.map(
+                                        (
+                                            field,
+                                        ) => (
+                                            <TableRow
+                                                key={
+                                                    field
+                                                }
+                                            >
+                                                <TableCell className="font-medium">
+                                                    {getFieldLabel(
+                                                        field,
+                                                        t,
+                                                    )}
+                                                </TableCell>
+
+                                                <TableCell className="max-w-[320px] whitespace-pre-wrap break-words text-muted-foreground">
+                                                    {formatValue(
+                                                        log
+                                                            .old_values?.[
+                                                            field
+                                                        ],
+                                                        t,
+                                                    )}
+                                                </TableCell>
+
+                                                <TableCell className="max-w-[320px] whitespace-pre-wrap break-words font-medium">
+                                                    {formatValue(
+                                                        log
+                                                            .new_values?.[
+                                                            field
+                                                        ],
+                                                        t,
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ),
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+}
+
+/* ==========================================================================
+   COMPONENTES DE APOYO
+   ========================================================================== */
+
+function FilterField({
+    label,
+    children,
+}: {
+    label: string;
+    children: ReactNode;
+}) {
+    return (
+        <div className="min-w-0 space-y-2">
+            <Label className="text-xs font-semibold">
+                {label}
+            </Label>
+
+            {children}
+        </div>
+    );
+}
+
+function StatCard({
+    icon,
+    label,
+    value,
+    tone = 'default',
+}: {
+    icon: ReactNode;
+    label: string;
+    value: number;
+    tone?:
+        | 'default'
+        | 'success'
+        | 'warning';
+}) {
+    const iconClass =
+        tone === 'success'
+            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+            : tone === 'warning'
+              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              : 'bg-primary/10 text-primary';
+
+    return (
+        <Card className="rounded-2xl">
+            <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                    <div
+                        className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
+                    >
+                        {icon}
+                    </div>
+
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase leading-4 tracking-[0.05em] text-muted-foreground sm:text-[11px]">
+                            {label}
+                        </p>
+
+                        <p className="mt-1 text-xl font-bold tracking-tight">
+                            {value}
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function EventBadge({
+    event,
+    label,
+}: {
+    event: string;
+    label: string;
+}) {
+    return (
+        <Badge
+            variant="outline"
+            className={[
+                'text-[10px]',
+                eventBadgeTone(
+                    event,
+                ),
+            ].join(
+                ' ',
+            )}
+        >
+            {label}
+        </Badge>
+    );
+}
+
+function MetaBadge({
+    children,
+}: {
+    children: ReactNode;
+}) {
+    return (
+        <Badge
+            variant="outline"
+            className="gap-1.5 font-normal text-[10px] text-muted-foreground"
+        >
+            {children}
+        </Badge>
+    );
+}
+
+function ValueBox({
+    value,
+    muted = false,
+}: {
+    value: string;
+    muted?: boolean;
+}) {
+    return (
+        <div
+            className={[
+                'min-w-0 whitespace-pre-wrap break-words rounded-lg border bg-background px-2.5 py-2 text-xs',
+                muted
+                    ? 'text-muted-foreground'
+                    : 'font-medium',
+            ].join(
+                ' ',
+            )}
+        >
+            {value}
+        </div>
+    );
+}
+
+function DetailCard({
+    title,
+    icon,
+    children,
+}: {
+    title: string;
+    icon: ReactNode;
+    children: ReactNode;
+}) {
+    return (
+        <Card className="rounded-xl shadow-none">
+            <CardHeader className="border-b bg-muted/[0.08]">
+                <div className="flex items-center gap-2">
+                    <span className="text-primary">
+                        {icon}
+                    </span>
+
+                    <CardTitle className="text-sm">
+                        {title}
+                    </CardTitle>
+                </div>
+            </CardHeader>
+
+            <CardContent className="space-y-3 p-4">
+                {children}
+            </CardContent>
+        </Card>
+    );
+}
+
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
+    return (
+        <div className="min-w-0">
+            <p className="text-[10px] font-medium uppercase tracking-[0.05em] text-muted-foreground">
+                {label}
+            </p>
+
+            <p
+                className={[
+                    'mt-1 break-words text-sm',
+                    mono
+                        ? 'font-mono text-xs'
+                        : 'font-medium',
+                ].join(
+                    ' ',
+                )}
+            >
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function EmptyAudit({
+    t,
+}: {
+    t: Translator;
+}) {
+    return (
+        <CardContent className="flex min-h-64 flex-col items-center justify-center p-8 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <Activity className="size-6" />
+            </div>
+
+            <h3 className="mt-4 font-semibold">
+                {t(
+                    'audit.no_activity',
+                )}
+            </h3>
+
+            <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground">
+                {t(
+                    'audit.no_activity_description',
+                )}
+            </p>
+        </CardContent>
+    );
+}
+
+/* ==========================================================================
+   TONOS DE EVENTOS
+   ========================================================================== */
+
+function eventTone(
+    event: string,
+): string {
+    switch (event) {
+        case 'login':
+            return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+
+        case 'logout':
+            return 'border-slate-500/20 bg-slate-500/10 text-slate-600 dark:text-slate-400';
+
+        case 'create':
+            return 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400';
+
+        case 'update':
+        case 'role_change':
+        case 'status_change':
+            return 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400';
+
+        case 'delete':
+            return 'border-destructive/20 bg-destructive/10 text-destructive';
+
+        default:
+            return 'border-primary/15 bg-primary/10 text-primary';
+    }
+}
+
+function eventBadgeTone(
+    event: string,
+): string {
+    switch (event) {
+        case 'login':
+            return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+
+        case 'logout':
+            return 'border-slate-500/20 bg-slate-500/10 text-slate-600 dark:text-slate-400';
+
+        case 'create':
+            return 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400';
+
+        case 'update':
+        case 'role_change':
+        case 'status_change':
+            return 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400';
+
+        case 'delete':
+            return 'border-destructive/20 bg-destructive/10 text-destructive';
+
+        default:
+            return 'border-primary/15 bg-primary/10 text-primary';
+    }
 }

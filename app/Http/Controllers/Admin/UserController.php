@@ -12,6 +12,8 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
+use App\Models\SystemSetting;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
@@ -25,40 +27,327 @@ class UserController extends Controller
             403
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Filtros
+        |--------------------------------------------------------------------------
+        */
+
         $search = trim(
             (string) $request->input('search', '')
         );
 
-        $users = User::query()
+        $status = trim(
+            (string) $request->input('status', '')
+        );
+
+        $presence = trim(
+            (string) $request->input('presence', '')
+        );
+
+        $role = trim(
+            (string) $request->input('role', '')
+        );
+
+        $dateFrom = trim(
+            (string) $request->input('date_from', '')
+        );
+
+        $dateTo = trim(
+            (string) $request->input('date_to', '')
+        );
+
+        $sort = trim(
+            (string) $request->input('sort', 'newest')
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Valores permitidos
+        |--------------------------------------------------------------------------
+        */
+
+        $allowedStatuses = [
+            'active',
+            'pending',
+            'suspended',
+        ];
+
+        $allowedPresence = [
+            'online',
+            'away',
+            'offline',
+        ];
+
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'name_asc',
+            'name_desc',
+            'last_activity',
+        ];
+
+        if (! in_array($status, $allowedStatuses, true)) {
+            $status = '';
+        }
+
+        if (! in_array($presence, $allowedPresence, true)) {
+            $presence = '';
+        }
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
+
+        if (
+            $dateFrom !== ''
+            && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)
+        ) {
+            $dateFrom = '';
+        }
+
+        if (
+            $dateTo !== ''
+            && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)
+        ) {
+            $dateTo = '';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Registros por página
+        |--------------------------------------------------------------------------
+        |
+        | Se respeta la configuración global definida en Configuración
+        | del sistema.
+        |
+        */
+
+        $perPage = (int) SystemSetting::valueOf(
+            'system.per_page',
+            20
+        );
+
+        if (
+            ! in_array(
+                $perPage,
+                [10, 20, 25, 50, 100],
+                true
+            )
+        ) {
+            $perPage = 20;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Límites de presencia
+        |--------------------------------------------------------------------------
+        |
+        | online  = actividad en últimos 2 minutos
+        | away    = actividad entre 2 y 10 minutos
+        | offline = sin actividad o más de 10 minutos
+        |
+        */
+
+        $onlineLimit = now()->copy()->subMinutes(2);
+        $awayLimit = now()->copy()->subMinutes(10);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Consulta principal
+        |--------------------------------------------------------------------------
+        */
+
+        $query = User::query()
             ->with('roles:id,name')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
+
+            /*
+            | Búsqueda general
+            */
+            ->when(
+                $search !== '',
+                function ($query) use ($search) {
+                    $query->where(
+                        function ($query) use ($search) {
+                            $query
+                                ->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                )
+                                ->orWhere(
+                                    'username',
+                                    'like',
+                                    "%{$search}%"
+                                )
+                                ->orWhere(
+                                    'email',
+                                    'like',
+                                    "%{$search}%"
+                                )
+                                ->orWhere(
+                                    'phone',
+                                    'like',
+                                    "%{$search}%"
+                                );
+                        }
+                    );
+                }
+            )
+
+            /*
+            | Estado
+            */
+            ->when(
+                $status !== '',
+                fn ($query) =>
+                    $query->where(
+                        'status',
+                        $status
+                    )
+            )
+
+            /*
+            | Rol
+            */
+            ->when(
+                $role !== '',
+                fn ($query) =>
+                    $query->whereHas(
+                        'roles',
+                        fn ($roleQuery) =>
+                            $roleQuery->where(
+                                'name',
+                                $role
+                            )
+                    )
+            )
+
+            /*
+            | Fecha de creación desde
+            */
+            ->when(
+                $dateFrom !== '',
+                fn ($query) =>
+                    $query->whereDate(
+                        'created_at',
+                        '>=',
+                        $dateFrom
+                    )
+            )
+
+            /*
+            | Fecha de creación hasta
+            */
+            ->when(
+                $dateTo !== '',
+                fn ($query) =>
+                    $query->whereDate(
+                        'created_at',
+                        '<=',
+                        $dateTo
+                    )
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filtro por presencia
+        |--------------------------------------------------------------------------
+        */
+
+        if ($presence === 'online') {
+            $query->where(
+                'last_seen_at',
+                '>=',
+                $onlineLimit
+            );
+        }
+
+        if ($presence === 'away') {
+            $query
+                ->whereNotNull('last_seen_at')
+                ->where(
+                    'last_seen_at',
+                    '<',
+                    $onlineLimit
+                )
+                ->where(
+                    'last_seen_at',
+                    '>=',
+                    $awayLimit
+                );
+        }
+
+        if ($presence === 'offline') {
+            $query->where(
+                function ($query) use ($awayLimit) {
                     $query
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('username', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('name')
-            ->paginate(10)
+                        ->whereNull('last_seen_at')
+                        ->orWhere(
+                            'last_seen_at',
+                            '<',
+                            $awayLimit
+                        );
+                }
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Orden
+        |--------------------------------------------------------------------------
+        |
+        | Por defecto: más recientes primero.
+        | Cada usuario recién creado aparecerá al inicio de la primera página.
+        |
+        */
+
+        match ($sort) {
+            'oldest' =>
+                $query
+                    ->orderBy('created_at', 'asc')
+                    ->orderBy('id', 'asc'),
+
+            'name_asc' =>
+                $query
+                    ->orderBy('name', 'asc')
+                    ->orderBy('id', 'desc'),
+
+            'name_desc' =>
+                $query
+                    ->orderBy('name', 'desc')
+                    ->orderBy('id', 'desc'),
+
+            'last_activity' =>
+                $query
+                    ->orderByDesc('last_seen_at')
+                    ->orderByDesc('id'),
+
+            default =>
+                $query
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id'),
+        };
+
+        /*
+        |--------------------------------------------------------------------------
+        | Paginación
+        |--------------------------------------------------------------------------
+        */
+
+        $users = $query
+            ->paginate($perPage)
             ->withQueryString()
-           ->through(function (User $user) {
+            ->through(function (User $user) {
                 /*
                 |--------------------------------------------------------------------------
                 | Presencia del usuario
                 |--------------------------------------------------------------------------
-                |
-                | online  = actividad en últimos 2 minutos
-                | away    = actividad entre 2 y 10 minutos
-                | offline = más de 10 minutos
-                |
                 */
 
                 $presence = 'offline';
 
                 if ($user->last_seen_at) {
-
                     if (
                         $user->last_seen_at->gte(
                             now()->subMinutes(2)
@@ -142,9 +431,60 @@ class UserController extends Controller
 
                     'created_at' =>
                         $user->created_at
-                            ?->format('d/m/Y'),
+                            ?->format('d/m/Y H:i'),
                 ];
             });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Estadísticas globales
+        |--------------------------------------------------------------------------
+        |
+        | Estas estadísticas NO dependen de los filtros del listado.
+        |
+        */
+
+        $stats = [
+            'total' =>
+                User::query()->count(),
+
+            'active' =>
+                User::query()
+                    ->where('status', 'active')
+                    ->count(),
+
+            'online' =>
+                User::query()
+                    ->where(
+                        'last_seen_at',
+                        '>=',
+                        now()->subMinutes(2)
+                    )
+                    ->count(),
+
+            'suspended' =>
+                User::query()
+                    ->where('status', 'suspended')
+                    ->count(),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Roles disponibles para filtros
+        |--------------------------------------------------------------------------
+        */
+
+        $filterRoles = Role::query()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Respuesta Inertia
+        |--------------------------------------------------------------------------
+        */
 
         return Inertia::render(
             'admin/users/index',
@@ -153,7 +493,19 @@ class UserController extends Controller
 
                 'filters' => [
                     'search' => $search,
+                    'status' => $status,
+                    'presence' => $presence,
+                    'role' => $role,
+                    'date_from' => $dateFrom,
+                    'date_to' => $dateTo,
+                    'sort' => $sort,
                 ],
+
+                'filterOptions' => [
+                    'roles' => $filterRoles,
+                ],
+
+                'stats' => $stats,
 
                 'can' => [
                     'create' =>
@@ -170,7 +522,7 @@ class UserController extends Controller
 
                     'updateStatus' =>
                         $request->user()->can('users.status.update'),
-                        
+
                     'viewAudit' =>
                         $request->user()->can('audit_logs.view'),
                 ],
@@ -431,9 +783,9 @@ class UserController extends Controller
             'username' => [
                 'nullable',
                 'string',
+                'min:6',
                 'max:100',
-                'alpha_dash',
-
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z0-9_-]+$/',
                 Rule::unique('users', 'username')
                     ->ignore($user->id),
             ],
@@ -761,4 +1113,105 @@ class UserController extends Controller
             'Usuario eliminado correctamente.'
         );
     }
+
+    /**
+     * Verificar disponibilidad de nombre de usuario.
+     */
+    public function checkUsername(Request $request): JsonResponse
+    {
+        abort_unless(
+            $request->user()->can('users.update'),
+            403
+        );
+
+        $validated = $request->validate([
+            'username' => [
+                'required',
+                'string',
+                'min:6',
+                'max:100',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z0-9_-]+$/',
+            ],
+
+            'ignore' => [
+                'nullable',
+                'integer',
+                'exists:users,id',
+            ],
+        ]);
+
+        $username =
+            $validated['username'];
+
+        $ignoreId =
+            $validated['ignore'] ?? null;
+
+        $exists = User::query()
+            ->where('username', $username)
+            ->when(
+                $ignoreId,
+                fn ($query) =>
+                    $query->where(
+                        'id',
+                        '!=',
+                        $ignoreId
+                    )
+            )
+            ->exists();
+
+        $suggestion = null;
+
+        if ($exists) {
+            $base = substr(
+                $username,
+                0,
+                90
+            );
+
+            for (
+                $number = 2;
+                $number <= 999;
+                $number++
+            ) {
+                $candidate =
+                    "{$base}_{$number}";
+
+                $candidateExists =
+                    User::query()
+                        ->where(
+                            'username',
+                            $candidate
+                        )
+                        ->when(
+                            $ignoreId,
+                            fn ($query) =>
+                                $query->whereKeyNot(
+                                    $ignoreId
+                                )
+                        )
+                        ->exists();
+
+                if (! $candidateExists) {
+                    $suggestion =
+                        $candidate;
+
+                    break;
+                }
+            }
+        }
+
+        return response()->json([
+            'username' =>
+                $username,
+
+            'available' =>
+                ! $exists,
+
+            'suggestion' =>
+                $suggestion,
+        ]);
+    }
+
+
+
 }

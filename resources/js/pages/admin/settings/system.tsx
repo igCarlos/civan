@@ -6,17 +6,21 @@ import {
 import {
     CalendarDays,
     Check,
+    CheckCircle2,
     Clock3,
     CreditCard,
     Globe2,
     Languages,
     ImageIcon,
     LayoutDashboard,
+    LoaderCircle,
+    MonitorCog,
     Palette,
     PanelLeft,
     RotateCcw,
     Sparkles,
     Save,
+    Undo2,
     Upload,
     X,
     Settings,
@@ -383,6 +387,123 @@ export default function SystemSettingsPage({
                 : settings.favicon
         );
 
+    const labels =
+        form.data.locale === 'en'
+            ? {
+                  controlCenter: 'Control center',
+                  summary:
+                      'Manage CIVAN identity, branding, visual appearance and regional preferences from one place.',
+                  unsaved: 'Unsaved changes',
+                  saved: 'Settings saved successfully',
+                  allSaved: 'Everything is saved',
+                  pending:
+                      'You have changes that have not been saved yet.',
+                  discard: 'Discard changes',
+                  readonly:
+                      'You have read-only access to these settings.',
+                  preview: 'Live panel preview',
+                  previewHint:
+                      'Changes are reflected here before saving.',
+                  lightLogo: 'Light logo',
+                  darkLogo: 'Dark logo',
+                  favicon: 'Favicon',
+                  appearanceSummary: 'Current appearance',
+                  locale: 'Language',
+                  records: 'Rows',
+                  primary: 'Primary',
+                  dashboard: 'Dashboard',
+                  users: 'Users',
+                  settingsNav: 'Settings',
+                  activeModule: 'Active module',
+                  exampleCard: 'Example card',
+                  exampleText: 'This preview updates while you customize CIVAN.',
+              }
+            : {
+                  controlCenter: 'Centro de control',
+                  summary:
+                      'Administra la identidad, marca, apariencia visual y preferencias regionales de CIVAN desde un solo lugar.',
+                  unsaved: 'Cambios sin guardar',
+                  saved: 'Configuración guardada correctamente',
+                  allSaved: 'Todo está guardado',
+                  pending:
+                      'Tienes cambios que todavía no han sido guardados.',
+                  discard: 'Descartar cambios',
+                  readonly:
+                      'Tienes acceso de solo lectura a esta configuración.',
+                  preview: 'Vista previa en vivo',
+                  previewHint:
+                      'Los cambios se reflejan aquí antes de guardar.',
+                  lightLogo: 'Logo claro',
+                  darkLogo: 'Logo oscuro',
+                  favicon: 'Favicon',
+                  appearanceSummary: 'Apariencia actual',
+                  locale: 'Idioma',
+                  records: 'Registros',
+                  primary: 'Principal',
+                  dashboard: 'Dashboard',
+                  users: 'Usuarios',
+                  settingsNav: 'Sistema',
+                  activeModule: 'Módulo activo',
+                  exampleCard: 'Tarjeta de ejemplo',
+                  exampleText: 'Esta vista se actualiza mientras personalizas CIVAN.',
+              };
+
+    const savedPrimaryColor =
+        normalizeHexColor(
+            settings.primary_color,
+        );
+
+    const savedSidebarColor =
+        normalizeHexColor(
+            settings.sidebar_color,
+            '#FAFAFA',
+        );
+
+    const savedBackgroundColor =
+        normalizeHexColor(
+            settings.background_color,
+            '#FFFFFF',
+        );
+
+    const savedCardColor =
+        normalizeHexColor(
+            settings.card_color,
+            '#FFFFFF',
+        );
+
+    const hasChanges =
+        form.data.panel_name !== settings.panel_name ||
+        form.data.short_name !== settings.short_name ||
+        form.data.logo_light !== null ||
+        form.data.logo_dark !== null ||
+        form.data.favicon !== null ||
+        form.data.remove_logo_light ||
+        form.data.remove_logo_dark ||
+        form.data.remove_favicon ||
+        form.data.logo_size !==
+            Number(
+                settings.logo_size ?? 75,
+            ) ||
+        form.data.primary_color.toUpperCase() !==
+            savedPrimaryColor.toUpperCase() ||
+        form.data.sidebar_color.toUpperCase() !==
+            savedSidebarColor.toUpperCase() ||
+        form.data.sidebar_shape !== settings.sidebar_shape ||
+        form.data.background_color_mode !==
+            settings.background_color_mode ||
+        form.data.background_color.toUpperCase() !==
+            savedBackgroundColor.toUpperCase() ||
+        form.data.card_color_mode !==
+            settings.card_color_mode ||
+        form.data.card_color.toUpperCase() !==
+            savedCardColor.toUpperCase() ||
+        form.data.card_style !== settings.card_style ||
+        form.data.timezone !== settings.timezone ||
+        form.data.locale !== settings.locale ||
+        form.data.date_format !== settings.date_format ||
+        form.data.time_format !== settings.time_format ||
+        form.data.per_page !== settings.per_page;
+
     /*
     |--------------------------------------------------------------------------
     | Vista previa global en tiempo real
@@ -461,11 +582,153 @@ export default function SystemSettingsPage({
         );
     };
 
+    const discardChanges = () => {
+        form.setData(
+            'panel_name',
+            settings.panel_name,
+        );
+
+        form.setData(
+            'short_name',
+            settings.short_name,
+        );
+
+        form.setData(
+            'logo_light',
+            null,
+        );
+
+        form.setData(
+            'logo_dark',
+            null,
+        );
+
+        form.setData(
+            'favicon',
+            null,
+        );
+
+        form.setData(
+            'remove_logo_light',
+            false,
+        );
+
+        form.setData(
+            'remove_logo_dark',
+            false,
+        );
+
+        form.setData(
+            'remove_favicon',
+            false,
+        );
+
+        form.setData(
+            'logo_size',
+            Number(
+                settings.logo_size ?? 75,
+            ),
+        );
+
+        form.setData(
+            'primary_color',
+            savedPrimaryColor,
+        );
+
+        form.setData(
+            'sidebar_color',
+            savedSidebarColor,
+        );
+
+        form.setData(
+            'sidebar_shape',
+            settings.sidebar_shape,
+        );
+
+        form.setData(
+            'background_color_mode',
+            settings.background_color_mode,
+        );
+
+        form.setData(
+            'background_color',
+            savedBackgroundColor,
+        );
+
+        form.setData(
+            'card_color_mode',
+            settings.card_color_mode,
+        );
+
+        form.setData(
+            'card_color',
+            savedCardColor,
+        );
+
+        form.setData(
+            'card_style',
+            settings.card_style,
+        );
+
+        form.setData(
+            'timezone',
+            settings.timezone,
+        );
+
+        form.setData(
+            'locale',
+            settings.locale,
+        );
+
+        form.setData(
+            'date_format',
+            settings.date_format,
+        );
+
+        form.setData(
+            'time_format',
+            settings.time_format,
+        );
+
+        form.setData(
+            'per_page',
+            settings.per_page,
+        );
+
+        form.clearErrors();
+
+        applySystemAppearance({
+            primary_color:
+                savedPrimaryColor,
+            sidebar_color:
+                savedSidebarColor,
+            sidebar_shape:
+                settings.sidebar_shape,
+            background_color_mode:
+                settings.background_color_mode,
+            background_color:
+                savedBackgroundColor,
+            card_color_mode:
+                settings.card_color_mode,
+            card_color:
+                savedCardColor,
+            card_style:
+                settings.card_style,
+        });
+    };
+
     const submit = (
         event:
             FormEvent<HTMLFormElement>,
     ) => {
         event.preventDefault();
+
+        if (
+            !can.update ||
+            !hasChanges
+        ) {
+            return;
+        }
 
         form.post(
             '/dashboard/configuracion/sistema',
@@ -545,30 +808,108 @@ export default function SystemSettingsPage({
             />
 
             <div className="flex w-full min-w-0 flex-1 flex-col gap-6 p-4 md:p-6">
-                <div className="flex min-w-0 items-start gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-card">
-                        <Settings className="size-5" />
-                    </div>
+                <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+                    <div className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-primary/10 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-24 left-1/3 size-48 rounded-full bg-primary/[0.06] blur-3xl" />
 
-                    <div className="min-w-0">
-                        <h1 className="text-2xl font-bold tracking-tight">
-                            {t(
-                                'settings.title',
-                            )}
-                        </h1>
+                    <div className="relative flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex min-w-0 items-start gap-4">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-sm">
+                                <Settings className="size-5" />
+                            </div>
 
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {t(
-                                'settings.description',
-                            )}
-                        </p>
+                            <div className="min-w-0">
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+                                        {labels.controlCenter}
+                                    </span>
+
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                            form.recentlySuccessful
+                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                : hasChanges
+                                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                  : 'bg-muted text-muted-foreground'
+                                        }`}
+                                    >
+                                        {form.recentlySuccessful ? (
+                                            <CheckCircle2 className="size-3" />
+                                        ) : (
+                                            <Check className="size-3" />
+                                        )}
+
+                                        {form.recentlySuccessful
+                                            ? labels.saved
+                                            : hasChanges
+                                              ? labels.unsaved
+                                              : labels.allSaved}
+                                    </span>
+                                </div>
+
+                                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                                    {t(
+                                        'settings.title',
+                                    )}
+                                </h1>
+
+                                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                                    {labels.summary}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid shrink-0 grid-cols-3 gap-2 lg:min-w-[360px]">
+                            <div className="min-w-0 rounded-xl border bg-background/70 p-3 backdrop-blur">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Palette className="size-4" />
+                                    <span className="truncate text-[10px] font-semibold uppercase tracking-[0.08em]">
+                                        {labels.primary}
+                                    </span>
+                                </div>
+                                <p className="mt-2 truncate font-mono text-xs font-semibold">
+                                    {form.data.primary_color}
+                                </p>
+                            </div>
+
+                            <div className="min-w-0 rounded-xl border bg-background/70 p-3 backdrop-blur">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Languages className="size-4" />
+                                    <span className="truncate text-[10px] font-semibold uppercase tracking-[0.08em]">
+                                        {labels.locale}
+                                    </span>
+                                </div>
+                                <p className="mt-2 truncate text-xs font-semibold">
+                                    {form.data.locale.toUpperCase()}
+                                </p>
+                            </div>
+
+                            <div className="min-w-0 rounded-xl border bg-background/70 p-3 backdrop-blur">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <LayoutDashboard className="size-4" />
+                                    <span className="truncate text-[10px] font-semibold uppercase tracking-[0.08em]">
+                                        {labels.records}
+                                    </span>
+                                </div>
+                                <p className="mt-2 truncate text-xs font-semibold">
+                                    {form.data.per_page}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {!can.update && (
+                    <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4 text-sm text-amber-700 dark:text-amber-300">
+                        <MonitorCog className="mt-0.5 size-4 shrink-0" />
+                        {labels.readonly}
+                    </div>
+                )}
 
                 {Object.keys(
                     form.errors,
                 ).length > 0 && (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+                    <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 shadow-sm">
                         <p className="font-medium text-destructive">
                             {t(
                                 'settings.save_error_title',
@@ -612,16 +953,26 @@ export default function SystemSettingsPage({
                         IDENTIDAD
                     ======================================================= */}
 
-                    <section className="min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm">
-                        <div className="border-b p-5">
-                            <div className="flex items-center gap-2">
-                                <LayoutDashboard className="size-4" />
+                    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+                        <div className="border-b border-border/70 bg-muted/15 p-5 sm:p-6">
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border bg-background text-primary shadow-sm">
+                                    <LayoutDashboard className="size-4" />
+                                </div>
 
-                                <h2 className="font-semibold">
-                                    {t(
-                                        'settings.identity',
-                                    )}
-                                </h2>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] font-bold text-primary">
+                                            01
+                                        </span>
+
+                                        <h2 className="font-semibold">
+                                            {t(
+                                                'settings.identity',
+                                            )}
+                                        </h2>
+                                    </div>
+                                </div>
                             </div>
 
                             <p className="mt-1 text-sm text-muted-foreground">
@@ -631,7 +982,7 @@ export default function SystemSettingsPage({
                             </p>
                         </div>
 
-                        <div className="grid gap-5 p-5 min-[720px]:grid-cols-2">
+                        <div className="grid gap-5 p-5 sm:p-6 min-[720px]:grid-cols-2">
                             <div className="min-w-0 space-y-2">
                                 <label
                                     htmlFor="panel_name"
@@ -661,7 +1012,7 @@ export default function SystemSettingsPage({
                                             !can.update ||
                                             form.processing
                                         }
-                                        className="h-10 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                                        className="h-11 w-full rounded-xl border bg-background pl-10 pr-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                     />
                                 </div>
 
@@ -698,7 +1049,7 @@ export default function SystemSettingsPage({
                                         !can.update ||
                                         form.processing
                                     }
-                                    className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                 />
 
                                 {form.errors.short_name && (
@@ -711,7 +1062,7 @@ export default function SystemSettingsPage({
 
                         {/* Branding */}
 
-                        <div className="border-t p-5">
+                        <div className="border-t border-border/70 p-5 sm:p-6">
                             <div className="mb-4">
                                 <div className="flex items-center gap-2">
                                     <ImageIcon className="size-4" />
@@ -733,7 +1084,7 @@ export default function SystemSettingsPage({
                             <div className="grid min-w-0 gap-4 min-[720px]:grid-cols-2 min-[1200px]:grid-cols-3">
                                 {/* Logo claro */}
 
-                                <div className="min-w-0 rounded-xl border p-4">
+                                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-4 transition hover:border-primary/20">
                                     <div>
                                         <p className="text-sm font-medium">
                                             {t(
@@ -748,7 +1099,7 @@ export default function SystemSettingsPage({
                                         </p>
                                     </div>
 
-                                    <div className="mt-3 h-28 overflow-hidden rounded-lg border bg-white">
+                                    <div className="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl border bg-white p-3">
                                         {logoLightPreview ? (
                                             <img
                                                 src={
@@ -757,7 +1108,7 @@ export default function SystemSettingsPage({
                                                 alt={t(
                                                     'settings.logo_light',
                                                 )}
-                                                className="h-full object-cover object-center"
+                                                className="max-h-full object-contain object-center"
                                                 style={{
                                                     width:
                                                         `${form.data.logo_size}%`,
@@ -773,7 +1124,7 @@ export default function SystemSettingsPage({
                                     </div>
 
                                     <div className="mt-3 space-y-2">
-                                        <label className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium hover:bg-muted">
+                                        <label className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition hover:border-primary/30 hover:bg-primary/[0.04]">
                                             <Upload className="size-3.5" />
 
                                             {t(
@@ -831,7 +1182,7 @@ export default function SystemSettingsPage({
                                                     !can.update ||
                                                     form.processing
                                                 }
-                                                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold text-destructive transition hover:border-destructive/30 hover:bg-destructive/10"
                                             >
                                                 <X className="size-3.5" />
 
@@ -853,7 +1204,7 @@ export default function SystemSettingsPage({
 
                                 {/* Logo oscuro */}
 
-                                <div className="min-w-0 rounded-xl border p-4">
+                                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-4 transition hover:border-primary/20">
                                     <div>
                                         <p className="text-sm font-medium">
                                             {t(
@@ -868,7 +1219,7 @@ export default function SystemSettingsPage({
                                         </p>
                                     </div>
 
-                                    <div className="mt-3 h-28 overflow-hidden rounded-lg border bg-zinc-950">
+                                    <div className="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl border bg-zinc-950 p-3">
                                         {logoDarkPreview ? (
                                             <img
                                                 src={
@@ -877,7 +1228,7 @@ export default function SystemSettingsPage({
                                                 alt={t(
                                                     'settings.logo_dark',
                                                 )}
-                                                className="h-full object-cover object-center"
+                                                className="max-h-full object-contain object-center"
                                                 style={{
                                                     width:
                                                         `${form.data.logo_size}%`,
@@ -893,7 +1244,7 @@ export default function SystemSettingsPage({
                                     </div>
 
                                     <div className="mt-3 space-y-2">
-                                        <label className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium hover:bg-muted">
+                                        <label className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition hover:border-primary/30 hover:bg-primary/[0.04]">
                                             <Upload className="size-3.5" />
 
                                             {t(
@@ -951,7 +1302,7 @@ export default function SystemSettingsPage({
                                                     !can.update ||
                                                     form.processing
                                                 }
-                                                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold text-destructive transition hover:border-destructive/30 hover:bg-destructive/10"
                                             >
                                                 <X className="size-3.5" />
 
@@ -973,7 +1324,7 @@ export default function SystemSettingsPage({
 
                                 {/* Favicon */}
 
-                                <div className="min-w-0 rounded-xl border p-4">
+                                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/30 p-4 transition hover:border-primary/20">
                                     <div>
                                         <p className="text-sm font-medium">
                                             {t(
@@ -988,7 +1339,7 @@ export default function SystemSettingsPage({
                                         </p>
                                     </div>
 
-                                    <div className="mt-3 flex h-24 items-center justify-center overflow-hidden rounded-lg border bg-background p-4">
+                                    <div className="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl border bg-background p-4">
                                         {faviconPreview ? (
                                             <img
                                                 src={
@@ -1009,7 +1360,7 @@ export default function SystemSettingsPage({
                                     </div>
 
                                     <div className="mt-3 space-y-2">
-                                        <label className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium hover:bg-muted">
+                                        <label className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition hover:border-primary/30 hover:bg-primary/[0.04]">
                                             <Upload className="size-3.5" />
 
                                             {t(
@@ -1067,7 +1418,7 @@ export default function SystemSettingsPage({
                                                     !can.update ||
                                                     form.processing
                                                 }
-                                                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold text-destructive transition hover:border-destructive/30 hover:bg-destructive/10"
                                             >
                                                 <X className="size-3.5" />
 
@@ -1088,7 +1439,7 @@ export default function SystemSettingsPage({
                                 </div>
                             </div>
 
-                            <div className="mt-5 rounded-xl border p-4">
+                            <div className="mt-5 rounded-2xl border border-border/70 bg-muted/15 p-4 sm:p-5">
                                 <div className="flex flex-col gap-3 min-[640px]:flex-row min-[640px]:items-center min-[640px]:justify-between">
                                     <div>
                                         <p className="text-sm font-medium">
@@ -1104,7 +1455,7 @@ export default function SystemSettingsPage({
                                         </p>
                                     </div>
 
-                                    <span className="shrink-0 rounded-md border bg-background px-2.5 py-1 font-mono text-xs">
+                                    <span className="shrink-0 rounded-xl border bg-background px-3 py-1.5 font-mono text-xs font-semibold">
                                         {
                                             form.data.logo_size
                                         }%
@@ -1169,16 +1520,26 @@ export default function SystemSettingsPage({
                         APARIENCIA
                     ======================================================= */}
 
-                    <section className="min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm">
-                        <div className="border-b p-5">
-                            <div className="flex items-center gap-2">
-                                <Palette className="size-4" />
+                    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+                        <div className="border-b border-border/70 bg-muted/15 p-5 sm:p-6">
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border bg-background text-primary shadow-sm">
+                                    <Palette className="size-4" />
+                                </div>
 
-                                <h2 className="font-semibold">
-                                    {t(
-                                        'settings.appearance',
-                                    )}
-                                </h2>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] font-bold text-primary">
+                                            02
+                                        </span>
+
+                                        <h2 className="font-semibold">
+                                            {t(
+                                                'settings.appearance',
+                                            )}
+                                        </h2>
+                                    </div>
+                                </div>
                             </div>
 
                             <p className="mt-1 text-sm text-muted-foreground">
@@ -1188,7 +1549,7 @@ export default function SystemSettingsPage({
                             </p>
                         </div>
 
-                        <div className="grid min-w-0 gap-6 p-5 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(280px,380px)]">
+                        <div className="grid min-w-0 gap-7 p-5 sm:p-6 min-[1050px]:grid-cols-[minmax(0,1fr)_minmax(340px,430px)]">
                             <div className="min-w-0 space-y-6">
                                 <div className="space-y-2">
                                     <label
@@ -1209,7 +1570,7 @@ export default function SystemSettingsPage({
                                     <div className="flex min-w-0 flex-col gap-2 min-[480px]:flex-row">
                                         <label
                                             htmlFor="primary_color_picker"
-                                            className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-md border bg-background px-3 min-[480px]:w-auto"
+                                            className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl border bg-background px-3 transition hover:border-primary/30 min-[480px]:w-auto"
                                         >
                                             <input
                                                 id="primary_color_picker"
@@ -1297,7 +1658,7 @@ export default function SystemSettingsPage({
                                             }
                                             maxLength={7}
                                             placeholder="#18181B"
-                                            className="h-10 w-full min-w-0 rounded-md border bg-background px-3 font-mono text-sm uppercase outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
+                                            className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 font-mono text-sm uppercase outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
                                         />
                                     </div>
 
@@ -1338,7 +1699,7 @@ export default function SystemSettingsPage({
                                                             !can.update ||
                                                             form.processing
                                                         }
-                                                        className={`flex min-w-0 items-center gap-2 rounded-lg border p-2.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                        className={`flex min-w-0 items-center gap-2 rounded-xl border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                             selected
                                                                 ? 'border-primary ring-2 ring-primary/20'
                                                                 : ''
@@ -1432,7 +1793,7 @@ export default function SystemSettingsPage({
                                                 !can.update ||
                                                 form.processing
                                             }
-                                            className={`rounded-lg border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                            className={`rounded-xl border p-3.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                 form.data.card_color_mode ===
                                                 'auto'
                                                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -1464,7 +1825,7 @@ export default function SystemSettingsPage({
                                                 !can.update ||
                                                 form.processing
                                             }
-                                            className={`rounded-lg border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                            className={`rounded-xl border p-3.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                 form.data.card_color_mode ===
                                                 'custom'
                                                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -1491,7 +1852,7 @@ export default function SystemSettingsPage({
                                             <div className="flex min-w-0 flex-col gap-2 min-[480px]:flex-row">
                                                 <label
                                                     htmlFor="card_color_picker"
-                                                    className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-md border bg-background px-3 min-[480px]:w-auto"
+                                                    className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl border bg-background px-3 transition hover:border-primary/30 min-[480px]:w-auto"
                                                 >
                                                     <input
                                                         id="card_color_picker"
@@ -1546,7 +1907,7 @@ export default function SystemSettingsPage({
                                                     }
                                                     maxLength={7}
                                                     placeholder="#FFFFFF"
-                                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 font-mono text-sm uppercase outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
+                                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 font-mono text-sm uppercase outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
                                                 />
                                             </div>
 
@@ -1579,7 +1940,7 @@ export default function SystemSettingsPage({
                                                                     !can.update ||
                                                                     form.processing
                                                                 }
-                                                                className={`flex min-w-0 items-center gap-2 rounded-lg border p-2.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                                className={`flex min-w-0 items-center gap-2 rounded-xl border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                                     selected
                                                                         ? 'border-primary ring-2 ring-primary/20'
                                                                         : ''
@@ -1644,7 +2005,7 @@ export default function SystemSettingsPage({
                                                     !can.update ||
                                                     form.processing
                                                 }
-                                                className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-xs font-medium transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                className={`flex items-center justify-center gap-2 rounded-xl border p-3.5 text-xs font-medium transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                     form.data.card_style ===
                                                     'solid'
                                                         ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -1670,7 +2031,7 @@ export default function SystemSettingsPage({
                                                     !can.update ||
                                                     form.processing
                                                 }
-                                                className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-xs font-medium transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                className={`flex items-center justify-center gap-2 rounded-xl border p-3.5 text-xs font-medium transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                     form.data.card_style ===
                                                     'glass'
                                                         ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -1687,7 +2048,7 @@ export default function SystemSettingsPage({
 
                                         {form.data.card_style ===
                                             'glass' && (
-                                            <div className="rounded-lg border border-dashed bg-primary/5 p-3">
+                                            <div className="rounded-xl border border-dashed border-primary/25 bg-primary/[0.05] p-3.5">
                                                 <div className="flex items-start gap-2">
                                                     <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
 
@@ -1727,7 +2088,7 @@ export default function SystemSettingsPage({
                                     <div className="flex min-w-0 flex-col gap-2 min-[480px]:flex-row">
                                         <label
                                             htmlFor="sidebar_color_picker"
-                                            className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-md border bg-background px-3 min-[480px]:w-auto"
+                                            className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl border bg-background px-3 transition hover:border-primary/30 min-[480px]:w-auto"
                                         >
                                             <input
                                                 id="sidebar_color_picker"
@@ -1791,7 +2152,7 @@ export default function SystemSettingsPage({
                                             }
                                             maxLength={7}
                                             placeholder="#FAFAFA"
-                                            className="h-10 w-full min-w-0 rounded-md border bg-background px-3 font-mono text-sm uppercase outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
+                                            className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 font-mono text-sm uppercase outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
                                         />
                                     </div>
 
@@ -1833,7 +2194,7 @@ export default function SystemSettingsPage({
                                                             !can.update ||
                                                             form.processing
                                                         }
-                                                        className={`flex min-w-0 items-center gap-2 rounded-lg border p-2.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                        className={`flex min-w-0 items-center gap-2 rounded-xl border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                             selected
                                                                 ? 'border-primary ring-2 ring-primary/20'
                                                                 : ''
@@ -1897,7 +2258,7 @@ export default function SystemSettingsPage({
                                                 !can.update ||
                                                 form.processing
                                             }
-                                            className={`flex items-center gap-3 rounded-lg border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                            className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                 form.data.sidebar_shape ===
                                                 'normal'
                                                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -1925,7 +2286,7 @@ export default function SystemSettingsPage({
                                                 !can.update ||
                                                 form.processing
                                             }
-                                            className={`flex items-center gap-3 rounded-lg border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                            className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                 form.data.sidebar_shape ===
                                                 'rounded'
                                                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -1983,7 +2344,7 @@ export default function SystemSettingsPage({
                                                 !can.update ||
                                                 form.processing
                                             }
-                                            className={`rounded-lg border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                            className={`rounded-xl border p-3.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                 form.data.background_color_mode ===
                                                 'auto'
                                                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -2015,7 +2376,7 @@ export default function SystemSettingsPage({
                                                 !can.update ||
                                                 form.processing
                                             }
-                                            className={`rounded-lg border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                            className={`rounded-xl border p-3.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                 form.data.background_color_mode ===
                                                 'custom'
                                                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
@@ -2042,7 +2403,7 @@ export default function SystemSettingsPage({
                                             <div className="flex min-w-0 flex-col gap-2 min-[480px]:flex-row">
                                                 <label
                                                     htmlFor="background_color_picker"
-                                                    className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-md border bg-background px-3 min-[480px]:w-auto"
+                                                    className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-xl border bg-background px-3 transition hover:border-primary/30 min-[480px]:w-auto"
                                                 >
                                                     <input
                                                         id="background_color_picker"
@@ -2097,7 +2458,7 @@ export default function SystemSettingsPage({
                                                     }
                                                     maxLength={7}
                                                     placeholder="#FFFFFF"
-                                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 font-mono text-sm uppercase outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
+                                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 font-mono text-sm uppercase outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:max-w-44"
                                                 />
                                             </div>
 
@@ -2125,7 +2486,7 @@ export default function SystemSettingsPage({
                                                                     !can.update ||
                                                                     form.processing
                                                                 }
-                                                                className={`flex min-w-0 items-center gap-2 rounded-lg border p-2.5 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                                className={`flex min-w-0 items-center gap-2 rounded-xl border p-3 text-left transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 ${
                                                                     selected
                                                                         ? 'border-primary ring-2 ring-primary/20'
                                                                         : ''
@@ -2172,87 +2533,36 @@ export default function SystemSettingsPage({
                             {/* Vista previa */}
 
                             <div className="min-w-0">
-                                <p className="mb-3 text-sm font-medium">
-                                    {t(
-                                        'settings.preview',
-                                    )}
-                                </p>
-
-                                <div className="overflow-hidden rounded-xl border bg-background">
-                                    <div className="border-b px-4 py-3">
-                                        <p className="font-semibold">
-                                            {t(
-                                                'settings.preview_title',
-                                            )}
+                                <div className="mb-3 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            {labels.preview}
                                         </p>
 
-                                        <p className="text-xs text-muted-foreground">
-                                            {t(
-                                                'settings.preview_description',
-                                            )}
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                            {labels.previewHint}
                                         </p>
                                     </div>
 
-                                    <div className="space-y-4 p-4">
-                                        <button
-                                            type="button"
-                                            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-                                        >
-                                            {t(
-                                                'settings.preview_button',
-                                            )}
-                                        </button>
-
-                                        <div className="space-y-2">
-                                            <div className="h-10 rounded-md border px-3 py-2 text-sm ring-2 ring-ring/30">
-                                                {t(
-                                                    'settings.preview_input',
-                                                )}
-                                            </div>
-
-                                            <div className="flex items-center gap-2 rounded-md bg-sidebar-accent px-3 py-2 text-sm font-medium text-sidebar-accent-foreground">
-                                                <Palette className="size-4" />
-
-                                                {t(
-                                                    'settings.preview_active',
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-xl border bg-card p-4 shadow-sm">
-                                            <div className="flex items-center gap-2">
-                                                <CreditCard className="size-4 text-primary" />
-
-                                                <p className="text-sm font-semibold">
-                                                    {t(
-                                                        'settings.preview_card',
-                                                    )}
-                                                </p>
-                                            </div>
-
-                                            <p className="mt-2 text-xs text-muted-foreground">
-                                                {form.data.card_style ===
-                                                'glass'
-                                                    ? t(
-                                                          'settings.preview_card_glass',
-                                                      )
-                                                    : t(
-                                                          'settings.preview_card_solid',
-                                                      )}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <span className="size-3 rounded-full bg-primary" />
-
-                                            <span className="text-xs text-muted-foreground">
-                                                {
-                                                    form.data.primary_color
-                                                }
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <Sparkles className="size-4 text-primary" />
                                 </div>
+
+                                <PanelPreview
+                                    panelName={form.data.panel_name}
+                                    shortName={form.data.short_name}
+                                    primaryColor={form.data.primary_color}
+                                    sidebarColor={form.data.sidebar_color}
+                                    sidebarShape={form.data.sidebar_shape}
+                                    backgroundColorMode={form.data.background_color_mode}
+                                    backgroundColor={form.data.background_color}
+                                    cardColorMode={form.data.card_color_mode}
+                                    cardColor={form.data.card_color}
+                                    cardStyle={form.data.card_style}
+                                    logoLight={logoLightPreview}
+                                    logoDark={logoDarkPreview}
+                                    logoSize={form.data.logo_size}
+                                    labels={labels}
+                                />
                             </div>
                         </div>
                     </section>
@@ -2261,16 +2571,26 @@ export default function SystemSettingsPage({
                         REGIONAL
                     ======================================================= */}
 
-                    <section className="min-w-0 overflow-hidden rounded-xl border bg-card shadow-sm">
-                        <div className="border-b p-5">
-                            <div className="flex items-center gap-2">
-                                <Globe2 className="size-4" />
+                    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+                        <div className="border-b border-border/70 bg-muted/15 p-5 sm:p-6">
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border bg-background text-primary shadow-sm">
+                                    <Globe2 className="size-4" />
+                                </div>
 
-                                <h2 className="font-semibold">
-                                    {t(
-                                        'settings.regional',
-                                    )}
-                                </h2>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] font-bold text-primary">
+                                            03
+                                        </span>
+
+                                        <h2 className="font-semibold">
+                                            {t(
+                                                'settings.regional',
+                                            )}
+                                        </h2>
+                                    </div>
+                                </div>
                             </div>
 
                             <p className="mt-1 text-sm text-muted-foreground">
@@ -2280,7 +2600,7 @@ export default function SystemSettingsPage({
                             </p>
                         </div>
 
-                        <div className="grid min-w-0 gap-5 p-5 min-[720px]:grid-cols-2 min-[1200px]:grid-cols-3">
+                        <div className="grid min-w-0 gap-5 p-5 sm:p-6 min-[720px]:grid-cols-2 min-[1200px]:grid-cols-3">
                             <div className="min-w-0 space-y-2">
                                 <label
                                     htmlFor="timezone"
@@ -2308,7 +2628,7 @@ export default function SystemSettingsPage({
                                         !can.update ||
                                         form.processing
                                     }
-                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {options.timezones.map(
                                         (timezone) => (
@@ -2356,7 +2676,7 @@ export default function SystemSettingsPage({
                                         !can.update ||
                                         form.processing
                                     }
-                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     <option value="es">
                                         {t(
@@ -2405,7 +2725,7 @@ export default function SystemSettingsPage({
                                         !can.update ||
                                         form.processing
                                     }
-                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {options
                                         .per_page_options
@@ -2449,7 +2769,7 @@ export default function SystemSettingsPage({
                                         !can.update ||
                                         form.processing
                                     }
-                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {options
                                         .date_formats
@@ -2493,7 +2813,7 @@ export default function SystemSettingsPage({
                                         !can.update ||
                                         form.processing
                                     }
-                                    className="h-10 w-full min-w-0 rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="h-11 w-full min-w-0 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {options
                                         .time_formats
@@ -2513,24 +2833,84 @@ export default function SystemSettingsPage({
                     </section>
 
                     {can.update && (
-                        <div className="flex justify-end">
-                            <button
-                                type="submit"
-                                disabled={
-                                    form.processing
-                                }
-                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60 min-[480px]:w-auto"
-                            >
-                                <Save className="size-4" />
+                        <div className="sticky bottom-4 z-30">
+                            <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/95 p-3 shadow-xl backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex min-w-0 items-center gap-3 px-1">
+                                    <div
+                                        className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
+                                            form.recentlySuccessful
+                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                : hasChanges
+                                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                  : 'bg-muted text-muted-foreground'
+                                        }`}
+                                    >
+                                        {form.recentlySuccessful ? (
+                                            <CheckCircle2 className="size-4" />
+                                        ) : hasChanges ? (
+                                            <Sparkles className="size-4" />
+                                        ) : (
+                                            <Check className="size-4" />
+                                        )}
+                                    </div>
 
-                                {form.processing
-                                    ? t(
-                                          'settings.saving',
-                                      )
-                                    : t(
-                                          'settings.save',
-                                      )}
-                            </button>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold">
+                                            {form.recentlySuccessful
+                                                ? labels.saved
+                                                : hasChanges
+                                                  ? labels.unsaved
+                                                  : labels.allSaved}
+                                        </p>
+
+                                        {hasChanges && (
+                                            <p className="truncate text-xs text-muted-foreground">
+                                                {labels.pending}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-2 sm:flex-row">
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            discardChanges
+                                        }
+                                        disabled={
+                                            form.processing ||
+                                            !hasChanges
+                                        }
+                                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <Undo2 className="size-4" />
+                                        {labels.discard}
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            form.processing ||
+                                            !hasChanges
+                                        }
+                                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {form.processing ? (
+                                            <LoaderCircle className="size-4 animate-spin" />
+                                        ) : (
+                                            <Save className="size-4" />
+                                        )}
+
+                                        {form.processing
+                                            ? t(
+                                                  'settings.saving',
+                                              )
+                                            : t(
+                                                  'settings.save',
+                                              )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </form>
@@ -2538,3 +2918,417 @@ export default function SystemSettingsPage({
         </AppLayout>
     );
 }
+
+/* ==========================================================================
+   VISTA PREVIA DEL PANEL
+   ========================================================================== */
+
+function PanelPreview({
+    panelName,
+    shortName,
+    primaryColor,
+    sidebarColor,
+    sidebarShape,
+    backgroundColorMode,
+    backgroundColor,
+    cardColorMode,
+    cardColor,
+    cardStyle,
+    logoLight,
+    logoDark,
+    logoSize,
+    labels,
+}: {
+    panelName: string;
+    shortName: string;
+    primaryColor: string;
+    sidebarColor: string;
+    sidebarShape: 'normal' | 'rounded';
+    backgroundColorMode: 'auto' | 'custom';
+    backgroundColor: string;
+    cardColorMode: 'auto' | 'custom';
+    cardColor: string;
+    cardStyle: 'solid' | 'glass';
+    logoLight: string | null;
+    logoDark: string | null;
+    logoSize: number;
+    labels: {
+        preview: string;
+        previewHint: string;
+        dashboard: string;
+        users: string;
+        settingsNav: string;
+        activeModule: string;
+        exampleCard: string;
+        exampleText: string;
+    };
+}) {
+    const safePrimary = isValidHex(primaryColor)
+        ? primaryColor
+        : '#7C3AED';
+
+    const safeSidebar = isValidHex(sidebarColor)
+        ? sidebarColor
+        : '#111827';
+
+    const sidebarIsDark = isDarkColor(safeSidebar);
+
+    const previewLogo = sidebarIsDark
+        ? logoDark ?? logoLight
+        : logoLight ?? logoDark;
+
+    const previewBackground =
+        backgroundColorMode === 'custom' &&
+        isValidHex(backgroundColor)
+            ? backgroundColor
+            : undefined;
+
+    const customCardColor =
+        cardColorMode === 'custom' &&
+        isValidHex(cardColor)
+            ? cardColor
+            : undefined;
+
+    const previewCardBackground = customCardColor
+        ? cardStyle === 'glass'
+            ? hexToRgba(customCardColor, 0.72)
+            : customCardColor
+        : undefined;
+
+    const cardTextDark = customCardColor
+        ? !isDarkColor(customCardColor)
+        : false;
+
+    return (
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-sm">
+            {/* Barra superior */}
+            <div className="flex items-center justify-between border-b border-border/70 bg-card/70 px-4 py-3 backdrop-blur">
+                <div className="flex min-w-0 items-center gap-3">
+                    <div
+                        className="flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-black text-white shadow-sm"
+                        style={{
+                            backgroundColor: safePrimary,
+                        }}
+                    >
+                        {shortName
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase() || 'C'}
+                    </div>
+
+                    <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold">
+                            {panelName || 'CIVAN Panel'}
+                        </p>
+
+                        <p className="truncate text-[10px] text-muted-foreground">
+                            {labels.preview}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <span className="hidden font-mono text-[9px] text-muted-foreground sm:inline">
+                        {safePrimary.toUpperCase()}
+                    </span>
+
+                    <span
+                        className="size-2 rounded-full shadow-sm"
+                        style={{
+                            backgroundColor: safePrimary,
+                        }}
+                    />
+                </div>
+            </div>
+
+            {/* Mini aplicación */}
+            <div
+                className="grid min-h-[330px] grid-cols-[108px_minmax(0,1fr)] p-2"
+                style={
+                    previewBackground
+                        ? {
+                              backgroundColor: previewBackground,
+                          }
+                        : undefined
+                }
+            >
+                <aside
+                    className={[
+                        'flex min-w-0 flex-col border border-black/5 p-2 shadow-sm transition-all',
+                        sidebarShape === 'rounded'
+                            ? 'rounded-xl'
+                            : 'rounded-sm',
+                    ].join(' ')}
+                    style={{
+                        backgroundColor: safeSidebar,
+                        color: sidebarIsDark
+                            ? '#F8FAFC'
+                            : '#18181B',
+                    }}
+                >
+                    {/* Logo */}
+                    <div className="mb-4 flex h-11 items-center justify-center overflow-hidden px-1">
+                        {previewLogo ? (
+                            <img
+                                src={previewLogo}
+                                alt={panelName || 'CIVAN'}
+                                className="max-h-full object-contain object-center"
+                                style={{
+                                    width: `${Math.min(
+                                        100,
+                                        Math.max(50, logoSize),
+                                    )}%`,
+                                }}
+                            />
+                        ) : (
+                            <div
+                                className="flex size-8 items-center justify-center rounded-lg text-xs font-black text-white"
+                                style={{
+                                    backgroundColor: safePrimary,
+                                }}
+                            >
+                                {shortName
+                                    .trim()
+                                    .charAt(0)
+                                    .toUpperCase() || 'C'}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <div
+                            className="rounded-lg px-2 py-2 text-[9px] font-semibold"
+                            style={{
+                                backgroundColor: hexToRgba(
+                                    safePrimary,
+                                    sidebarIsDark ? 0.28 : 0.14,
+                                ),
+                                color: sidebarIsDark
+                                    ? '#FFFFFF'
+                                    : safePrimary,
+                            }}
+                        >
+                            {labels.dashboard}
+                        </div>
+
+                        <div
+                            className="rounded-lg px-2 py-2 text-[9px] opacity-70"
+                        >
+                            {labels.users}
+                        </div>
+
+                        <div
+                            className="rounded-lg px-2 py-2 text-[9px] opacity-70"
+                        >
+                            {labels.settingsNav}
+                        </div>
+                    </div>
+
+                    <div className="mt-auto pt-4">
+                        <div className="h-1.5 w-10 rounded-full bg-current opacity-10" />
+                        <div className="mt-2 h-1.5 w-14 rounded-full bg-current opacity-10" />
+                    </div>
+                </aside>
+
+                <main className="min-w-0 p-3 sm:p-4">
+                    {/* Encabezado del contenido */}
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <div
+                                className="h-2.5 w-24 rounded-full"
+                                style={{
+                                    backgroundColor: hexToRgba(
+                                        safePrimary,
+                                        0.2,
+                                    ),
+                                }}
+                            />
+
+                            <div className="mt-2 h-2 w-32 max-w-full rounded-full bg-foreground/10" />
+                        </div>
+
+                        <button
+                            type="button"
+                            className="h-7 shrink-0 rounded-lg px-3 text-[9px] font-semibold text-white shadow-sm"
+                            style={{
+                                backgroundColor: safePrimary,
+                            }}
+                        >
+                            {shortName || 'CIVAN'}
+                        </button>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        <PreviewCard
+                            title={labels.exampleCard}
+                            primaryColor={safePrimary}
+                            backgroundColor={previewCardBackground}
+                            glass={cardStyle === 'glass'}
+                            darkText={cardTextDark}
+                        />
+
+                        <PreviewCard
+                            title={labels.activeModule}
+                            primaryColor={safePrimary}
+                            backgroundColor={previewCardBackground}
+                            glass={cardStyle === 'glass'}
+                            darkText={cardTextDark}
+                            action
+                        />
+                    </div>
+
+                    <div
+                        className={[
+                            'mt-3 rounded-xl border p-3 shadow-sm',
+                            cardStyle === 'glass'
+                                ? 'backdrop-blur-xl'
+                                : '',
+                            !previewCardBackground
+                                ? cardStyle === 'glass'
+                                    ? 'bg-card/70'
+                                    : 'bg-card'
+                                : '',
+                        ].join(' ')}
+                        style={
+                            previewCardBackground
+                                ? {
+                                      backgroundColor:
+                                          previewCardBackground,
+                                  }
+                                : undefined
+                        }
+                    >
+                        <div className="flex items-center gap-2">
+                            <span
+                                className="size-2 rounded-full"
+                                style={{
+                                    backgroundColor: safePrimary,
+                                }}
+                            />
+
+                            <div className="h-2 w-20 rounded-full bg-foreground/10" />
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-3 gap-2">
+                            <div className="h-8 rounded-lg border bg-background/50" />
+                            <div className="h-8 rounded-lg border bg-background/50" />
+                            <div className="h-8 rounded-lg border bg-background/50" />
+                        </div>
+                    </div>
+
+                    <p className="mt-3 text-[9px] leading-4 text-muted-foreground">
+                        {labels.exampleText}
+                    </p>
+                </main>
+            </div>
+        </div>
+    );
+}
+
+function PreviewCard({
+    title,
+    primaryColor,
+    backgroundColor,
+    glass,
+    darkText,
+    action = false,
+}: {
+    title: string;
+    primaryColor: string;
+    backgroundColor?: string;
+    glass: boolean;
+    darkText: boolean;
+    action?: boolean;
+}) {
+    return (
+        <div
+            className={[
+                'rounded-xl border p-3 shadow-sm',
+                glass ? 'backdrop-blur-xl' : '',
+                !backgroundColor
+                    ? glass
+                        ? 'bg-card/70'
+                        : 'bg-card'
+                    : '',
+            ].join(' ')}
+            style={
+                backgroundColor
+                    ? {
+                          backgroundColor,
+                          color: darkText
+                              ? '#18181B'
+                              : '#F8FAFC',
+                      }
+                    : undefined
+            }
+        >
+            <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-[9px] font-semibold">
+                    {title}
+                </span>
+
+                <span
+                    className="size-2 shrink-0 rounded-full"
+                    style={{
+                        backgroundColor: primaryColor,
+                    }}
+                />
+            </div>
+
+            {action ? (
+                <button
+                    type="button"
+                    className="mt-3 flex h-7 w-full items-center justify-center rounded-lg text-[9px] font-semibold text-white"
+                    style={{
+                        backgroundColor: primaryColor,
+                    }}
+                >
+                    CIVAN
+                </button>
+            ) : (
+                <>
+                    <div className="mt-3 h-2 w-14 rounded-full bg-current opacity-10" />
+                    <div className="mt-2 h-2 w-20 rounded-full bg-current opacity-10" />
+                </>
+            )}
+        </div>
+    );
+}
+
+function isValidHex(value: string): boolean {
+    return /^#[0-9A-Fa-f]{6}$/.test(value);
+}
+
+function isDarkColor(value: string): boolean {
+    if (!isValidHex(value)) {
+        return false;
+    }
+
+    const red = parseInt(value.slice(1, 3), 16);
+    const green = parseInt(value.slice(3, 5), 16);
+    const blue = parseInt(value.slice(5, 7), 16);
+
+    const luminance =
+        (0.299 * red +
+            0.587 * green +
+            0.114 * blue) /
+        255;
+
+    return luminance < 0.55;
+}
+
+function hexToRgba(
+    value: string,
+    alpha: number,
+): string {
+    if (!isValidHex(value)) {
+        return `rgba(124, 58, 237, ${alpha})`;
+    }
+
+    const red = parseInt(value.slice(1, 3), 16);
+    const green = parseInt(value.slice(3, 5), 16);
+    const blue = parseInt(value.slice(5, 7), 16);
+
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
