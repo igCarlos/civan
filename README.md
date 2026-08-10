@@ -29,39 +29,40 @@ CIVAN está orientado a la administración desde una interfaz web moderna. La ve
 
 1. [Características actuales](#características-actuales)
 2. [Stack tecnológico](#stack-tecnológico)
-3. [Instalación local recomendada](#instalación-local-recomendada)
-4. [Requisitos antes de instalar](#requisitos-antes-de-instalar)
-5. [Paso 1 - Instalar y preparar XAMPP](#paso-1---instalar-y-preparar-xampp)
-6. [Paso 2 - Instalar Composer](#paso-2---instalar-composer)
-7. [Paso 3 - Instalar Node.js y npm](#paso-3---instalar-nodejs-y-npm)
-8. [Paso 4 - Instalar Git](#paso-4---instalar-git)
-9. [Paso 5 - Descargar CIVAN](#paso-5---descargar-civan)
-10. [Paso 6 - Instalar dependencias de PHP](#paso-6---instalar-dependencias-de-php)
-11. [Paso 7 - Instalar dependencias frontend](#paso-7---instalar-dependencias-frontend)
-12. [Paso 8 - Crear el archivo .env](#paso-8---crear-el-archivo-env)
-13. [Paso 9 - Crear la base de datos en XAMPP](#paso-9---crear-la-base-de-datos-en-xampp)
-14. [Paso 10 - Configurar la base de datos](#paso-10---configurar-la-base-de-datos)
-15. [Paso 11 - Generar APP_KEY](#paso-11---generar-app_key)
-16. [Paso 12 - Ejecutar migraciones](#paso-12---ejecutar-migraciones)
-17. [Paso 13 - Crear el storage link](#paso-13---crear-el-storage-link)
-18. [Paso 14 - Sincronizar permisos](#paso-14---sincronizar-permisos)
-19. [Paso 15 - Crear el primer administrador](#paso-15---crear-el-primer-administrador)
-20. [Paso 16 - Limpiar cachés](#paso-16---limpiar-cachés)
-21. [Paso 17 - Ejecutar CIVAN](#paso-17---ejecutar-civan)
-22. [Paso 18 - Comprobar la instalación](#paso-18---comprobar-la-instalación)
-23. [Autenticación y seguridad](#autenticación-y-seguridad)
-24. [Autenticación en dos pasos - 2FA](#autenticación-en-dos-pasos---2fa)
-25. [Sesiones y dispositivos](#sesiones-y-dispositivos)
-26. [Rate Limit con Fortify](#rate-limit-con-fortify)
-27. [Storage, logos y favicon](#storage-logos-y-favicon)
-28. [Configuración inicial de CIVAN](#configuración-inicial-de-civan)
-29. [Sistema de apariencia](#sistema-de-apariencia)
-30. [Auditoría](#auditoría)
-31. [Comandos útiles en XAMPP](#comandos-útiles-en-xampp)
-32. [Solución de problemas](#solución-de-problemas)
-33. [Checklist final](#checklist-final)
-34. [Buenas prácticas para GitHub](#buenas-prácticas-para-github)
-35. [Instalación resumida](#instalación-resumida)
+3. [Dependencias y librerías utilizadas](#dependencias-y-librerías-utilizadas)
+4. [Instalación local recomendada](#instalación-local-recomendada)
+5. [Requisitos antes de instalar](#requisitos-antes-de-instalar)
+6. [Paso 1 - Instalar y preparar XAMPP](#paso-1---instalar-y-preparar-xampp)
+7. [Paso 2 - Instalar Composer](#paso-2---instalar-composer)
+8. [Paso 3 - Instalar Node.js y npm](#paso-3---instalar-nodejs-y-npm)
+9. [Paso 4 - Instalar Git](#paso-4---instalar-git)
+10. [Paso 5 - Descargar CIVAN](#paso-5---descargar-civan)
+11. [Paso 6 - Instalar dependencias de PHP](#paso-6---instalar-dependencias-de-php)
+12. [Paso 7 - Instalar dependencias frontend](#paso-7---instalar-dependencias-frontend)
+13. [Paso 8 - Crear el archivo .env](#paso-8---crear-el-archivo-env)
+14. [Paso 9 - Crear la base de datos en XAMPP](#paso-9---crear-la-base-de-datos-en-xampp)
+15. [Paso 10 - Configurar la base de datos](#paso-10---configurar-la-base-de-datos)
+16. [Paso 11 - Generar APP_KEY](#paso-11---generar-app_key)
+17. [Paso 12 - Ejecutar migraciones](#paso-12---ejecutar-migraciones)
+18. [Paso 13 - Crear el storage link](#paso-13---crear-el-storage-link)
+19. [Paso 14 - Sincronizar permisos](#paso-14---sincronizar-permisos)
+20. [Paso 15 - Crear el primer administrador](#paso-15---crear-el-primer-administrador)
+21. [Paso 16 - Limpiar cachés](#paso-16---limpiar-cachés)
+22. [Paso 17 - Ejecutar CIVAN](#paso-17---ejecutar-civan)
+23. [Paso 18 - Comprobar la instalación](#paso-18---comprobar-la-instalación)
+24. [Autenticación y seguridad](#autenticación-y-seguridad)
+25. [Autenticación en dos pasos - 2FA](#autenticación-en-dos-pasos---2fa)
+26. [Sesiones y dispositivos](#sesiones-y-dispositivos)
+27. [Rate Limit con Fortify](#rate-limit-con-fortify)
+28. [Storage, logos y favicon](#storage-logos-y-favicon)
+29. [Configuración inicial de CIVAN](#configuración-inicial-de-civan)
+30. [Sistema de apariencia](#sistema-de-apariencia)
+31. [Auditoría](#auditoría)
+32. [Comandos útiles en XAMPP](#comandos-útiles-en-xampp)
+33. [Solución de problemas](#solución-de-problemas)
+34. [Checklist final](#checklist-final)
+35. [Buenas prácticas para GitHub](#buenas-prácticas-para-github)
+36. [Instalación resumida](#instalación-resumida)
 
 ---
 
@@ -177,6 +178,553 @@ La versión actual de CIVAN incluye:
 - npm
 - Git
 - PowerShell
+
+---
+
+
+# Dependencias y librerías utilizadas
+
+Esta sección documenta **qué librería utiliza cada función importante de CIVAN** y cómo instalarla manualmente.
+
+> **Instalación normal desde GitHub:** si clonaste el repositorio completo, NO necesitas ejecutar uno por uno todos los `composer require` o `npm install` de esta sección. Los archivos `composer.lock` y `package-lock.json` ya describen las dependencias del proyecto. En una instalación normal debes ejecutar:
+>
+> ```powershell
+> composer install
+> npm ci
+> ```
+>
+> Los comandos individuales siguientes son útiles si estás **reconstruyendo CIVAN desde cero**, si una dependencia fue eliminada accidentalmente o si quieres comprobar qué paquete proporciona una funcionalidad.
+
+## Dependencias PHP / Composer
+
+### Laravel Framework
+
+Framework principal del backend.
+
+Instalación manual desde un proyecto completamente vacío:
+
+```powershell
+composer create-project laravel/laravel civan
+```
+
+En CIVAN ya existente:
+
+```powershell
+composer install
+```
+
+Comprobar:
+
+```powershell
+composer show laravel/framework
+```
+
+---
+
+### Laravel Fortify - Login, 2FA y Rate Limit de autenticación
+
+CIVAN utiliza **Laravel Fortify** para parte del backend de autenticación y para la autenticación en dos pasos.
+
+Paquete:
+
+```text
+laravel/fortify
+```
+
+Instalación manual:
+
+```powershell
+composer require laravel/fortify
+```
+
+Si estuvieras creando la integración desde cero:
+
+```powershell
+php artisan fortify:install
+```
+
+Después:
+
+```powershell
+php artisan migrate
+php artisan optimize:clear
+```
+
+Comprobar instalación:
+
+```powershell
+composer show laravel/fortify
+```
+
+Comprobar rutas 2FA:
+
+```powershell
+php artisan route:list --path=two-factor
+```
+
+> **Importante para CIVAN clonado desde GitHub:** no ejecutes `php artisan fortify:install` nuevamente si `config/fortify.php`, las acciones de Fortify, migraciones y providers ya existen. `composer install` + `php artisan migrate` es suficiente.
+
+Fortify instala o utiliza internamente las dependencias necesarias para TOTP y QR. No es necesario instalar manualmente paquetes internos como `pragmarx/google2fa` o `bacon/bacon-qr-code` cuando Composer ya los resuelve como dependencias de Fortify.
+
+---
+
+### Spatie Laravel Permission - Roles y permisos
+
+Utilizado para:
+
+```text
+Roles
+Permisos
+Asignación de roles a usuarios
+Comprobaciones can:*
+```
+
+Paquete:
+
+```text
+spatie/laravel-permission
+```
+
+Instalación manual:
+
+```powershell
+composer require spatie/laravel-permission
+```
+
+Si se está configurando desde cero, publicar archivos del paquete:
+
+```powershell
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+```
+
+Migrar:
+
+```powershell
+php artisan migrate
+```
+
+Limpiar caché:
+
+```powershell
+php artisan optimize:clear
+```
+
+Comprobar:
+
+```powershell
+composer show spatie/laravel-permission
+```
+
+En CIVAN también debes sincronizar los permisos propios:
+
+```powershell
+php artisan permissions:sync-models --force
+```
+
+---
+
+### PhpSpreadsheet - Exportación Excel XLSX
+
+CIVAN utiliza **PhpSpreadsheet** para generar archivos Excel `.xlsx` en el módulo de auditoría.
+
+Paquete:
+
+```text
+phpoffice/phpspreadsheet
+```
+
+Instalación manual:
+
+```powershell
+composer require phpoffice/phpspreadsheet
+```
+
+Comprobar:
+
+```powershell
+composer show phpoffice/phpspreadsheet
+```
+
+Extensiones PHP especialmente importantes para esta librería:
+
+```text
+zip
+xml
+xmlreader
+xmlwriter
+gd
+mbstring
+```
+
+En XAMPP comprueba:
+
+```powershell
+php -m | findstr zip
+php -m | findstr xml
+php -m | findstr gd
+php -m | findstr mbstring
+```
+
+El código de CIVAN utiliza clases como:
+
+```php
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+```
+
+---
+
+### Laravel DomPDF - Exportación PDF
+
+CIVAN utiliza el wrapper de DomPDF para generar las exportaciones PDF de auditoría.
+
+Paquete:
+
+```text
+barryvdh/laravel-dompdf
+```
+
+Instalación manual:
+
+```powershell
+composer require barryvdh/laravel-dompdf
+```
+
+Comprobar:
+
+```powershell
+composer show barryvdh/laravel-dompdf
+```
+
+CIVAN utiliza:
+
+```php
+use Barryvdh\DomPDF\Facade\Pdf;
+```
+
+Si necesitas publicar la configuración manualmente:
+
+```powershell
+php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider"
+```
+
+Después:
+
+```powershell
+php artisan optimize:clear
+```
+
+Extensiones PHP recomendadas:
+
+```text
+dom
+mbstring
+```
+
+Comprobar:
+
+```powershell
+php -m | findstr dom
+php -m | findstr mbstring
+```
+
+---
+
+### Exportación CSV
+
+La exportación CSV de CIVAN **no necesita una librería Composer adicional**.
+
+Utiliza funciones nativas de PHP como:
+
+```php
+fputcsv();
+```
+
+Por eso:
+
+```text
+CSV   → PHP nativo
+Excel → phpoffice/phpspreadsheet
+PDF   → barryvdh/laravel-dompdf
+```
+
+---
+
+## Dependencias frontend / npm
+
+En una instalación normal:
+
+```powershell
+npm ci
+```
+
+Si no existe `package-lock.json`:
+
+```powershell
+npm install
+```
+
+Esto instala automáticamente todo lo definido en `package.json`.
+
+### React
+
+Interfaz principal.
+
+Paquetes:
+
+```text
+react
+react-dom
+```
+
+Instalación manual:
+
+```powershell
+npm install react react-dom
+```
+
+Comprobar:
+
+```powershell
+npm list react react-dom
+```
+
+---
+
+### Inertia React
+
+Conecta Laravel con React sin tener que construir una API REST separada para cada pantalla.
+
+Paquete:
+
+```text
+@inertiajs/react
+```
+
+Instalación manual:
+
+```powershell
+npm install @inertiajs/react
+```
+
+Comprobar:
+
+```powershell
+npm list @inertiajs/react
+```
+
+---
+
+### Lucide React
+
+Utilizado para los iconos del panel.
+
+Paquete:
+
+```text
+lucide-react
+```
+
+Instalación manual:
+
+```powershell
+npm install lucide-react
+```
+
+Comprobar:
+
+```powershell
+npm list lucide-react
+```
+
+---
+
+### Vite
+
+Compilador y servidor de desarrollo del frontend.
+
+En un proyecto Laravel existente normalmente ya viene configurado.
+
+Comprobar:
+
+```powershell
+npm list vite
+```
+
+Ejecutar:
+
+```powershell
+npm run dev
+```
+
+Build:
+
+```powershell
+npm run build
+```
+
+---
+
+### Tailwind CSS
+
+Utilizado para estilos y diseño responsive.
+
+Comprobar:
+
+```powershell
+npm list tailwindcss
+```
+
+La instalación exacta depende de la versión de Tailwind definida en `package.json`. Para una instalación clonada de CIVAN utiliza siempre:
+
+```powershell
+npm ci
+```
+
+en lugar de instalar una versión diferente manualmente.
+
+---
+
+## Herramientas externas necesarias
+
+Estas herramientas no se instalan con Composer.
+
+### XAMPP
+
+Proporciona principalmente:
+
+```text
+PHP
+MySQL / MariaDB
+Apache
+phpMyAdmin
+```
+
+Ubicación usada en esta documentación:
+
+```text
+C:\xampp
+```
+
+---
+
+### Composer
+
+Administrador de dependencias PHP.
+
+Comprobar:
+
+```powershell
+composer --version
+```
+
+---
+
+### Node.js
+
+Necesario para ejecutar npm, Vite, React y el build frontend.
+
+Comprobar:
+
+```powershell
+node -v
+npm -v
+```
+
+---
+
+### Git
+
+Necesario para clonar y actualizar el repositorio.
+
+Comprobar:
+
+```powershell
+git --version
+```
+
+---
+
+## Instalación manual de las principales librerías PHP en una sola ejecución
+
+> Este comando es únicamente para reconstruir las dependencias principales manualmente. Si clonaste CIVAN normalmente, utiliza `composer install`.
+
+```powershell
+composer require `
+    laravel/fortify `
+    spatie/laravel-permission `
+    phpoffice/phpspreadsheet `
+    barryvdh/laravel-dompdf
+```
+
+En una sola línea:
+
+```powershell
+composer require laravel/fortify spatie/laravel-permission phpoffice/phpspreadsheet barryvdh/laravel-dompdf
+```
+
+Después:
+
+```powershell
+php artisan migrate
+php artisan optimize:clear
+```
+
+Y para los permisos CIVAN:
+
+```powershell
+php artisan permissions:sync-models --force
+```
+
+---
+
+## Verificar todas las dependencias principales
+
+Ejecuta:
+
+```powershell
+composer show laravel/fortify
+composer show spatie/laravel-permission
+composer show phpoffice/phpspreadsheet
+composer show barryvdh/laravel-dompdf
+```
+
+Frontend:
+
+```powershell
+npm list react
+npm list react-dom
+npm list @inertiajs/react
+npm list lucide-react
+npm list vite
+npm list tailwindcss
+```
+
+Si todos aparecen correctamente, las dependencias principales están instaladas.
+
+---
+
+## Resumen de qué librería utiliza cada módulo
+
+| Función de CIVAN | Librería / herramienta |
+|---|---|
+| Backend principal | Laravel |
+| Login | Laravel + Fortify |
+| 2FA / TOTP | Laravel Fortify |
+| QR de 2FA | dependencias resueltas por Fortify |
+| Recovery codes | Laravel Fortify |
+| Rate Limit de autenticación | Laravel / Fortify |
+| Roles y permisos | Spatie Laravel Permission |
+| Exportar Excel XLSX | PhpSpreadsheet |
+| Exportar PDF | Laravel DomPDF |
+| Exportar CSV | PHP nativo |
+| Sesiones y dispositivos | Laravel Database Sessions |
+| Base de datos | MySQL de XAMPP |
+| Frontend | React |
+| Laravel ↔ React | Inertia.js |
+| Compilación frontend | Vite |
+| Estilos | Tailwind CSS |
+| Iconos | Lucide React |
 
 ---
 
@@ -504,6 +1052,23 @@ Si Composer indica que falta una extensión PHP:
 ```powershell
 composer install
 ```
+
+
+## ¿Qué instala Composer?
+
+Entre las dependencias principales utilizadas actualmente por CIVAN se encuentran:
+
+```text
+laravel/fortify
+spatie/laravel-permission
+phpoffice/phpspreadsheet
+barryvdh/laravel-dompdf
+```
+
+No es necesario ejecutar los cuatro `composer require` después de clonar el proyecto: `composer install` los obtiene utilizando `composer.lock`.
+
+Para ver los comandos individuales y la función de cada paquete consulta la sección [Dependencias y librerías utilizadas](#dependencias-y-librerías-utilizadas).
+
 
 ---
 
@@ -2050,6 +2615,10 @@ Comprueba todo en orden:
 - [ ] Git instalado.
 - [ ] Repositorio clonado.
 - [ ] `composer install` completado.
+- [ ] `laravel/fortify` instalado.
+- [ ] `spatie/laravel-permission` instalado.
+- [ ] `phpoffice/phpspreadsheet` instalado.
+- [ ] `barryvdh/laravel-dompdf` instalado.
 - [ ] `npm ci` o `npm install` completado.
 - [ ] `.env` creado.
 - [ ] Base de datos `civan` creada.
